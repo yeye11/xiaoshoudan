@@ -81,69 +81,72 @@
 <div
   bind:this={salesInvoiceRef}
   class="sales-invoice print:shadow-none"
-  style="width: 1280px; min-height: 720px; margin: 0 auto; padding: 40px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
+  style="width: 100%; max-width: 900px; aspect-ratio: 210 / 297; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white; display: flex; flex-direction: column;"
 >
   <!-- 公司抬头 -->
-  <div class="text-center mb-4 border-b border-gray-400 pb-3">
-    <h1 class="text-xl font-bold mb-1" style="color: #000;">{invoice.companyInfo.name}</h1>
-    <div class="text-xs flex justify-center space-x-8 mb-1" style="color: #333;">
+  <div class="text-center" style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
+    <h1 style="font-size: 16px; font-weight: bold; margin: 0 0 2px 0; color: #000;">{invoice.companyInfo.name}</h1>
+    <div style="font-size: 11px; margin: 1px 0; color: #333;">
       <span>地址：{invoice.companyInfo.address}</span>
-      <span>电话：{invoice.companyInfo.phone}</span>
+      <span style="margin-left: 20px;">电话：{invoice.companyInfo.phone}</span>
     </div>
-    <h2 class="text-lg font-bold" style="color: #000;">销 售 单</h2>
+    <h2 style="font-size: 16px; font-weight: bold; margin: 2px 0 0 0; color: #000; letter-spacing: 8px;">销 售 单</h2>
   </div>
 
   <!-- 基本信息 -->
-  <div class="grid grid-cols-3 gap-4 mb-2 text-xs" style="align-items: center;">
-    <div style="display: flex; align-items: center;"><strong>客户名称：</strong><span>{invoice.customerInfo.name}</span></div>
-    <div style="display: flex; align-items: center;"><strong>客户电话：</strong><span>{invoice.customerInfo.phone || ''}</span></div>
-    <div style="display: flex; align-items: center;"><strong>制单人：</strong><span>{invoice.createdBy}</span></div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; font-size: 12px; margin-bottom: 4px;">
+    <div style="padding: 2px 4px;"><strong>客户名称：</strong><span>{invoice.customerInfo.name}</span></div>
+    <div style="padding: 2px 4px;"><strong>客户电话：</strong><span>{invoice.customerInfo.phone || ''}</span></div>
+    <div style="padding: 2px 4px;"><strong>制单人：</strong><span>{invoice.createdBy}</span></div>
   </div>
 
-  <div class="grid grid-cols-3 gap-4 mb-3 text-xs" style="align-items: center;">
-    <div style="display: flex; align-items: center;"><strong>客户地址：</strong><span>{invoice.customerInfo.address || ''}</span></div>
-    <div style="display: flex; align-items: center;"><strong>物流名称：</strong><span></span></div>
-    <div style="display: flex; align-items: center;"><strong>开单日期：</strong><span>{formatDate(invoice.date)}</span></div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; font-size: 12px; margin-bottom: 4px;">
+    <div style="padding: 2px 4px;"><strong>客户地址：</strong><span>{invoice.customerInfo.address || ''}</span></div>
+    <div style="padding: 2px 4px;"><strong>物流名称：</strong><span></span></div>
+    <div style="padding: 2px 4px;"><strong>开单日期：</strong><span>{formatDate(invoice.date)}</span></div>
   </div>
-  
+
   <!-- 商品明细表格 -->
-  <div class="mb-3">
-    <table class="w-full border-collapse text-xs" style="border: 1px solid #000;">
+  <div style="margin-bottom: 2px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #000; table-layout: fixed;">
       <thead>
-        <tr style="background-color: #f5f5f5;">
-          <th class="px-2 py-1 text-center font-bold" style="width: 8%; border: 1px solid #000;">序号</th>
-          <th class="px-2 py-1 text-center font-bold" style="width: 30%; border: 1px solid #000;">产品名称</th>
-          <th class="px-2 py-1 text-center font-bold" style="width: 20%; border: 1px solid #000;">规格型号</th>
-          <th class="px-2 py-1 text-center font-bold" style="width: 10%; border: 1px solid #000;">单位</th>
-          <th class="px-2 py-1 text-center font-bold" style="width: 10%; border: 1px solid #000;">数量</th>
-          <th class="px-2 py-1 text-center font-bold" style="width: 12%; border: 1px solid #000;">单价</th>
-          <th class="px-2 py-1 text-center font-bold" style="width: 10%; border: 1px solid #000;">金额</th>
+        <tr style="background-color: #f5f5f5; height: 20px;">
+          <th style="width: 5%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">序号</th>
+          <th style="width: 25%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">产品名称</th>
+          <th style="width: 25%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">规格型号</th>
+          <th style="width: 6%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">单位</th>
+          <th style="width: 6%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">数量</th>
+          <th style="width: 10%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">单价</th>
+          <th style="width: 12%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">金额</th>
+          <th style="width: 11%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">备注</th>
         </tr>
       </thead>
       <tbody>
         <!-- 实际商品行 -->
         {#each invoice.items as item, index}
-          <tr>
-            <td class="px-2 py-1 text-center" style="border: 1px solid #000;">{index + 1}</td>
-            <td class="px-2 py-1 text-center" style="border: 1px solid #000;">{item.productName}</td>
-            <td class="px-2 py-1 text-center" style="border: 1px solid #000;">{item.specification}</td>
-            <td class="px-2 py-1 text-center" style="border: 1px solid #000;">{item.unit}</td>
-            <td class="px-2 py-1 text-center" style="border: 1px solid #000;">{item.quantity}</td>
-            <td class="px-2 py-1 text-center" style="border: 1px solid #000;">{formatCurrency(item.unitPrice)}</td>
-            <td class="px-2 py-1 text-center font-semibold" style="border: 1px solid #000;">{formatCurrency(item.amount)}</td>
+          <tr style="height: 18px;">
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{index + 1}</td>
+            <td style="border: 1px solid #000; padding: 1px; word-break: break-word;">{item.productName}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{item.specification}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{item.unit}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{item.quantity}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{formatCurrency(item.unitPrice)}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; word-break: break-word;">{formatCurrency(item.amount)}</td>
+            <td style="border: 1px solid #000; padding: 1px; word-break: break-word;"></td>
           </tr>
         {/each}
 
         <!-- 空行填充 -->
         {#each generateEmptyRows(Math.max(0, 8 - invoice.items.length)) as _}
-          <tr>
-            <td class="px-2 py-1 text-center" style="height: 24px; border: 1px solid #000;"></td>
-            <td class="px-2 py-1" style="border: 1px solid #000;"></td>
-            <td class="px-2 py-1" style="border: 1px solid #000;"></td>
-            <td class="px-2 py-1" style="border: 1px solid #000;"></td>
-            <td class="px-2 py-1" style="border: 1px solid #000;"></td>
-            <td class="px-2 py-1" style="border: 1px solid #000;"></td>
-            <td class="px-2 py-1" style="border: 1px solid #000;"></td>
+          <tr style="height: 18px;">
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
+            <td style="border: 1px solid #000; padding: 1px;"></td>
           </tr>
         {/each}
       </tbody>
@@ -151,35 +154,35 @@
   </div>
   
   <!-- 合计信息 -->
-  <div class="flex justify-between items-center mb-2 text-xs">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 12px;">
     <div>
-      <span class="font-medium">合计（大写）：</span>
-      <span class="font-bold" style="color: #d32f2f;">{numberToChineseSimple(invoice.totalAmount)}</span>
+      <span style="font-weight: 500;">合计（大写）：</span>
+      <span style="font-weight: bold; color: #d32f2f;">{numberToChineseSimple(invoice.totalAmount)}</span>
     </div>
     <div>
-      <span class="font-medium">合计：</span>
-      <span class="text-sm font-bold" style="color: #d32f2f;">{formatCurrency(invoice.totalAmount)}</span>
+      <span style="font-weight: 500;">合计：</span>
+      <span style="font-weight: bold; color: #d32f2f;">{formatCurrency(invoice.totalAmount)}</span>
     </div>
   </div>
 
   <!-- 备注和条款 -->
-  <div class="mb-2 text-xs">
+  <div style="margin-bottom: 2px; font-size: 12px;">
     {#if invoice.notes}
-      <p class="mb-1"><span class="font-medium">备注：</span>{invoice.notes}</p>
+      <p style="margin: 0 0 2px 0;"><span style="font-weight: 500;">备注：</span>{invoice.notes}</p>
     {/if}
-    <div class="flex justify-between items-center">
-      <p style="color: #666;">以上货品请核对清楚，如有质量问题请在3日内致电告知本公司，谢谢！</p>
-      <span style="color: #666;">第1页/共1页</span>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <p style="color: #666; margin: 0; font-size: 11px;">以上货品请核对清楚，如有质量问题请在3日内致电告知本公司，谢谢！</p>
+      <span style="color: #666; font-size: 11px;">第1页/共1页</span>
     </div>
   </div>
 
   <!-- 签名区域 -->
-  <div class="grid grid-cols-2 gap-8 text-xs mt-3">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 12px; margin-top: 4px;">
     <div>
-      <span class="font-medium">销售单位及经手人（签章）：</span>
+      <span style="font-weight: 500;">销售单位及经手人（签章）：</span>
     </div>
     <div>
-      <span class="font-medium">客户单位及经手人（签章）：</span>
+      <span style="font-weight: 500;">收货单位及经手人（签章）：</span>
     </div>
   </div>
 </div>
