@@ -58,6 +58,17 @@ export const exportElementAsImage = async (
   fileName: string
 ): Promise<void> => {
   try {
+    // 保存原始样式
+    const originalWidth = element.style.width;
+    const originalMaxWidth = element.style.maxWidth;
+
+    // 临时修改元素宽度为 A4 纸张宽度（210mm ≈ 794px）
+    element.style.setProperty('width', '794px', 'important');
+    element.style.setProperty('max-width', '794px', 'important');
+
+    // 等待 DOM 重排
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     // 克隆元素以避免修改原始DOM
     const clone = element.cloneNode(true) as HTMLElement;
 
@@ -83,6 +94,10 @@ export const exportElementAsImage = async (
 
     // 清理离屏容器
     document.body.removeChild(offscreen);
+
+    // 恢复原始样式
+    element.style.width = originalWidth;
+    element.style.maxWidth = originalMaxWidth;
 
     // 转换为图片并下载
     return new Promise((resolve, reject) => {
