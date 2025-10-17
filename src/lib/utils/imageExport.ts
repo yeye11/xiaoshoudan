@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
  * 统一的图片导出配置
  */
 export const IMAGE_EXPORT_CONFIG = {
-  scale: 1, // 1:1 缩放，输出实际尺寸
+  scale: 3, // 2倍缩放提高清晰度
   useCORS: true,
   backgroundColor: '#ffffff',
   logging: false,
