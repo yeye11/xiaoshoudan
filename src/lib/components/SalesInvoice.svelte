@@ -177,11 +177,11 @@
   </div>
 
   <!-- 签名区域 -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 12px; margin-top: 4px;">
-    <div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 12px; margin-top: 4px; min-height: 80px;">
+    <div style="display: flex; flex-direction: column;">
       <span style="font-weight: 500;">销售单位及经手人（签章）：</span>
     </div>
-    <div>
+    <div style="display: flex; flex-direction: column;">
       <span style="font-weight: 500;">收货单位及经手人（签章）：</span>
     </div>
   </div>
@@ -222,7 +222,6 @@
       margin: 0;
       padding: 20px;
       width: 210mm !important;
-      height: 297mm !important;
       background: white !important;
     }
 
