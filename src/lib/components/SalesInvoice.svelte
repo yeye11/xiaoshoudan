@@ -110,43 +110,43 @@
   <div style="margin-bottom: 2px;">
     <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #000; table-layout: fixed;">
       <thead>
-        <tr style="background-color: #f5f5f5; height: 20px;">
-          <th style="width: 5%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">序号</th>
-          <th style="width: 25%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">产品名称</th>
-          <th style="width: 25%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">规格型号</th>
-          <th style="width: 6%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">单位</th>
-          <th style="width: 6%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">数量</th>
-          <th style="width: 10%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">单价</th>
-          <th style="width: 12%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">金额</th>
-          <th style="width: 11%; border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold;">备注</th>
+        <tr style="background-color: #ffffff; height: 20px;">
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">序号</th>
+          <th style="width: 20%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">产品名称</th>
+          <th style="width: 20%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">规格型号</th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">单位</th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">数量</th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">单价</th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">金额</th>
+          <th style="width: 11%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">备注</th>
         </tr>
       </thead>
       <tbody>
         <!-- 实际商品行 -->
         {#each invoice.items as item, index}
-          <tr style="height: 18px;">
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{index + 1}</td>
-            <td style="border: 1px solid #000; padding: 1px; word-break: break-word;">{item.productName}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{item.specification}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{item.unit}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{item.quantity}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word;">{formatCurrency(item.unitPrice)}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; word-break: break-word;">{formatCurrency(item.amount)}</td>
-            <td style="border: 1px solid #000; padding: 1px; word-break: break-word;"></td>
+          <tr style="height: 18px; background-color: #ffffff;">
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{index + 1}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.productName}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.specification}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.unit}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.quantity}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{formatCurrency(item.unitPrice)}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; word-break: break-word; background-color: #ffffff;">{formatCurrency(item.amount)}</td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"></td>
           </tr>
         {/each}
 
         <!-- 空行填充 -->
         {#each generateEmptyRows(Math.max(0, 8 - invoice.items.length)) as _}
-          <tr style="height: 18px;">
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
-            <td style="border: 1px solid #000; padding: 1px;"></td>
+          <tr style="height: 18px; background-color: #ffffff;">
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
           </tr>
         {/each}
       </tbody>
