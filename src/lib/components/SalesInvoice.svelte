@@ -81,7 +81,7 @@
 <div
   bind:this={salesInvoiceRef}
   class="sales-invoice print:shadow-none"
-  style="width: 100%; max-width: 900px; aspect-ratio: 210 / 297; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white; display: flex; flex-direction: column;"
+  style="width: 100%; max-width: 900px; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
 >
   <!-- 公司抬头 -->
   <div class="text-center" style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
@@ -221,8 +221,9 @@
       border: none;
       margin: 0;
       padding: 20px;
-      width: 210mm !important;
+
       background: white !important;
+
     }
 
     @page {
