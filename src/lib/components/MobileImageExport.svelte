@@ -181,10 +181,14 @@
       clone.style.margin = '0';
       clone.style.background = '#ffffff';
 
-      // 强制设置宽度为 A4 纸张宽度（210mm ≈ 794px）
-      clone.style.setProperty('width', '794px', 'important');
-      clone.style.setProperty('max-width', '794px', 'important');
-      clone.style.setProperty('min-width', '794px', 'important');
+      // 获取源元素的实际宽度（页面上显示的宽度）
+      const sourceWidth = sourceEl.offsetWidth;
+      console.log('📏 源元素宽度:', sourceWidth);
+
+      // 设置克隆元素的宽度与源元素相同
+      clone.style.setProperty('width', `${sourceWidth}px`, 'important');
+      clone.style.setProperty('max-width', `${sourceWidth}px`, 'important');
+      clone.style.setProperty('min-width', `${sourceWidth}px`, 'important');
 
       // 移除所有 oklch 颜色，替换为标准颜色
       const removeOklchColors = (element: HTMLElement) => {
