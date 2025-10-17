@@ -1,0 +1,32 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "fs:allow-write-file",
+    "fs:allow-read-file",
+    "fs:allow-exists",
+    "fs:allow-create",
+    "fs:allow-picture-write",
+    "fs:allow-picture-write-recursive",
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [
+        { "path": "$PICTURE" },
+        { "path": "$PICTURE/*" },
+        { "path": "$PICTURE/**/*" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-create",
+      "allow": [
+        { "path": "$PICTURE" },
+        { "path": "$PICTURE/*" },
+        { "path": "$PICTURE/**/*" }
+      ]
+    }
+  ]
+}

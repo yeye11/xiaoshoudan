@@ -1,0 +1,1 @@
+export { default as component } from "../../../../src/routes/save-methods-summary/+page.svelte";

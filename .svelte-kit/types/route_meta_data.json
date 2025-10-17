@@ -1,0 +1,58 @@
+{
+	"/": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/delivery": [
+		"src/routes/+layout.ts"
+	],
+	"/invoice": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/mobile/customers": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/customers/new": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/customers/[id]": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/customers/[id]/edit": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/data": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/delivery/[id]": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/products": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/products/new": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/profile": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/sales": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/sales/new": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/sales/[id]": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/sales/[id]/edit": [
+		"src/routes/+layout.ts"
+	],
+	"/mobile/service": [
+		"src/routes/+layout.ts"
+	]
+}
