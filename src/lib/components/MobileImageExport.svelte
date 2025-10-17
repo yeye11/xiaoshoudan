@@ -181,6 +181,11 @@
       clone.style.margin = '0';
       clone.style.background = '#ffffff';
 
+      // 强制设置宽度为 A4 纸张宽度（210mm ≈ 794px）
+      clone.style.setProperty('width', '794px', 'important');
+      clone.style.setProperty('max-width', '794px', 'important');
+      clone.style.setProperty('min-width', '794px', 'important');
+
       // 移除所有 oklch 颜色，替换为标准颜色
       const removeOklchColors = (element: HTMLElement) => {
         // 移除所有元素的 class，避免 Tailwind 的 oklch 颜色
