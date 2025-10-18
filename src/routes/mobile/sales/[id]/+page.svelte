@@ -167,7 +167,7 @@
       <h3 class="font-medium text-gray-900 mb-3">保存选项</h3>
       <MobileImageExport
         targetElement={invoiceContainer}
-        fileName={`销售单-${invoice.invoiceNumber}`}
+        fileName={`销售单-${invoice.invoiceNumber}-${new Date(invoice.date).toLocaleDateString('zh-CN')}`}
         showButton={true}
       />
     </div>

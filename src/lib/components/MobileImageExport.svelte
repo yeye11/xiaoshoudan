@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import html2canvas from 'html2canvas';
-  import { IMAGE_EXPORT_CONFIG } from '$lib/utils/imageExport';
+  import { exportElementAsImage } from '$lib/utils/imageExport';
 
   export let targetElement: HTMLElement | null = null;
   export let fileName: string = 'document';
@@ -12,7 +11,7 @@
 
   // 仅导出销售单内容；可通过 selector 定制
   export let selector: string = '.sales-invoice';
-  let html2canvasFn: ((el: HTMLElement, opts?: any) => Promise<HTMLCanvasElement>) | null = null;
+
   let supportsShare = false;
 
   onMount(async () => {
@@ -28,9 +27,7 @@
       'AndroidImageSaver': 'AndroidImageSaver' in window
     });
 
-    // 直接使用静态导入的 html2canvas
-    html2canvasFn = html2canvas;
-    console.log('✅ html2canvas 已加载');
+
   });
 
   // 使用 Android 原生方法保存图片（通过 JavaScript 接口）
@@ -350,13 +347,26 @@
   };
 
 
+  // 统一接口：直接使用 utils 的导出函数，命名与桌面端一致（保存为图片）
+  const exportAsImageUnified = async () => {
+    if (!targetElement) return;
+    isExporting = true;
+    try { await exportElementAsImage(targetElement as HTMLElement, fileName); }
+    catch (e) {
+      console.error('导出图片失败:', e);
+      alert('导出图片失败，请重试');
+    }
+    finally { isExporting = false; }
+  };
+
 </script>
 
 {#if showButton}
+
   <div class="flex flex-col space-y-2">
     <!-- 主要导出按钮 -->
     <button
-      on:click={exportAsImage}
+      on:click={exportAsImageUnified}
       disabled={isExporting}
       class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
     >
@@ -370,7 +380,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4 4m4-4v12"></path>
         </svg>
-        <span>保存图片</span>
+        <span>保存为图片</span>
       {/if}
     </button>
 

@@ -53,7 +53,7 @@
     <div class="block md:hidden mb-4">
       <MobileImageExport
         targetElement={salesInvoiceRef}
-        fileName="销售单"
+        fileName={`销售单-${invoice.invoiceNumber}-${formatDate(invoice.date)}`}
         showButton={true}
       />
     </div>

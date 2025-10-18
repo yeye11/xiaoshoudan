@@ -19,8 +19,8 @@
   let showProductPicker = false;
   let selectedItemIndex = -1;
 
-  // 默认公司信息
-  const defaultCompanyInfo = {
+  // 默认公司信息（兜底）
+  const FALLBACK_COMPANY_INFO = {
     name: '佛山市仁腾装饰材料有限公司',
     address: '佛山市南海盐步大转弯夹板装饰第五期C1座12号',
     phone: '18575852698',
@@ -28,8 +28,32 @@
     taxId: ''
   };
 
+  // 来自“我的-资料”的公司信息（若存在则覆盖兜底值）
+  let companyInfo = { ...FALLBACK_COMPANY_INFO };
+  const refreshCompanyInfoFromProfile = () => {
+    try {
+      const stored = localStorage.getItem('user_info');
+      if (stored) {
+        const u = JSON.parse(stored);
+        companyInfo = {
+          name: u.company || FALLBACK_COMPANY_INFO.name,
+          address: u.address || FALLBACK_COMPANY_INFO.address,
+          phone: u.phone || FALLBACK_COMPANY_INFO.phone,
+          email: u.email || FALLBACK_COMPANY_INFO.email,
+          taxId: u.taxId || FALLBACK_COMPANY_INFO.taxId
+        };
+      } else {
+        companyInfo = { ...FALLBACK_COMPANY_INFO };
+      }
+    } catch (e) {
+      console.warn('读取用户资料失败，使用默认公司信息', e);
+      companyInfo = { ...FALLBACK_COMPANY_INFO };
+    }
+  };
+
   onMount(() => {
     loadData();
+    refreshCompanyInfoFromProfile();
     initializeInvoice();
   });
 
@@ -52,7 +76,7 @@
   };
 
   const initializeInvoice = () => {
-    invoice = createEmptyInvoice(defaultCompanyInfo);
+    invoice = createEmptyInvoice(companyInfo);
     // 初始化为不含默认商品
     invoice.items = [];
 

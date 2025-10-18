@@ -132,7 +132,15 @@ function initializeDefaultProduct() {
  * 目前返回固定值"经理"，将来可以从用户登录信息中获取
  */
 export function getCurrentUserName(): string {
-  // TODO: 将来从用户登录信息中获取
+  try {
+    const stored = localStorage.getItem('user_info');
+    if (stored) {
+      const u = JSON.parse(stored);
+      return (u.name && String(u.name).trim()) || '经理';
+    }
+  } catch (e) {
+    console.warn('读取 user_info 失败，使用默认制单人', e);
+  }
   return '经理';
 }
 
