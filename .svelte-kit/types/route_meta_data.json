@@ -1,12 +1,7 @@
 {
 	"/": [
+		"src/routes/+page.ts",
 		"src/routes/+layout.ts",
-		"src/routes/+layout.ts"
-	],
-	"/delivery": [
-		"src/routes/+layout.ts"
-	],
-	"/invoice": [
 		"src/routes/+layout.ts"
 	],
 	"/mobile": [

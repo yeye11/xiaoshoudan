@@ -12,12 +12,14 @@ type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 export type Snapshot<T = any> = Kit.Snapshot<T>;
 type PageParentData = EnsureDefined<LayoutData>;
-type LayoutRouteId = RouteId | "/" | "/delivery" | "/invoice" | "/mobile" | "/mobile/customers" | "/mobile/customers/[id]" | "/mobile/customers/[id]/edit" | "/mobile/customers/new" | "/mobile/data" | "/mobile/delivery/[id]" | "/mobile/products" | "/mobile/products/new" | "/mobile/profile" | "/mobile/sales" | "/mobile/sales/[id]" | "/mobile/sales/[id]/edit" | "/mobile/sales/new" | "/mobile/service" | null
+type LayoutRouteId = RouteId | "/" | "/mobile" | "/mobile/customers" | "/mobile/customers/[id]" | "/mobile/customers/[id]/edit" | "/mobile/customers/new" | "/mobile/data" | "/mobile/delivery/[id]" | "/mobile/products" | "/mobile/products/new" | "/mobile/profile" | "/mobile/sales" | "/mobile/sales/[id]" | "/mobile/sales/[id]/edit" | "/mobile/sales/new" | "/mobile/service" | null
 type LayoutParams = RouteParams & { id?: string }
 type LayoutParentData = EnsureDefined<{}>;
 
 export type PageServerData = null;
-export type PageData = Expand<PageParentData>;
+export type PageLoad<OutputData extends OutputDataShape<PageParentData> = OutputDataShape<PageParentData>> = Kit.Load<RouteParams, PageServerData, PageParentData, OutputData, RouteId>;
+export type PageLoadEvent = Parameters<PageLoad>[0];
+export type PageData = Expand<Omit<PageParentData, keyof Kit.LoadProperties<Awaited<ReturnType<typeof import('../../../../src/routes/+page.js').load>>>> & OptionalUnion<EnsureDefined<Kit.LoadProperties<Awaited<ReturnType<typeof import('../../../../src/routes/+page.js').load>>>>>>;
 export type PageProps = { params: RouteParams; data: PageData }
 export type LayoutServerData = null;
 export type LayoutLoad<OutputData extends OutputDataShape<LayoutParentData> = OutputDataShape<LayoutParentData>> = Kit.Load<LayoutParams, LayoutServerData, LayoutParentData, OutputData, LayoutRouteId>;
