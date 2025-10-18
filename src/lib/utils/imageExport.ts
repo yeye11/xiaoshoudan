@@ -48,6 +48,40 @@ const removeOklchColors = (element: HTMLElement): void => {
 };
 
 /**
+ * 在克隆节点上，规范化表格单元格的垂直/水平对齐，避免 html2canvas 的兼容性差异
+ * 仅作用于克隆体，不影响页面真实 DOM
+ */
+const normalizeTableCellsForExport = (root: HTMLElement): void => {
+  const cells = root.querySelectorAll('th, td');
+  cells.forEach((el) => {
+    const cell = el as HTMLElement;
+    const rect = cell.getBoundingClientRect();
+    const cs = window.getComputedStyle(cell);
+
+    // 仅在导出用克隆体上，消除上下内边距对视觉中心的影响
+    // 保留左右 padding，不改变水平间距
+    const pl = cs.paddingLeft;
+    const pr = cs.paddingRight;
+    cell.style.paddingTop = '0px';
+    cell.style.paddingBottom = '0px';
+    cell.style.paddingLeft = pl;
+    cell.style.paddingRight = pr;
+
+    // 锁定高度，避免渲染时行高被重算导致偏移
+    if (rect.height > 0) {
+      cell.style.height = `${rect.height}px`;
+      cell.style.minHeight = `${rect.height}px`;
+    }
+
+    // 确保盒模型一致
+    cell.style.boxSizing = 'border-box';
+    // 明确 vertical-align，提升一致性
+    cell.style.verticalAlign = 'middle';
+  });
+};
+
+
+/**
  * 导出HTML元素为图片
  * @param element - 要导出的HTML元素
  * @param fileName - 文件名（不含扩展名）
@@ -62,9 +96,11 @@ export const exportElementAsImage = async (
     const originalWidth = element.style.width;
     const originalMaxWidth = element.style.maxWidth;
 
-    // 临时修改元素宽度为 A4 纸张宽度（210mm ≈ 794px）
-    element.style.setProperty('width', '794px', 'important');
-    element.style.setProperty('max-width', '794px', 'important');
+    // 根据页面当前渲染宽度导出，跟随页面宽度
+    const rect = element.getBoundingClientRect();
+    const targetWidth = Math.max(1, Math.round(rect.width || element.offsetWidth));
+    element.style.setProperty('width', `${targetWidth}px`, 'important');
+    element.style.setProperty('max-width', `${targetWidth}px`, 'important');
 
     // 等待 DOM 重排
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -84,6 +120,9 @@ export const exportElementAsImage = async (
     // 移除 oklch 颜色
     removeOklchColors(clone);
 
+    // 规范化表格单元格（仅作用于克隆体）
+    normalizeTableCellsForExport(clone);
+
     // 使用 html2canvas 生成图片
     const canvas = await html2canvas(clone, {
       scale: IMAGE_EXPORT_CONFIG.scale,
@@ -99,7 +138,7 @@ export const exportElementAsImage = async (
     element.style.width = originalWidth;
     element.style.maxWidth = originalMaxWidth;
 
-    // 转换为图片并下载
+    // 转换为图片并下载（包含 dataURL 兜底，避免个别环境 toBlob 返回 null）
     return new Promise((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
@@ -112,7 +151,16 @@ export const exportElementAsImage = async (
             URL.revokeObjectURL(url);
             resolve();
           } else {
-            reject(new Error('生成图片失败'));
+            try {
+              const dataUrl = canvas.toDataURL(IMAGE_EXPORT_CONFIG.format, IMAGE_EXPORT_CONFIG.quality);
+              const link = document.createElement('a');
+              link.href = dataUrl;
+              link.download = `${fileName}${IMAGE_EXPORT_CONFIG.fileExtension}`;
+              link.click();
+              resolve();
+            } catch (e) {
+              reject(new Error('生成图片失败：toBlob 返回空且 dataURL 兜底失败'));
+            }
           }
         },
         IMAGE_EXPORT_CONFIG.format,

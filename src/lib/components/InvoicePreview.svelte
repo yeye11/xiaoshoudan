@@ -50,11 +50,11 @@
     text += `送货日期: ${formatDate(invoice.date)}\n\n`;
     text += `商品明细:\n`;
     text += `序号\t产品名称\t规格型号\t单位\t数量\t单价\t金额\n`;
-    
+
     invoice.items.forEach((item, index) => {
       text += `${index + 1}\t${item.productName}\t${item.specification}\t${item.unit}\t${item.quantity}\t${formatCurrency(item.unitPrice)}\t${formatCurrency(item.amount)}\n`;
     });
-    
+
     text += `\n合计: ${formatCurrency(invoice.totalAmount)}`;
     return text;
   }
@@ -63,7 +63,7 @@
 <div class="invoice-preview">
   <!-- 操作按钮栏 -->
   <div class="no-print mb-6 flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-    <button 
+    <button
       on:click={onBack}
       class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center"
     >
@@ -72,9 +72,9 @@
       </svg>
       返回编辑
     </button>
-    
+
     <div class="flex space-x-2">
-      <button 
+      <button
         on:click={copyToClipboard}
         class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center"
       >
@@ -83,8 +83,8 @@
         </svg>
         复制
       </button>
-      
-      <button 
+
+      <button
         on:click={exportToPDF}
         class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center"
       >
@@ -93,8 +93,8 @@
         </svg>
         导出PDF
       </button>
-      
-      <button 
+
+      <button
         on:click={handlePrint}
         class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center"
       >
@@ -161,51 +161,51 @@
       <table class="w-full border-collapse border border-gray-400">
         <thead>
           <tr class="bg-gray-100">
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">序号</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">产品名称</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">规格型号</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">单位</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">数量</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">单价</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">金额</th>
-            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700">备注</th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">序号</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">产品名称</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">规格型号</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">单位</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">数量</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">单价</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">金额</div></th>
+            <th class="border border-gray-400 px-3 py-2 text-center font-medium text-gray-700"><div class="cell-v-center center">备注</div></th>
           </tr>
         </thead>
         <tbody>
           {#each invoice.items as item, index}
             <tr>
-              <td class="border border-gray-400 px-3 py-2 text-center">{index + 1}</td>
-              <td class="border border-gray-400 px-3 py-2">{item.productName}</td>
-              <td class="border border-gray-400 px-3 py-2 text-center">{item.specification}</td>
-              <td class="border border-gray-400 px-3 py-2 text-center">{item.unit}</td>
-              <td class="border border-gray-400 px-3 py-2 text-right">{item.quantity}</td>
-              <td class="border border-gray-400 px-3 py-2 text-right">{formatCurrency(item.unitPrice)}</td>
-              <td class="border border-gray-400 px-3 py-2 text-right font-medium">{formatCurrency(item.amount)}</td>
-              <td class="border border-gray-400 px-3 py-2">{item.note || ''}</td>
+              <td class="border border-gray-400 px-3 py-2 text-center"><div class="cell-v-center center">{index + 1}</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center left">{item.productName}</div></td>
+              <td class="border border-gray-400 px-3 py-2 text-center"><div class="cell-v-center center">{item.specification}</div></td>
+              <td class="border border-gray-400 px-3 py-2 text-center"><div class="cell-v-center center">{item.unit}</div></td>
+              <td class="border border-gray-400 px-3 py-2 text-right"><div class="cell-v-center right">{item.quantity}</div></td>
+              <td class="border border-gray-400 px-3 py-2 text-right"><div class="cell-v-center right">{formatCurrency(item.unitPrice)}</div></td>
+              <td class="border border-gray-400 px-3 py-2 text-right font-medium"><div class="cell-v-center right">{formatCurrency(item.amount)}</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center left">{item.note || ''}</div></td>
             </tr>
           {/each}
-          
+
           <!-- 填充空行以保持表格美观 -->
           {#each Array(Math.max(0, 8 - invoice.items.length)) as _}
             <tr>
-              <td class="border border-gray-400 px-3 py-2 h-8">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
-              <td class="border border-gray-400 px-3 py-2">&nbsp;</td>
+              <td class="border border-gray-400 px-3 py-2 h-8"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
+              <td class="border border-gray-400 px-3 py-2"><div class="cell-v-center center">&nbsp;</div></td>
             </tr>
           {/each}
         </tbody>
         <tfoot>
           <tr class="bg-gray-100">
             <td colspan="6" class="border border-gray-400 px-3 py-3 text-right font-medium">
-              合计（大写）：{invoice.totalAmount.toFixed(2).replace(/\d/g, (d) => '零一二三四五六七八九'[parseInt(d)])}元整
+              <div class="cell-v-center right">合计（大写）：{invoice.totalAmount.toFixed(2).replace(/\d/g, (d) => '零一二三四五六七八九'[parseInt(d)])}元整</div>
             </td>
             <td class="border border-gray-400 px-3 py-3 text-right font-bold text-lg">
-              {formatCurrency(invoice.totalAmount)}
+              <div class="cell-v-center right">{formatCurrency(invoice.totalAmount)}</div>
             </td>
             <td class="border border-gray-400 px-3 py-3"></td>
           </tr>
@@ -250,27 +250,42 @@
     .no-print {
       display: none !important;
     }
-    
+
     .invoice-content {
       box-shadow: none !important;
       margin: 0 !important;
       padding: 20mm !important;
     }
-    
+
     body {
       margin: 0;
       padding: 0;
     }
-    
+
     @page {
       size: A4;
       margin: 0;
     }
   }
-  
+
   .invoice-preview {
     background-color: #f5f5f5;
     min-height: 100vh;
     padding: 20px;
   }
+
+  /* 表格单元格显式垂直居中，避免依赖 UA 默认，提升 html2canvas 一致性 */
+  table th, table td { vertical-align: middle; }
+
+  /* 通用：仅做垂直居中的包裹容器，水平对齐由修饰类控制 */
+  .cell-v-center {
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    width: 100%;
+    height: 100%;
+  }
+  .cell-v-center.center { justify-content: center; }
+  .cell-v-center.left { justify-content: flex-start; }
+  .cell-v-center.right { justify-content: flex-end; }
+
 </style>

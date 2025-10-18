@@ -81,7 +81,7 @@
 <div
   bind:this={salesInvoiceRef}
   class="sales-invoice print:shadow-none"
-  style="width: 100%; max-width: 900px; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
+  style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
 >
   <!-- 公司抬头 -->
   <div class="text-center" style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
@@ -94,65 +94,64 @@
   </div>
 
   <!-- 基本信息 -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; font-size: 12px; margin-bottom: 4px;">
-    <div style="padding: 2px 4px;"><strong>客户名称：</strong><span>{invoice.customerInfo.name}</span></div>
-    <div style="padding: 2px 4px;"><strong>客户电话：</strong><span>{invoice.customerInfo.phone || ''}</span></div>
-    <div style="padding: 2px 4px;"><strong>制单人：</strong><span>{invoice.createdBy}</span></div>
-  </div>
-
-  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; font-size: 12px; margin-bottom: 4px;">
-    <div style="padding: 2px 4px;"><strong>客户地址：</strong><span>{invoice.customerInfo.address || ''}</span></div>
-    <div style="padding: 2px 4px;"><strong>物流名称：</strong><span></span></div>
-    <div style="padding: 2px 4px;"><strong>开单日期：</strong><span>{formatDate(invoice.date)}</span></div>
+  <div class="info-grid" style="--col1: 1.3fr; --col2: 1fr; --col3: 0.7fr;">
+    <!-- 第一行 -->
+    <div class="info-item" style="padding: 2px 4px;"><strong>客户名称：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.name}>{invoice.customerInfo.name}</span></div>
+    <div class="info-item" style="padding: 2px 4px;"><strong>客户电话：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.phone || ''}>{invoice.customerInfo.phone || ''}</span></div>
+    <div class="info-item" style="padding: 2px 4px;"><strong>制单人：</strong><span class="nowrap-ellipsis" title={invoice.createdBy}>{invoice.createdBy}</span></div>
+    <!-- 第二行（与上面共用同一套列轨，保证上下严格对齐） -->
+    <div class="info-item" style="padding: 2px 4px;"><strong>客户地址：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.address || ''}>{invoice.customerInfo.address || ''}</span></div>
+    <div class="info-item" style="padding: 2px 4px;"><strong>物流名称：</strong><span class="nowrap-ellipsis"></span></div>
+    <div class="info-item" style="padding: 2px 4px;"><strong>开单日期：</strong><span class="nowrap-ellipsis">{formatDate(invoice.date)}</span></div>
   </div>
 
   <!-- 商品明细表格 -->
   <div style="margin-bottom: 2px;">
-    <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #000; table-layout: fixed;">
+    <table class="items-table" style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #000; table-layout: fixed;">
       <thead>
         <tr style="background-color: #ffffff; height: 20px;">
-          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">序号</th>
-          <th style="width: 20%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">产品名称</th>
-          <th style="width: 20%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">规格型号</th>
-          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">单位</th>
-          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">数量</th>
-          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">单价</th>
-          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">金额</th>
-          <th style="width: 11%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;">备注</th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">序号</div></th>
+          <th style="width: 20%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">产品名称</div></th>
+          <th style="width: 20%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">规格型号</div></th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">单位</div></th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">数量</div></th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">单价</div></th>
+          <th style="width: 10%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">金额</div></th>
+          <th style="width: 11%; border: 1px solid #000; padding: 2px 1px; text-align: center; vertical-align: middle; font-weight: bold; background-color: #ffffff;"><div class="cell-center">备注</div></th>
         </tr>
       </thead>
       <tbody>
         <!-- 实际商品行 -->
         {#each invoice.items as item, index}
           <tr style="height: 18px; background-color: #ffffff;">
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{index + 1}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.productName}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.specification}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.unit}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{item.quantity}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;">{formatCurrency(item.unitPrice)}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; word-break: break-word; background-color: #ffffff;">{formatCurrency(item.amount)}</td>
-            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{index + 1}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{item.productName}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{item.specification}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{item.unit}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{item.quantity}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{formatCurrency(item.unitPrice)}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; word-break: break-word; background-color: #ffffff;"><div class="cell-center">{formatCurrency(item.amount)}</div></td>
+            <td style="border: 1px solid #000; padding: 1px; text-align: center; word-break: break-word; background-color: #ffffff;"><div class="cell-center"></div></td>
           </tr>
         {/each}
 
         <!-- 空行填充 -->
         {#each generateEmptyRows(Math.max(0, 8 - invoice.items.length)) as _}
           <tr style="height: 18px; background-color: #ffffff;">
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
-            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
+            <td style="border: 1px solid #000; padding: 1px; background-color: #ffffff;"><div class="cell-center">&nbsp;</div></td>
           </tr>
         {/each}
       </tbody>
     </table>
   </div>
-  
+
   <!-- 合计信息 -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 12px;">
     <div>
@@ -195,7 +194,7 @@
   >
     🖨️ 打印/保存PDF
   </button>
-  
+
   <button
     on:click={exportAsImage}
     class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
@@ -242,6 +241,49 @@
     border-width: 1px;
     border-style: solid;
     border-color: #374151;
+    vertical-align: middle; /* 显式指定垂直居中，html2canvas 不依赖 UA 默认值 */
+  }
+
+  /* 信息网格：增加列间距，使右侧整体右移一些 */
+  /* 基础信息三列网格，默认均分；用于第一行（名称/电话/制单人） */
+  .info-grid {
+    display: grid;
+    /* 使用 CSS 变量定义每列比例，便于在不同行微调列宽 */
+    grid-template-columns: var(--col1, 1fr) var(--col2, 1fr) var(--col3, 1fr);
+    column-gap: 0px; /* 列间距，按需微调 */
+    font-size: 12px;
+    margin-bottom: 4px;
+    align-items: center; /* 让每格内容垂直居中对齐 */
+  }
+  /* 客户地址可能较长：第二行使用加宽的第一列 */
+
+  /* 信息项：标签固定，值可省略号截断，保持水平分布协调 */
+  .info-item { display: flex; align-items: center; gap: 4px; }
+  .info-item strong { white-space: nowrap; }
+  .info-item .nowrap-ellipsis {
+    flex: 1;             /* 占据剩余空间 */
+    min-width: 0;        /* 允许在 flex 容器内收缩 */
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* 商品表行高变量，保证视觉垂直居中 */
+  .items-table { --head-h: 20px; --row-h: 18px; }
+  .items-table thead tr { height: var(--head-h); }
+  .items-table tbody tr { height: var(--row-h); }
+  /* 覆盖上下内边距，避免文本被挤到底部 */
+  .items-table th, .items-table td { padding-top: 0 !important; padding-bottom: 0 !important; }
+
+  /* 表格单元格内容的精确垂直/水平居中（单行文本） */
+  .cell-center {
+    display: block; /* 使用块级并配合精确行高 */
+    text-align: center;
+    width: 100%;
+    height: var(--row-h);
+    line-height: var(--row-h);
+  }
+  .items-table thead .cell-center {
+    height: var(--head-h);
+    line-height: var(--head-h);
   }
 
   /* 移动端适配 */
