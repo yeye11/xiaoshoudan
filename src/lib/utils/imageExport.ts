@@ -240,29 +240,51 @@ export const exportElementAsImage = async (
     element.style.width = originalWidth;
     element.style.maxWidth = originalMaxWidth;
 
-    // 转换为图片并下载（包含 dataURL 兜底，避免个别环境 toBlob 返回 null）
+    // 转换为图片并保存（支持 Android 原生保存；否则使用浏览器下载，包含 dataURL 兜底）
     return new Promise((resolve, reject) => {
       canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${fileName}${IMAGE_EXPORT_CONFIG.fileExtension}`;
-            link.click();
-            URL.revokeObjectURL(url);
-            resolve();
-          } else {
-            try {
+        async (blob) => {
+          try {
+            if (!blob) {
+              // toBlob 为空时使用 dataURL 兜底
               const dataUrl = canvas.toDataURL(IMAGE_EXPORT_CONFIG.format, IMAGE_EXPORT_CONFIG.quality);
               const link = document.createElement('a');
               link.href = dataUrl;
               link.download = `${fileName}${IMAGE_EXPORT_CONFIG.fileExtension}`;
               link.click();
               resolve();
-            } catch (e) {
-              reject(new Error('生成图片失败：toBlob 返回空且 dataURL 兜底失败'));
+              return;
             }
+
+            const fullName = `${fileName}${IMAGE_EXPORT_CONFIG.fileExtension}`;
+            const w: any = window as any;
+            // 优先：Android 原生接口（保存到相册）
+            if (w.AndroidImageSaver && typeof w.AndroidImageSaver.saveImage === 'function') {
+              try {
+                const base64 = await new Promise<string>((res, rej) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => res(String(reader.result).split(',')[1]);
+                  reader.onerror = rej;
+                  reader.readAsDataURL(blob);
+                });
+                const ok = w.AndroidImageSaver.saveImage(base64, fullName);
+                if (!ok) console.warn('AndroidImageSaver.saveImage 返回 false，回退到浏览器下载');
+                if (ok) { resolve(); return; }
+              } catch (e) {
+                console.warn('调用 Android 原生保存失败，回退到浏览器下载:', e);
+              }
+            }
+
+            // 回退：浏览器下载（WebView/浏览器环境）
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fullName;
+            link.click();
+            URL.revokeObjectURL(url);
+            resolve();
+          } catch (e) {
+            reject(e);
           }
         },
         IMAGE_EXPORT_CONFIG.format,

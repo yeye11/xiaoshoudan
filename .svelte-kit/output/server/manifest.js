@@ -10,7 +10,7 @@ return {
 	assets: new Set(["favicon.png","game_item/game_hongzhong.png","game_item/game_paodekuai.png","game_item/game_tuiduizi.png","show_bg_1.png","svelte.svg","tauri.svg","vite.svg","zp_desk_2.png"]),
 	mimeTypes: {".png":"image/png",".svg":"image/svg+xml"},
 	_: {
-		client: {start:"_app/immutable/entry/start.DEt-OdA0.js",app:"_app/immutable/entry/app.W98qwnY5.js",imports:["_app/immutable/entry/start.DEt-OdA0.js","_app/immutable/chunks/D9O0WCOO.js","_app/immutable/chunks/nbkepknC.js","_app/immutable/chunks/D0iwhpLH.js","_app/immutable/entry/app.W98qwnY5.js","_app/immutable/chunks/nbkepknC.js","_app/immutable/chunks/Bzak7iHL.js","_app/immutable/chunks/BcVSc5tD.js","_app/immutable/chunks/DL9iPyes.js","_app/immutable/chunks/Cs9q_1e7.js","_app/immutable/chunks/D_8yISCJ.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.BVkCl_KP.js",app:"_app/immutable/entry/app.HZtoUDcy.js",imports:["_app/immutable/entry/start.BVkCl_KP.js","_app/immutable/chunks/D3qAVNxD.js","_app/immutable/chunks/nbkepknC.js","_app/immutable/chunks/D0iwhpLH.js","_app/immutable/entry/app.HZtoUDcy.js","_app/immutable/chunks/nbkepknC.js","_app/immutable/chunks/Bzak7iHL.js","_app/immutable/chunks/BcVSc5tD.js","_app/immutable/chunks/DL9iPyes.js","_app/immutable/chunks/Cs9q_1e7.js","_app/immutable/chunks/D_8yISCJ.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
