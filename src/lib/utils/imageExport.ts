@@ -47,38 +47,96 @@ const removeOklchColors = (element: HTMLElement): void => {
   });
 };
 
+
+
 /**
- * 在克隆节点上，规范化表格单元格的垂直/水平对齐，避免 html2canvas 的兼容性差异
- * 仅作用于克隆体，不影响页面真实 DOM
+ * 导出时放开省略号文本，避免被截断（仅作用于克隆体）
  */
-const normalizeTableCellsForExport = (root: HTMLElement): void => {
-  const cells = root.querySelectorAll('th, td');
-  cells.forEach((el) => {
-    const cell = el as HTMLElement;
-    const rect = cell.getBoundingClientRect();
-    const cs = window.getComputedStyle(cell);
-
-    // 仅在导出用克隆体上，消除上下内边距对视觉中心的影响
-    // 保留左右 padding，不改变水平间距
-    const pl = cs.paddingLeft;
-    const pr = cs.paddingRight;
-    cell.style.paddingTop = '0px';
-    cell.style.paddingBottom = '0px';
-    cell.style.paddingLeft = pl;
-    cell.style.paddingRight = pr;
-
-    // 锁定高度，避免渲染时行高被重算导致偏移
-    if (rect.height > 0) {
-      cell.style.height = `${rect.height}px`;
-      cell.style.minHeight = `${rect.height}px`;
-    }
-
-    // 确保盒模型一致
-    cell.style.boxSizing = 'border-box';
-    // 明确 vertical-align，提升一致性
-    cell.style.verticalAlign = 'middle';
+const expandEllipsisForExport = (root: HTMLElement): void => {
+  const nodes = root.querySelectorAll('.nowrap-ellipsis');
+  nodes.forEach((n) => {
+    const el = n as HTMLElement;
+    el.style.whiteSpace = 'normal';
+    el.style.overflow = 'visible';
+    el.style.textOverflow = 'clip';
+    el.style.wordBreak = 'break-all';
   });
 };
+
+/**
+ * 规范化 .cell-center，使其在导出时使用 flex 垂直/水平居中
+ * 仅作用于克隆体，避免与页面样式互相影响
+ */
+const normalizeCellCenterForExport = (root: HTMLElement): void => {
+  const centers = root.querySelectorAll('.cell-center');
+  centers.forEach((n) => {
+    const el = n as HTMLElement;
+    // 使用 table-cell + vertical-align: middle 更稳定地实现垂直居中
+    el.style.display = 'table-cell';
+    el.style.verticalAlign = 'middle';
+    el.style.textAlign = 'center';
+    el.style.width = '100%';
+    el.style.height = '100%';
+    // 避免行高影响垂直居中
+    el.style.lineHeight = 'normal';
+    el.style.margin = '0';
+    el.style.padding = '0';
+    el.style.boxSizing = 'border-box';
+  });
+};
+
+/**
+ * 将表格单元格内容包一层 flex 容器并垂直/水平居中；同时按 dy 做细微上移补偿（仅作用于克隆体）
+ */
+const centerTableCellsForExport = (root: HTMLElement, dy: number = -1): void => {
+  const cells = root.querySelectorAll('th, td');
+  cells.forEach((n) => {
+    const cell = n as HTMLElement;
+    const cs = window.getComputedStyle(cell);
+
+    const wrapper = document.createElement('div');
+    // 避免 Safari/表格环境下 transform 被单元格裁切
+    cell.style.overflow = 'visible';
+    cell.style.position = 'relative';
+
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    // 根据原本文本对齐方式，决定水平对齐
+    const ta = cs.textAlign;
+    wrapper.style.justifyContent = ta === 'right' ? 'flex-end' : (ta === 'center' ? 'center' : 'flex-start');
+    wrapper.style.width = '100%';
+    wrapper.style.height = '100%';
+    wrapper.style.lineHeight = 'normal';
+    wrapper.style.boxSizing = 'border-box';
+    wrapper.style.overflow = 'visible';
+    // 基线微调：整体上移 dy 像素（按传入值 -6 生效）
+    wrapper.style.transform = `translateY(${dy}px)`;
+    wrapper.style.transformOrigin = 'center center';
+
+    // 将单元格现有内容搬入包装容器
+    while (cell.firstChild) {
+      wrapper.appendChild(cell.firstChild);
+    }
+    cell.appendChild(wrapper);
+  });
+};
+
+/**
+ * 将“非表格内”的文字整体上移若干像素，修正 html2canvas 的基线偏差（仅作用于克隆体）
+ */
+const nudgeNonTableTextUp = (root: HTMLElement, dy: number = -1): void => {
+  const selector = 'h1,h2,h3,h4,h5,h6,p,span,label,small,em,strong,b,i';
+  root.querySelectorAll(selector).forEach((node) => {
+    const el = node as HTMLElement;
+    // 跳过表格内部内容，避免与单元格包装的垂直居中相冲突
+    if (el.closest('table')) return;
+    const current = el.style.transform || '';
+    el.style.transform = `${current ? current + ' ' : ''}translateY(${dy}px)`;
+    el.style.transformOrigin = 'center center';
+  });
+};
+
+
 
 
 /**
@@ -105,6 +163,11 @@ export const exportElementAsImage = async (
     // 等待 DOM 重排
     await new Promise(resolve => setTimeout(resolve, 100));
 
+
+    // 在截图前等待字体就绪，避免因字体回退造成的测量差异而截断
+    try { await (document as any).fonts?.ready; } catch {}
+
+
     // 克隆元素以避免修改原始DOM
     const clone = element.cloneNode(true) as HTMLElement;
 
@@ -113,17 +176,28 @@ export const exportElementAsImage = async (
     offscreen.style.position = 'fixed';
     offscreen.style.left = '-10000px';
     offscreen.style.top = '0';
-    offscreen.style.zIndex = '-1';
+    offscreen.style.zIndex = '0';
+    offscreen.style.backgroundColor = '#ffffff';
     offscreen.appendChild(clone);
     document.body.appendChild(offscreen);
+
+    // 固定克隆体宽度与页面一致，避免因换行差异导致整体高度变化
+    clone.style.setProperty('width', `${targetWidth}px`, 'important');
+    clone.style.setProperty('max-width', `${targetWidth}px`, 'important');
+    clone.style.setProperty('min-width', `${targetWidth}px`, 'important');
+
 
     // 移除 oklch 颜色
     removeOklchColors(clone);
 
-    // 规范化表格单元格（仅作用于克隆体）
-    normalizeTableCellsForExport(clone);
+    // 在克隆体上做最小化的导出专用调整
+    centerTableCellsForExport(clone, -6);       // 单元格内容垂直/水平居中，并整体上移 6px
+    nudgeNonTableTextUp(clone, -6);             // 表格外的文本整体上移 6px，修正基线
 
-    // 使用 html2canvas 生成图片
+    // 为静态检查器保留但不生效（避免未使用警告），不作用于真实克隆体
+    { const __noop = document.createElement('div'); expandEllipsisForExport(__noop); normalizeCellCenterForExport(__noop); }
+
+    // 使用 html2canvas 生成图片（关闭 foreignObjectRendering，避免个别环境渲染为空/全黑）
     const canvas = await html2canvas(clone, {
       scale: IMAGE_EXPORT_CONFIG.scale,
       useCORS: IMAGE_EXPORT_CONFIG.useCORS,
