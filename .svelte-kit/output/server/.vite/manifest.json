@@ -9,19 +9,6 @@
       "_environment.js"
     ]
   },
-  "_DeliveryNote.svelte_svelte_type_style_lang.js": {
-    "file": "chunks/DeliveryNote.svelte_svelte_type_style_lang.js",
-    "name": "DeliveryNote.svelte_svelte_type_style_lang"
-  },
-  "_InvoiceItemsTable.js": {
-    "file": "chunks/InvoiceItemsTable.js",
-    "name": "InvoiceItemsTable",
-    "imports": [
-      "_index2.js",
-      "_invoice.js",
-      "_context.js"
-    ]
-  },
   "_MobileHeader.js": {
     "file": "chunks/MobileHeader.js",
     "name": "MobileHeader",
@@ -33,15 +20,6 @@
   "_MobileImageExport.svelte_svelte_type_style_lang.js": {
     "file": "chunks/MobileImageExport.svelte_svelte_type_style_lang.js",
     "name": "MobileImageExport.svelte_svelte_type_style_lang"
-  },
-  "_Navigation.js": {
-    "file": "chunks/Navigation.js",
-    "name": "Navigation",
-    "imports": [
-      "_index2.js",
-      "_stores.js",
-      "_context.js"
-    ]
   },
   "_context.js": {
     "file": "chunks/context.js",
@@ -166,7 +144,7 @@
       "_context.js"
     ],
     "css": [
-      "_app/immutable/assets/_layout.C6XL8xeZ.css"
+      "_app/immutable/assets/_layout.CTLi288Y.css"
     ]
   },
   "src/routes/+layout.ts": {
@@ -175,42 +153,11 @@
     "src": "src/routes/+layout.ts",
     "isEntry": true
   },
-  "src/routes/+page.svelte": {
-    "file": "entries/pages/_page.svelte.js",
-    "name": "entries/pages/_page.svelte",
-    "src": "src/routes/+page.svelte",
-    "isEntry": true,
-    "imports": [
-      "_Navigation.js"
-    ]
-  },
-  "src/routes/delivery/+page.svelte": {
-    "file": "entries/pages/delivery/_page.svelte.js",
-    "name": "entries/pages/delivery/_page.svelte",
-    "src": "src/routes/delivery/+page.svelte",
-    "isEntry": true,
-    "imports": [
-      "_index2.js",
-      "_invoice.js",
-      "_InvoiceItemsTable.js",
-      "_MobileImageExport.svelte_svelte_type_style_lang.js",
-      "_DeliveryNote.svelte_svelte_type_style_lang.js",
-      "_Navigation.js",
-      "_context.js"
-    ]
-  },
-  "src/routes/invoice/+page.svelte": {
-    "file": "entries/pages/invoice/_page.svelte.js",
-    "name": "entries/pages/invoice/_page.svelte",
-    "src": "src/routes/invoice/+page.svelte",
-    "isEntry": true,
-    "imports": [
-      "_index2.js",
-      "_invoice.js",
-      "_InvoiceItemsTable.js",
-      "_Navigation.js",
-      "_context.js"
-    ]
+  "src/routes/+page.ts": {
+    "file": "entries/pages/_page.ts.js",
+    "name": "entries/pages/_page.ts",
+    "src": "src/routes/+page.ts",
+    "isEntry": true
   },
   "src/routes/mobile/+layout.svelte": {
     "file": "entries/pages/mobile/_layout.svelte.js",
@@ -221,9 +168,6 @@
       "_index2.js",
       "_stores.js",
       "_context.js"
-    ],
-    "css": [
-      "_app/immutable/assets/_layout.DH28ySnW.css"
     ]
   },
   "src/routes/mobile/+page.svelte": {
@@ -314,7 +258,6 @@
       "_index2.js",
       "_MobileHeader.js",
       "_MobileImageExport.svelte_svelte_type_style_lang.js",
-      "_DeliveryNote.svelte_svelte_type_style_lang.js",
       "_exports.js",
       "_utils.js",
       "_state.svelte.js"
@@ -346,6 +289,20 @@
       "_index2.js",
       "_MobileHeader.js",
       "_invoice.js",
+      "_exports.js",
+      "_utils.js",
+      "_state.svelte.js",
+      "_context.js"
+    ]
+  },
+  "src/routes/mobile/products/select/+page.svelte": {
+    "file": "entries/pages/mobile/products/select/_page.svelte.js",
+    "name": "entries/pages/mobile/products/select/_page.svelte",
+    "src": "src/routes/mobile/products/select/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index2.js",
+      "_MobileHeader.js",
       "_exports.js",
       "_utils.js",
       "_state.svelte.js",
@@ -412,6 +369,7 @@
     "imports": [
       "_index2.js",
       "_MobileHeader.js",
+      "_stores.js",
       "_exports.js",
       "_utils.js",
       "_state.svelte.js"

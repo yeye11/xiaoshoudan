@@ -11,7 +11,7 @@
   });
 </script>
 
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-white flex flex-col" style="min-height: 100dvh;">
   <slot />
   <ToastHost />
 </div>

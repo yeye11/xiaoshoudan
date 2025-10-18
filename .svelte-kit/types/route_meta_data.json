@@ -32,6 +32,9 @@
 	"/mobile/products/new": [
 		"src/routes/+layout.ts"
 	],
+	"/mobile/products/select": [
+		"src/routes/+layout.ts"
+	],
 	"/mobile/profile": [
 		"src/routes/+layout.ts"
 	],

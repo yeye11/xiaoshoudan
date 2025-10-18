@@ -1,6 +1,6 @@
 import { a0 as attr } from "../../../../../../chunks/index2.js";
 import { M as MobileHeader } from "../../../../../../chunks/MobileHeader.js";
-import { c as createEmptyInvoice } from "../../../../../../chunks/invoice.js";
+import { b as createEmptyInvoice } from "../../../../../../chunks/invoice.js";
 import "@sveltejs/kit/internal";
 import "../../../../../../chunks/exports.js";
 import "../../../../../../chunks/utils.js";

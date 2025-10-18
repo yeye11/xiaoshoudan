@@ -20,31 +20,29 @@ export const nodes = [
 	() => import('./nodes/16'),
 	() => import('./nodes/17'),
 	() => import('./nodes/18'),
-	() => import('./nodes/19'),
-	() => import('./nodes/20')
+	() => import('./nodes/19')
 ];
 
 export const server_loads = [];
 
 export const dictionary = {
 		"/": [3],
-		"/delivery": [4],
-		"/invoice": [5],
-		"/mobile": [6,[2]],
-		"/mobile/customers": [7,[2]],
-		"/mobile/customers/new": [10,[2]],
-		"/mobile/customers/[id]": [8,[2]],
-		"/mobile/customers/[id]/edit": [9,[2]],
-		"/mobile/data": [11,[2]],
-		"/mobile/delivery/[id]": [12,[2]],
-		"/mobile/products": [13,[2]],
-		"/mobile/products/new": [14,[2]],
-		"/mobile/profile": [15,[2]],
-		"/mobile/sales": [16,[2]],
-		"/mobile/sales/new": [19,[2]],
-		"/mobile/sales/[id]": [17,[2]],
-		"/mobile/sales/[id]/edit": [18,[2]],
-		"/mobile/service": [20,[2]]
+		"/mobile": [4,[2]],
+		"/mobile/customers": [5,[2]],
+		"/mobile/customers/new": [8,[2]],
+		"/mobile/customers/[id]": [6,[2]],
+		"/mobile/customers/[id]/edit": [7,[2]],
+		"/mobile/data": [9,[2]],
+		"/mobile/delivery/[id]": [10,[2]],
+		"/mobile/products": [11,[2]],
+		"/mobile/products/new": [12,[2]],
+		"/mobile/products/select": [13,[2]],
+		"/mobile/profile": [14,[2]],
+		"/mobile/sales": [15,[2]],
+		"/mobile/sales/new": [18,[2]],
+		"/mobile/sales/[id]": [16,[2]],
+		"/mobile/sales/[id]/edit": [17,[2]],
+		"/mobile/service": [19,[2]]
 	};
 
 export const hooks = {

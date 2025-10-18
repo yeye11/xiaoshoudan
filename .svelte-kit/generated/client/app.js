@@ -19,7 +19,8 @@ export const nodes = [
 	() => import('./nodes/15'),
 	() => import('./nodes/16'),
 	() => import('./nodes/17'),
-	() => import('./nodes/18')
+	() => import('./nodes/18'),
+	() => import('./nodes/19')
 ];
 
 export const server_loads = [];
@@ -35,12 +36,13 @@ export const dictionary = {
 		"/mobile/delivery/[id]": [10,[2]],
 		"/mobile/products": [11,[2]],
 		"/mobile/products/new": [12,[2]],
-		"/mobile/profile": [13,[2]],
-		"/mobile/sales": [14,[2]],
-		"/mobile/sales/new": [17,[2]],
-		"/mobile/sales/[id]": [15,[2]],
-		"/mobile/sales/[id]/edit": [16,[2]],
-		"/mobile/service": [18,[2]]
+		"/mobile/products/select": [13,[2]],
+		"/mobile/profile": [14,[2]],
+		"/mobile/sales": [15,[2]],
+		"/mobile/sales/new": [18,[2]],
+		"/mobile/sales/[id]": [16,[2]],
+		"/mobile/sales/[id]/edit": [17,[2]],
+		"/mobile/service": [19,[2]]
 	};
 
 export const hooks = {

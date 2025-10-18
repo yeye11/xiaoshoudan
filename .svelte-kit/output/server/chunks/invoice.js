@@ -35,12 +35,6 @@ const generateInvoiceNumber = () => {
   const time = String(now.getTime()).slice(-4);
   return `INV${year}${month}${day}${time}`;
 };
-const calculateTotalAmount = (items) => {
-  return Math.round(items.reduce((total, item) => total + item.amount, 0) * 100) / 100;
-};
-const formatCurrency = (amount) => {
-  return amount.toFixed(2);
-};
 const createEmptyCustomer = () => ({
   id: crypto.randomUUID(),
   name: "",
@@ -75,9 +69,7 @@ const createEmptyProduct = () => ({
   isActive: true
 });
 export {
-  calculateTotalAmount as a,
-  createEmptyCustomer as b,
-  createEmptyInvoice as c,
-  createEmptyProduct as d,
-  formatCurrency as f
+  createEmptyProduct as a,
+  createEmptyInvoice as b,
+  createEmptyCustomer as c
 };

@@ -10,7 +10,7 @@ return {
 	assets: new Set(["favicon.png","game_item/game_hongzhong.png","game_item/game_paodekuai.png","game_item/game_tuiduizi.png","show_bg_1.png","svelte.svg","tauri.svg","vite.svg","zp_desk_2.png"]),
 	mimeTypes: {".png":"image/png",".svg":"image/svg+xml"},
 	_: {
-		client: {start:"_app/immutable/entry/start.Cnpb3vi5.js",app:"_app/immutable/entry/app.CvT3IfBL.js",imports:["_app/immutable/entry/start.Cnpb3vi5.js","_app/immutable/chunks/BqcfPq16.js","_app/immutable/chunks/D2QV5ZPr.js","_app/immutable/entry/app.CvT3IfBL.js","_app/immutable/chunks/D2QV5ZPr.js","_app/immutable/chunks/Bzak7iHL.js","_app/immutable/chunks/BvOdW7jM.js","_app/immutable/chunks/CMTa04h2.js","_app/immutable/chunks/BR_REAzN.js","_app/immutable/chunks/GeVYpaAz.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.DFrSDNG3.js",app:"_app/immutable/entry/app.DUe2bQSA.js",imports:["_app/immutable/entry/start.DFrSDNG3.js","_app/immutable/chunks/Dk2bme3r.js","_app/immutable/chunks/nbkepknC.js","_app/immutable/chunks/D0iwhpLH.js","_app/immutable/entry/app.DUe2bQSA.js","_app/immutable/chunks/nbkepknC.js","_app/immutable/chunks/Bzak7iHL.js","_app/immutable/chunks/BcVSc5tD.js","_app/immutable/chunks/DL9iPyes.js","_app/immutable/chunks/Cs9q_1e7.js","_app/immutable/chunks/D_8yISCJ.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -31,8 +31,7 @@ return {
 			__memo(() => import('./nodes/16.js')),
 			__memo(() => import('./nodes/17.js')),
 			__memo(() => import('./nodes/18.js')),
-			__memo(() => import('./nodes/19.js')),
-			__memo(() => import('./nodes/20.js'))
+			__memo(() => import('./nodes/19.js'))
 		],
 		remotes: {
 			
@@ -46,122 +45,115 @@ return {
 				endpoint: null
 			},
 			{
-				id: "/delivery",
-				pattern: /^\/delivery\/?$/,
-				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 4 },
-				endpoint: null
-			},
-			{
-				id: "/invoice",
-				pattern: /^\/invoice\/?$/,
-				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 5 },
-				endpoint: null
-			},
-			{
 				id: "/mobile",
 				pattern: /^\/mobile\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 6 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 4 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/customers",
 				pattern: /^\/mobile\/customers\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 7 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 5 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/customers/new",
 				pattern: /^\/mobile\/customers\/new\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 10 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 8 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/customers/[id]",
 				pattern: /^\/mobile\/customers\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 8 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 6 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/customers/[id]/edit",
 				pattern: /^\/mobile\/customers\/([^/]+?)\/edit\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 9 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 7 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/data",
 				pattern: /^\/mobile\/data\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 11 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 9 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/delivery/[id]",
 				pattern: /^\/mobile\/delivery\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 12 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 10 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/products",
 				pattern: /^\/mobile\/products\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 13 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 11 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/products/new",
 				pattern: /^\/mobile\/products\/new\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 14 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 12 },
+				endpoint: null
+			},
+			{
+				id: "/mobile/products/select",
+				pattern: /^\/mobile\/products\/select\/?$/,
+				params: [],
+				page: { layouts: [0,2,], errors: [1,,], leaf: 13 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/profile",
 				pattern: /^\/mobile\/profile\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 15 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 14 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/sales",
 				pattern: /^\/mobile\/sales\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 16 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 15 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/sales/new",
 				pattern: /^\/mobile\/sales\/new\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 19 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 18 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/sales/[id]",
 				pattern: /^\/mobile\/sales\/([^/]+?)\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 17 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 16 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/sales/[id]/edit",
 				pattern: /^\/mobile\/sales\/([^/]+?)\/edit\/?$/,
 				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 18 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 17 },
 				endpoint: null
 			},
 			{
 				id: "/mobile/service",
 				pattern: /^\/mobile\/service\/?$/,
 				params: [],
-				page: { layouts: [0,2,], errors: [1,,], leaf: 20 },
+				page: { layouts: [0,2,], errors: [1,,], leaf: 19 },
 				endpoint: null
 			}
 		],

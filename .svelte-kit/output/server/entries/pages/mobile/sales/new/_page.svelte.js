@@ -1,5 +1,6 @@
-import { a0 as attr } from "../../../../../chunks/index2.js";
+import { $ as store_get, a1 as unsubscribe_stores, a0 as attr } from "../../../../../chunks/index2.js";
 import { M as MobileHeader } from "../../../../../chunks/MobileHeader.js";
+import { p as page } from "../../../../../chunks/stores.js";
 import "@sveltejs/kit/internal";
 import "../../../../../chunks/exports.js";
 import "../../../../../chunks/utils.js";
@@ -7,7 +8,11 @@ import "@sveltejs/kit/internal/server";
 import "../../../../../chunks/state.svelte.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
+    var $$store_subs;
+    let invoice = null;
+    let products = [];
     let isSubmitting = false;
+    if (store_get($$store_subs ??= {}, "$page", page)?.url && products.length > 0 && invoice) ;
     MobileHeader($$renderer2, {
       title: "新建销售单",
       showBack: true,
@@ -23,6 +28,7 @@ function _page($$renderer, $$props) {
       $$renderer2.push("<!--[!-->");
     }
     $$renderer2.push(`<!--]-->`);
+    if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }
 export {

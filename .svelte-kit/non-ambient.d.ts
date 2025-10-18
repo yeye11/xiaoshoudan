@@ -27,7 +27,7 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/delivery" | "/invoice" | "/mobile" | "/mobile/customers" | "/mobile/customers/new" | "/mobile/customers/[id]" | "/mobile/customers/[id]/edit" | "/mobile/data" | "/mobile/delivery" | "/mobile/delivery/[id]" | "/mobile/products" | "/mobile/products/new" | "/mobile/profile" | "/mobile/sales" | "/mobile/sales/new" | "/mobile/sales/[id]" | "/mobile/sales/[id]/edit" | "/mobile/service";
+		RouteId(): "/" | "/delivery" | "/invoice" | "/mobile" | "/mobile/customers" | "/mobile/customers/new" | "/mobile/customers/[id]" | "/mobile/customers/[id]/edit" | "/mobile/data" | "/mobile/delivery" | "/mobile/delivery/[id]" | "/mobile/products" | "/mobile/products/new" | "/mobile/products/select" | "/mobile/profile" | "/mobile/sales" | "/mobile/sales/new" | "/mobile/sales/[id]" | "/mobile/sales/[id]/edit" | "/mobile/service";
 		RouteParams(): {
 			"/mobile/customers/[id]": { id: string };
 			"/mobile/customers/[id]/edit": { id: string };
@@ -49,6 +49,7 @@ declare module "$app/types" {
 			"/mobile/delivery/[id]": { id: string };
 			"/mobile/products": Record<string, never>;
 			"/mobile/products/new": Record<string, never>;
+			"/mobile/products/select": Record<string, never>;
 			"/mobile/profile": Record<string, never>;
 			"/mobile/sales": { id?: string };
 			"/mobile/sales/new": Record<string, never>;
@@ -56,7 +57,7 @@ declare module "$app/types" {
 			"/mobile/sales/[id]/edit": { id: string };
 			"/mobile/service": Record<string, never>
 		};
-		Pathname(): "/" | "/delivery" | "/delivery/" | "/invoice" | "/invoice/" | "/mobile" | "/mobile/" | "/mobile/customers" | "/mobile/customers/" | "/mobile/customers/new" | "/mobile/customers/new/" | `/mobile/customers/${string}` & {} | `/mobile/customers/${string}/` & {} | `/mobile/customers/${string}/edit` & {} | `/mobile/customers/${string}/edit/` & {} | "/mobile/data" | "/mobile/data/" | "/mobile/delivery" | "/mobile/delivery/" | `/mobile/delivery/${string}` & {} | `/mobile/delivery/${string}/` & {} | "/mobile/products" | "/mobile/products/" | "/mobile/products/new" | "/mobile/products/new/" | "/mobile/profile" | "/mobile/profile/" | "/mobile/sales" | "/mobile/sales/" | "/mobile/sales/new" | "/mobile/sales/new/" | `/mobile/sales/${string}` & {} | `/mobile/sales/${string}/` & {} | `/mobile/sales/${string}/edit` & {} | `/mobile/sales/${string}/edit/` & {} | "/mobile/service" | "/mobile/service/";
+		Pathname(): "/" | "/delivery" | "/delivery/" | "/invoice" | "/invoice/" | "/mobile" | "/mobile/" | "/mobile/customers" | "/mobile/customers/" | "/mobile/customers/new" | "/mobile/customers/new/" | `/mobile/customers/${string}` & {} | `/mobile/customers/${string}/` & {} | `/mobile/customers/${string}/edit` & {} | `/mobile/customers/${string}/edit/` & {} | "/mobile/data" | "/mobile/data/" | "/mobile/delivery" | "/mobile/delivery/" | `/mobile/delivery/${string}` & {} | `/mobile/delivery/${string}/` & {} | "/mobile/products" | "/mobile/products/" | "/mobile/products/new" | "/mobile/products/new/" | "/mobile/products/select" | "/mobile/products/select/" | "/mobile/profile" | "/mobile/profile/" | "/mobile/sales" | "/mobile/sales/" | "/mobile/sales/new" | "/mobile/sales/new/" | `/mobile/sales/${string}` & {} | `/mobile/sales/${string}/` & {} | `/mobile/sales/${string}/edit` & {} | `/mobile/sales/${string}/edit/` & {} | "/mobile/service" | "/mobile/service/";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): "/favicon.png" | "/game_item/game_hongzhong.png" | "/game_item/game_paodekuai.png" | "/game_item/game_tuiduizi.png" | "/show_bg_1.png" | "/svelte.svg" | "/tauri.svg" | "/vite.svg" | "/zp_desk_2.png" | string & {};
 	}

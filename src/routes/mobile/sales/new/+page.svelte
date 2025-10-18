@@ -53,6 +53,8 @@
 
   const initializeInvoice = () => {
     invoice = createEmptyInvoice(defaultCompanyInfo);
+    // 初始化为不含默认商品
+    invoice.items = [];
 
     // 检查URL参数中是否有客户ID和制单人
     const customerId = $page.url.searchParams.get('customerId');
@@ -71,7 +73,25 @@
     } else {
       invoice.createdBy = getCurrentUserName();
     }
+
+
   };
+
+  // 当从客户详情页带 customerId 跳转过来时，确保选中该客户（避免时序竞态）
+  $: if (invoice && customers.length > 0 && $page?.url) {
+    const cid = $page.url.searchParams.get('customerId');
+    if (cid && !invoice.customerId) {
+      const c = customers.find((x) => x.id === cid);
+      if (c) {
+        selectCustomer(c);
+        // 选中后清理 URL 上的 customerId，避免后续重复触发
+        const params = new URLSearchParams($page.url.search);
+        params.delete('customerId');
+        const qs = params.toString();
+        goto(`${$page.url.pathname}${qs ? '?' + qs : ''}`, { replaceState: true, noScroll: true, keepFocus: true });
+      }
+    }
+  }
 
   // 选择客户
   const selectCustomer = (customer: Customer) => {
@@ -149,13 +169,15 @@
   // 添加商品项目
   const addItem = () => {
     selectedItemIndex = -1;
-    showProductPicker = true;
+    const cid = invoice?.customerId;
+    goto(`/mobile/products/select?index=-1${cid ? `&customerId=${cid}` : ''}`);
   };
 
   // 编辑商品项目
   const editItem = (index: number) => {
     selectedItemIndex = index;
-    showProductPicker = true;
+    const cid = invoice?.customerId;
+    goto(`/mobile/products/select?index=${index}${cid ? `&customerId=${cid}` : ''}`);
   };
 
   // 删除商品项目
@@ -265,10 +287,30 @@
   const getProductInfo = (productId: string) => {
     return products.find(p => p.id === productId);
   };
+
+  // 监听从选择产品页返回的选择结果
+  $: if ($page?.url && products.length > 0 && invoice) {
+    const sp = $page.url.searchParams;
+    const picked = sp.get('pickProductId');
+    if (picked) {
+      const idx = parseInt(sp.get('index') || '-1', 10);
+      selectedItemIndex = isNaN(idx) ? -1 : idx;
+      const product = products.find(p => p.id === picked);
+      if (product) {
+        selectProduct(product);
+      }
+      // 清理URL参数
+      const params = new URLSearchParams($page.url.search);
+      params.delete('pickProductId');
+      params.delete('index');
+      const qs = params.toString();
+      goto(`${$page.url.pathname}${qs ? '?' + qs : ''}`, { replaceState: true, noScroll: true, keepFocus: true });
+    }
+  }
 </script>
 
-<MobileHeader 
-  title="新建销售单" 
+<MobileHeader
+  title="新建销售单"
   showBack={true}
   backgroundColor="bg-red-500"
 >
@@ -310,7 +352,7 @@
   {/if}
 
   <!-- 客户信息 -->
-  <div class="bg-white rounded-lg p-4 shadow-sm border space-y-4">
+  <div class="hidden bg-white rounded-lg p-4 shadow-sm border space-y-4">
     <div class="flex items-center justify-between">
       <h3 class="font-medium text-gray-900">客户信息</h3>
       <button
@@ -346,9 +388,9 @@
   </div>
 
   <!-- 基本信息 -->
-  <div class="bg-white rounded-lg p-4 shadow-sm border space-y-4">
+  <div class="hidden bg-white rounded-lg p-4 shadow-sm border space-y-4">
     <h3 class="font-medium text-gray-900">基本信息</h3>
-    
+
     <!-- 日期 -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
@@ -408,11 +450,13 @@
         <div class="border border-gray-200 rounded-lg p-3">
           <div class="flex items-start justify-between mb-3">
             <div class="flex-1">
-              <div class="font-medium text-gray-900">{item.productName || '未选择商品'}</div>
-              {#if item.specification}
-                <div class="text-sm text-gray-600">规格: {item.specification}</div>
-              {/if}
-              <div class="text-sm text-gray-600">单位: {item.unit}</div>
+              <div class="text-sm">
+                <span class="font-medium text-gray-900">{item.productName || '未选择商品'}</span>
+                {#if item.specification}
+                  <span class="text-gray-600 ml-2">规格: {item.specification}</span>
+                {/if}
+                <span class="text-gray-600 ml-2">单位: {item.unit}</span>
+              </div>
             </div>
             <div class="flex space-x-2">
               <button
@@ -476,18 +520,6 @@
             </div>
           </div>
 
-          <!-- 送货数量 -->
-          <div class="mt-3">
-            <label class="block text-xs text-gray-500 mb-1">送货数量</label>
-            <input
-              type="number"
-              bind:value={item.deliveryQuantity}
-              min="0"
-              step="1"
-              placeholder="可选"
-              class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-500 focus:border-transparent"
-            />
-          </div>
         </div>
       {/each}
     </div>
@@ -585,8 +617,8 @@
 
 <!-- 产品选择器 -->
 {#if showProductPicker}
-  <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-    <div class="bg-white w-full rounded-t-lg max-h-96 overflow-y-auto">
+  <div class="mt-4">
+    <div class="bg-white w-full rounded-lg shadow-sm border max-h-[60vh] overflow-y-auto">
       <div class="p-4 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-medium">选择产品</h3>

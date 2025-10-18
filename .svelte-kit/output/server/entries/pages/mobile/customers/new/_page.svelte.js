@@ -1,6 +1,6 @@
 import { a0 as attr, W as attr_class, Y as stringify } from "../../../../../chunks/index2.js";
 import { M as MobileHeader } from "../../../../../chunks/MobileHeader.js";
-import { b as createEmptyCustomer } from "../../../../../chunks/invoice.js";
+import { c as createEmptyCustomer } from "../../../../../chunks/invoice.js";
 import "@sveltejs/kit/internal";
 import "../../../../../chunks/exports.js";
 import "../../../../../chunks/utils.js";

@@ -40,14 +40,14 @@
   // 移动端布局始终显示底部导航
 </script>
 
-<div class="min-h-screen bg-gray-50 flex flex-col">
+<div class="min-h-screen bg-white flex flex-col" style="min-height: 100svh;">
   <!-- 主内容区域 -->
-  <main class="flex-1 pb-20">
+  <main class="flex-1" style="padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));">
     <slot />
   </main>
 
   <!-- 底部导航栏 -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+  <nav class="fixed bottom-0 left-0 right-0 bg-white z-50" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
     <div class="flex items-center justify-around h-16">
       {#each navItems as item}
         <a
@@ -63,13 +63,13 @@
       {/each}
     </div>
   </nav>
+
+  <!-- 兜底填充层：safe-area + 1px 防抖动，上盖到内容内部 -->
+  <div class="fixed left-0 right-0 bg-white pointer-events-none" style="bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 1px); z-index: 51;"></div>
+
+  <!-- 最底部向下延伸 2px，覆盖任何底缘发丝线 -->
+  <div class="fixed bg-white pointer-events-none" style="left: -1px; right: -1px; bottom: -80px; height: 80px; z-index: 9999;"></div>
+
+
 </div>
 
-<style>
-  /* 确保在移动端时内容不被底部导航遮挡 */
-  @media (max-width: 768px) {
-    main {
-      padding-bottom: 4rem;
-    }
-  }
-</style>

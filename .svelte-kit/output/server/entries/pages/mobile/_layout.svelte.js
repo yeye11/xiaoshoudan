@@ -37,9 +37,9 @@ function MobileLayout($$renderer, $$props) {
     ];
     currentPath = store_get($$store_subs ??= {}, "$page", page).url.pathname;
     navItems.find((item) => currentPath.startsWith(item.href)) || navItems[0];
-    $$renderer2.push(`<div class="min-h-screen bg-gray-50 flex flex-col"><main class="flex-1 pb-20 svelte-1cuwzxc"><!--[-->`);
+    $$renderer2.push(`<div class="min-h-screen bg-white flex flex-col" style="min-height: 100svh;"><main class="flex-1" style="padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));"><!--[-->`);
     slot($$renderer2, $$props, "default", {}, null);
-    $$renderer2.push(`<!--]--></main> <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50"><div class="flex items-center justify-around h-16"><!--[-->`);
+    $$renderer2.push(`<!--]--></main> <nav class="fixed bottom-0 left-0 right-0 bg-white z-50" style="padding-bottom: env(safe-area-inset-bottom, 0px);"><div class="flex items-center justify-around h-16"><!--[-->`);
     const each_array = ensure_array_like(
       // 移动端布局始终显示底部导航
       navItems
@@ -48,7 +48,7 @@ function MobileLayout($$renderer, $$props) {
       let item = each_array[$$index];
       $$renderer2.push(`<a${attr("href", item.href)}${attr_class(`flex flex-col items-center justify-center flex-1 py-2 transition-colors duration-200 ${stringify(currentPath.startsWith(item.href) ? item.activeColor : "text-gray-500")}`)}><svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"${attr("d", item.icon)}></path></svg> <span class="text-xs font-medium">${escape_html(item.name)}</span></a>`);
     }
-    $$renderer2.push(`<!--]--></div></nav></div>`);
+    $$renderer2.push(`<!--]--></div></nav> <div class="fixed left-0 right-0 bg-white pointer-events-none" style="bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 1px); z-index: 51;"></div> <div class="fixed bg-white pointer-events-none" style="left: -1px; right: -1px; bottom: -80px; height: 80px; z-index: 9999;"></div></div>`);
     if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }

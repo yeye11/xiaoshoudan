@@ -24,7 +24,7 @@ const store = writable([]);
 function _layout($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let data = $$props["data"];
-    $$renderer2.push(`<div class="min-h-screen bg-gray-50"><!--[-->`);
+    $$renderer2.push(`<div class="min-h-screen bg-white flex flex-col" style="min-height: 100dvh;"><!--[-->`);
     slot($$renderer2, $$props, "default", {}, null);
     $$renderer2.push(`<!--]--> `);
     ToastHost($$renderer2);

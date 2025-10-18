@@ -2,7 +2,6 @@ import { a2 as head } from "../../../../../chunks/index2.js";
 import { M as MobileHeader } from "../../../../../chunks/MobileHeader.js";
 import "html2canvas";
 import "../../../../../chunks/MobileImageExport.svelte_svelte_type_style_lang.js";
-import "../../../../../chunks/DeliveryNote.svelte_svelte_type_style_lang.js";
 import "@sveltejs/kit/internal";
 import "../../../../../chunks/exports.js";
 import "../../../../../chunks/utils.js";

@@ -27,6 +27,48 @@
     dataSize: '0 KB'
   };
 
+  // 编辑界面状态与表单
+  let showEdit = false;
+  let editForm: typeof userInfo = { ...userInfo };
+  let editErrors: { name?: string; phone?: string } = {};
+
+  const openEdit = () => {
+    editForm = { ...userInfo };
+    editErrors = {};
+    showEdit = true;
+  };
+
+  const closeEdit = () => {
+    showEdit = false;
+  };
+
+  const onAvatarChange = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        editForm.avatar = String(reader.result || '');
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  };
+
+  const validateEdit = () => {
+    editErrors = {};
+    if (!editForm.name || !editForm.name.trim()) editErrors.name = '请填写姓名';
+    const digits = (editForm.phone || '').replace(/\D/g, '');
+    if (editForm.phone && digits.length < 6) editErrors.phone = '电话号码格式不正确';
+    return Object.keys(editErrors).length === 0;
+  };
+
+  const saveEdit = () => {
+    if (!validateEdit()) return;
+    userInfo = { ...userInfo, ...editForm };
+    saveUserInfo();
+    showEdit = false;
+  };
+
+
   onMount(() => {
     loadUserInfo();
     loadSettings();
@@ -119,7 +161,7 @@
       const dataStr = JSON.stringify(allData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `cypridina-data-${new Date().toISOString().split('T')[0]}.json`;
@@ -147,7 +189,7 @@
         localStorage.removeItem('customer_categories');
         localStorage.removeItem('product_categories');
         localStorage.removeItem('product_units');
-        
+
         calculateDataStats();
         alert('数据已清除');
       }
@@ -161,8 +203,8 @@
   };
 </script>
 
-<MobileHeader 
-  title="我的" 
+<MobileHeader
+  title="我的"
   showBack={true}
   backgroundColor="bg-purple-500"
 />
@@ -182,8 +224,8 @@
         <p class="text-sm text-gray-600">{userInfo.phone}</p>
       </div>
     </div>
-    
-    <button class="w-full bg-purple-500 text-white py-2 rounded-lg font-medium hover:bg-purple-600 transition-colors">
+
+    <button on:click={openEdit} class="w-full bg-purple-500 text-white py-2 rounded-lg font-medium hover:bg-purple-600 transition-colors">
       编辑资料
     </button>
   </div>
@@ -317,3 +359,90 @@
     </div>
   </div>
 </div>
+
+{#if showEdit}
+  <div class="fixed inset-0 z-[60] flex items-end md:items-center md:justify-center">
+    <div class="absolute inset-0 bg-black/40" role="button" tabindex="0" aria-label="关闭编辑" on:click={closeEdit} on:keydown={(e) => (e.key === 'Escape' || e.key === 'Enter') && (e.preventDefault(), closeEdit())}></div>
+
+    <div class="relative w-full md:w-[480px] bg-white rounded-t-2xl md:rounded-xl p-4 md:p-6 max-h-[85vh] overflow-auto">
+      <div class="h-1.5 w-12 bg-gray-300 rounded-full mx-auto md:hidden mb-2"></div>
+      <h3 class="text-base font-medium text-gray-900 mb-4">编辑资料</h3>
+
+      <div class="space-y-4">
+        <!-- 头像 -->
+        <div class="flex items-center space-x-4">
+          <div class="w-16 h-16 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
+            {#if editForm.avatar}
+              <img src={editForm.avatar} alt="avatar" class="w-full h-full object-cover" />
+            {:else}
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+            {/if}
+          </div>
+          <label class="text-sm font-medium text-purple-600">
+            <input type="file" accept="image/*" class="hidden" on:change={onAvatarChange} />
+            更换头像
+          </label>
+        </div>
+
+        <!-- 姓名 -->
+        <div>
+          <label for="edit-name" class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+          <input id="edit-name"
+            type="text"
+            bind:value={editForm.name}
+            placeholder="请输入姓名"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent {editErrors.name ? 'border-red-500' : ''}"
+          />
+          {#if editErrors.name}
+            <p class="text-red-500 text-sm mt-1">{editErrors.name}</p>
+          {/if}
+        </div>
+
+        <!-- 公司 -->
+        <div>
+          <label for="edit-company" class="block text-sm font-medium text-gray-700 mb-1">公司</label>
+          <input id="edit-company"
+            type="text"
+            bind:value={editForm.company}
+            placeholder="请输入公司名称"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- 电话 -->
+        <div>
+          <label for="edit-phone" class="block text-sm font-medium text-gray-700 mb-1">电话</label>
+          <input id="edit-phone"
+            type="tel"
+            bind:value={editForm.phone}
+            placeholder="请输入电话号码"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent {editErrors.phone ? 'border-red-500' : ''}"
+          />
+          {#if editErrors.phone}
+            <p class="text-red-500 text-sm mt-1">{editErrors.phone}</p>
+          {/if}
+        </div>
+
+        <!-- 邮箱 -->
+        <div>
+          <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+          <input id="edit-email"
+            type="email"
+            bind:value={editForm.email}
+            placeholder="请输入邮箱（可选）"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button on:click={closeEdit} class="py-2 rounded-lg border border-gray-300 text-gray-700">取消</button>
+        <button on:click={saveEdit} class="py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600">保存</button>
+      </div>
+    </div>
+  </div>
+{/if}
+

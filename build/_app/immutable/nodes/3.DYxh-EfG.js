@@ -1,0 +1,1 @@
+import{R as t}from"../chunks/D0iwhpLH.js";function r(e,o){throw new t(e,o.toString())}const n=()=>{throw r(307,"/mobile")},l=Object.freeze(Object.defineProperty({__proto__:null,load:n},Symbol.toStringTag,{value:"Module"}));export{l as universal};
