@@ -125,17 +125,44 @@ const centerTableCellsForExport = (root: HTMLElement, dy: number = -1): void => 
  * 将“非表格内”的文字整体上移若干像素，修正 html2canvas 的基线偏差（仅作用于克隆体）
  */
 const nudgeNonTableTextUp = (root: HTMLElement, dy: number = -1): void => {
-  const selector = 'h1,h2,h3,h4,h5,h6,p,span,label,small,em,strong,b,i';
-  root.querySelectorAll(selector).forEach((node) => {
-    const el = node as HTMLElement;
-    // 跳过表格内部内容，避免与单元格包装的垂直居中相冲突
-    if (el.closest('table')) return;
-    const current = el.style.transform || '';
-    el.style.transform = `${current ? current + ' ' : ''}translateY(${dy}px)`;
-    el.style.transformOrigin = 'center center';
+  // 仅在白名单容器内进行文字上移，避免抬头/页脚等区域被影响
+  const allowlist = root.querySelectorAll('[data-export-nudge="on"], .info-grid');
+  const inlineSelector = 'span,label,small,em,strong,b,i';
+
+  allowlist.forEach((scope) => {
+    scope.querySelectorAll(inlineSelector).forEach((node) => {
+      const el = node as HTMLElement;
+      // 跳过表格内部内容
+      if (el.closest('table')) return;
+
+      const wrapper = document.createElement('span');
+      wrapper.style.display = 'inline-block';
+      wrapper.style.transform = `translateY(${dy}px)`;
+      wrapper.style.transformOrigin = 'center center';
+      wrapper.style.overflow = 'visible';
+      wrapper.style.willChange = 'transform';
+
+      while (el.firstChild) wrapper.appendChild(el.firstChild);
+      el.appendChild(wrapper);
+    });
   });
 };
 
+/**
+ * 导出时仅上移“销售单”标题，不影响页面
+ */
+const nudgeTitleUpForExport = (root: HTMLElement, dy: number = -6): void => {
+  const headers = Array.from(root.querySelectorAll('h1, h2, h3'));
+  headers.forEach((h) => {
+    const el = h as HTMLElement;
+    const text = (el.textContent || '').replace(/\s/g, '');
+    if (text === '销售单') {
+      el.style.transform = `translateY(${dy}px)`;
+      el.style.transformOrigin = 'center center';
+      el.style.willChange = 'transform';
+    }
+  });
+};
 
 
 
@@ -193,6 +220,7 @@ export const exportElementAsImage = async (
     // 在克隆体上做最小化的导出专用调整
     centerTableCellsForExport(clone, -6);       // 单元格内容垂直/水平居中，并整体上移 6px
     nudgeNonTableTextUp(clone, -6);             // 表格外的文本整体上移 6px，修正基线
+    nudgeTitleUpForExport(clone, -6);           // 仅将“销售单”标题上移 6px（导出专用）
 
     // 为静态检查器保留但不生效（避免未使用警告），不作用于真实克隆体
     { const __noop = document.createElement('div'); expandEllipsisForExport(__noop); normalizeCellCenterForExport(__noop); }

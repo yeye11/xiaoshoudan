@@ -84,7 +84,7 @@
   style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
 >
   <!-- 公司抬头 -->
-  <div class="text-center" style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
+  <div class="text-center" data-no-export-nudge style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
     <h1 style="font-size: 16px; font-weight: bold; margin: 0 0 2px 0; color: #000;">{invoice.companyInfo.name}</h1>
     <div style="font-size: 11px; margin: 1px 0; color: #333;">
       <span>地址：{invoice.companyInfo.address}</span>
@@ -94,7 +94,7 @@
   </div>
 
   <!-- 基本信息 -->
-  <div class="info-grid" style="--col1: 1.3fr; --col2: 1fr; --col3: 0.7fr;">
+  <div class="info-grid" data-export-nudge="on" style="--col1: 1.3fr; --col2: 1fr; --col3: 0.7fr;">
     <!-- 第一行 -->
     <div class="info-item" style="padding: 2px 4px;"><strong>客户名称：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.name}>{invoice.customerInfo.name}</span></div>
     <div class="info-item" style="padding: 2px 4px;"><strong>客户电话：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.phone || ''}>{invoice.customerInfo.phone || ''}</span></div>
@@ -153,7 +153,7 @@
   </div>
 
   <!-- 合计信息 -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 12px;">
+  <div data-no-export-nudge style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; font-size: 12px;">
     <div>
       <span style="font-weight: 500;">合计（大写）：</span>
       <span style="font-weight: bold; color: #d32f2f;">{numberToChineseSimple(invoice.totalAmount)}</span>
@@ -165,7 +165,7 @@
   </div>
 
   <!-- 备注和条款 -->
-  <div style="margin-bottom: 2px; font-size: 12px;">
+  <div data-no-export-nudge style="margin-bottom: 2px; font-size: 12px;">
     {#if invoice.notes}
       <p style="margin: 0 0 2px 0;"><span style="font-weight: 500;">备注：</span>{invoice.notes}</p>
     {/if}
