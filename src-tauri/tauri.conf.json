@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "identifier": "com.renteng.sales",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run dev -- --host --port 3000",
     "devUrl": "http://localhost:3000",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../build"
