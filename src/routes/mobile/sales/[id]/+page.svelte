@@ -1,7 +1,6 @@
 <script lang="ts">
   import MobileHeader from '$lib/components/MobileHeader.svelte';
   import SalesInvoice from '$lib/components/SalesInvoice.svelte';
-  import MobileImageExport from '$lib/components/MobileImageExport.svelte';
   import type { Invoice, Customer } from '$lib/types/invoice.ts';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
@@ -200,15 +199,6 @@
       </div>
     </div>
 
-    <!-- 移动端图片导出按钮 -->
-    <div class="bg-white rounded-lg p-4 shadow-sm border">
-      <h3 class="font-medium text-gray-900 mb-3">保存选项</h3>
-      <MobileImageExport
-        targetElement={invoiceContainer}
-        fileName={`销售单-${invoice.invoiceNumber}-${new Date(invoice.date).toLocaleDateString('zh-CN')}`}
-        showButton={true}
-      />
-    </div>
 
     <!-- 状态信息 -->
     <div class="bg-white rounded-lg p-4 shadow-sm border mt-6">
