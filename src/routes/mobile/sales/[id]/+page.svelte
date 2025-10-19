@@ -62,7 +62,7 @@
       if (storedInvoices) {
         const invoices: Invoice[] = JSON.parse(storedInvoices);
         invoice = invoices.find(inv => inv.id === invoiceId) || null;
-        
+
         if (!invoice) {
           error = '销售单不存在';
           loading = false;
@@ -93,8 +93,16 @@
   };
 
   const handlePrint = () => {
-    // 打印功能
-    window.print();
+    // 仅打印目标容器：在 body 上加标记类，print 媒体查询里只显示目标区域
+    const cls = 'printing-only';
+    const cleanup = () => {
+      document.body.classList.remove(cls);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    document.body.classList.add(cls);
+    // 等待一帧让样式生效
+    requestAnimationFrame(() => window.print());
+    window.addEventListener('afterprint', cleanup);
   };
 
   const handleDelete = () => {
@@ -143,8 +151,8 @@
   };
 </script>
 
-<MobileHeader 
-  title="销售单详情" 
+<MobileHeader
+  title="销售单详情"
   showBack={true}
   showActions={true}
   backgroundColor="bg-red-500"
@@ -191,7 +199,7 @@
     </div>
   {:else if invoice}
     <!-- 使用专业的销售单格式 -->
-    <div bind:this={invoiceContainer} class="bg-white rounded-lg shadow-sm border overflow-hidden" style="height: {containerH ?? 'auto'};">
+    <div bind:this={invoiceContainer} class="bg-white rounded-lg shadow-sm border overflow-hidden print-target" style="height: {containerH ?? 'auto'};">
       <div bind:this={viewportRef} style="position: relative; width: 100%; display: flex; justify-content: center;">
         <div bind:this={contentRef} style="width: {BASE_WIDTH}px; transform: scale({scale}); transform-origin: top center;">
           <SalesInvoice {invoice} showActions={false} fixedLayout={true} />
@@ -249,3 +257,21 @@
     </div>
   {/if}
 </div>
+
+
+<style>
+  /* 仅打印指定容器（invoiceContainer） */
+  @media print {
+    :global(body.printing-only *) { visibility: hidden !important; }
+    :global(body.printing-only .print-target),
+    :global(body.printing-only .print-target *) { visibility: visible !important; }
+    :global(body.printing-only .print-target) {
+      position: absolute !important;
+      left: 0; top: 0; right: 0; width: auto !important; height: auto !important;
+      margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: 0 !important;
+      background: white !important;
+    }
+    /* 打印时避免 transform 缩放导致的裁切，按原始尺寸打印 */
+    :global(body.printing-only .print-target [style*="transform: scale"]) { transform: none !important; }
+  }
+</style>
