@@ -4,6 +4,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.iml
+**/.vscode/
+**/.idea/
+
 
 # Logs
 npm-debug.log*
@@ -39,6 +42,11 @@ src-tauri/gen/
 *.keystore
 *.jks
 **/.gradle/
+**/build/
+android/local.properties
+**/.cxx/
+**/.externalNativeBuild/
+
 
 # Coverage / reports
 coverage/
