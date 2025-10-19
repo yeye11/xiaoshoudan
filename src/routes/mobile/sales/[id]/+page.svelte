@@ -93,14 +93,32 @@
   };
 
   const handlePrint = () => {
-    // 仅打印目标容器：在 body 上加标记类，print 媒体查询里只显示目标区域
+    // 将要打印的区域克隆到 body 直下的隔离容器中，避免祖先被隐藏导致内容不可见
     const cls = 'printing-only';
+    const overlayId = 'print-overlay';
+    const target = invoiceContainer as HTMLElement | null;
+    if (!target) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = overlayId;
+    overlay.className = 'print-isolate';
+
+    // 深拷贝目标区域，去掉内部的缩放 transform
+    const clone = target.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll<HTMLElement>('[style*="transform: scale"]').forEach((n) => {
+      n.style.transform = 'none';
+    });
+
+    overlay.appendChild(clone);
+    document.body.appendChild(overlay);
+
     const cleanup = () => {
       document.body.classList.remove(cls);
+      overlay.remove();
       window.removeEventListener('afterprint', cleanup);
     };
+
     document.body.classList.add(cls);
-    // 等待一帧让样式生效
     requestAnimationFrame(() => window.print());
     window.addEventListener('afterprint', cleanup);
   };
@@ -260,18 +278,22 @@
 
 
 <style>
-  /* 仅打印指定容器（invoiceContainer） */
+  /* 采用“打印隔离层”方案：把要打印的内容克隆到 #print-overlay，
+     仅保留该层，其余根节点隐藏，避免祖先被隐藏导致目标不可见 */
   @media print {
-    :global(body.printing-only *) { visibility: hidden !important; }
-    :global(body.printing-only .print-target),
-    :global(body.printing-only .print-target *) { visibility: visible !important; }
-    :global(body.printing-only .print-target) {
-      position: absolute !important;
-      left: 0; top: 0; right: 0; width: auto !important; height: auto !important;
-      margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: 0 !important;
+    :global(body.printing-only > :not(#print-overlay)) { display: none !important; }
+    :global(#print-overlay) { display: block !important; }
+
+    :global(#print-overlay .print-target) {
+      position: static !important;
+      width: 190mm !important; max-width: 190mm !important;
+      margin: 0 auto !important; padding: 0 !important; box-shadow: none !important; border: 0 !important;
       background: white !important;
+      transform: none !important;
+      page-break-inside: avoid !important; break-inside: avoid !important;
+      max-height: 277mm !important; overflow: hidden !important;
     }
-    /* 打印时避免 transform 缩放导致的裁切，按原始尺寸打印 */
-    :global(body.printing-only .print-target [style*="transform: scale"]) { transform: none !important; }
+
+    :global(#print-overlay .print-target [style*="transform: scale"]) { transform: none !important; }
   }
 </style>
