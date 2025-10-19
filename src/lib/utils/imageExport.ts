@@ -4,8 +4,8 @@ import html2canvas from 'html2canvas';
  * 统一的图片导出配置
  */
 export const IMAGE_EXPORT_CONFIG = {
-  // 固定导出图片的像素宽度（不随设备变化）
-  fixedPixelWidth: 1080,
+  // 固定导出图片的像素宽度（不随设备变化）。提高到 1800 以获得更清晰的文字边缘。
+  fixedPixelWidth: 1800,
   // 固定导出时用于布局的 CSS 宽度（px，不影响页面，仅作用于克隆体）。与页面设计稿一致，如 600。
   fixedCssWidth: 600,
   // 备用缩放倍率（当未设置 fixedPixelWidth 时才使用）
@@ -13,8 +13,9 @@ export const IMAGE_EXPORT_CONFIG = {
   useCORS: true,
   backgroundColor: '#ffffff',
   logging: false,
+  // 为了获得无损清晰度，改为 PNG。若需体积更小可切回 JPEG 并提高 quality。
   format: 'image/jpeg' as const,
-  quality: 0.95,
+  quality: 1.0,
   fileExtension: '.jpg' as const
 };
 
