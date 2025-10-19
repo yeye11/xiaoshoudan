@@ -4,7 +4,12 @@ import html2canvas from 'html2canvas';
  * 统一的图片导出配置
  */
 export const IMAGE_EXPORT_CONFIG = {
-  scale: 3, // 2倍缩放提高清晰度
+  // 固定导出图片的像素宽度（不随设备变化）
+  fixedPixelWidth: 1080,
+  // 固定导出时用于布局的 CSS 宽度（px，不影响页面，仅作用于克隆体）。与页面设计稿一致，如 600。
+  fixedCssWidth: 600,
+  // 备用缩放倍率（当未设置 fixedPixelWidth 时才使用）
+  scale: 3,
   useCORS: true,
   backgroundColor: '#ffffff',
   logging: false,
@@ -181,14 +186,11 @@ export const exportElementAsImage = async (
     const originalWidth = element.style.width;
     const originalMaxWidth = element.style.maxWidth;
 
-    // 根据页面当前渲染宽度导出，跟随页面宽度
-    const rect = element.getBoundingClientRect();
-    const targetWidth = Math.max(1, Math.round(rect.width || element.offsetWidth));
-    element.style.setProperty('width', `${targetWidth}px`, 'important');
-    element.style.setProperty('max-width', `${targetWidth}px`, 'important');
+    // 固定 CSS 宽度（仅用于导出克隆体，不修改原页面）
+    const cssWidth = IMAGE_EXPORT_CONFIG.fixedCssWidth ?? Math.max(1, Math.round(element.getBoundingClientRect().width || element.offsetWidth));
 
-    // 等待 DOM 重排
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // 等待 DOM 重排（给字体/布局与测量一个最小的 settle 时间）
+    await new Promise(resolve => setTimeout(resolve, 50));
 
 
     // 在截图前等待字体就绪，避免因字体回退造成的测量差异而截断
@@ -208,11 +210,14 @@ export const exportElementAsImage = async (
     offscreen.appendChild(clone);
     document.body.appendChild(offscreen);
 
-    // 固定克隆体宽度与页面一致，避免因换行差异导致整体高度变化
-    clone.style.setProperty('width', `${targetWidth}px`, 'important');
-    clone.style.setProperty('max-width', `${targetWidth}px`, 'important');
-    clone.style.setProperty('min-width', `${targetWidth}px`, 'important');
+    // 固定克隆体 CSS 宽度，避免受设备影响产生不同换行
+    clone.style.setProperty('width', `${cssWidth}px`, 'important');
+    clone.style.setProperty('max-width', `${cssWidth}px`, 'important');
+    clone.style.setProperty('min-width', `${cssWidth}px`, 'important');
 
+    // 计算用于“固定图片像素宽度”的缩放倍率：canvasWidth = cssWidth * scale = fixedPixelWidth
+    const desiredPixelWidth = IMAGE_EXPORT_CONFIG.fixedPixelWidth ?? Math.round(cssWidth * IMAGE_EXPORT_CONFIG.scale);
+    const computedScale = Math.max(1, Math.min(4, desiredPixelWidth / cssWidth)); // 限制缩放范围，避免过大/过小
 
     // 移除 oklch 颜色
     removeOklchColors(clone);
@@ -227,7 +232,7 @@ export const exportElementAsImage = async (
 
     // 使用 html2canvas 生成图片（关闭 foreignObjectRendering，避免个别环境渲染为空/全黑）
     const canvas = await html2canvas(clone, {
-      scale: IMAGE_EXPORT_CONFIG.scale,
+      scale: computedScale,
       useCORS: IMAGE_EXPORT_CONFIG.useCORS,
       backgroundColor: IMAGE_EXPORT_CONFIG.backgroundColor,
       logging: IMAGE_EXPORT_CONFIG.logging
