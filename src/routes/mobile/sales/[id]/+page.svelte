@@ -39,14 +39,15 @@
 
   async function updateScale() {
     await tick();
-    // 取设备/视口宽度，避免内部测量为 0
+    // 取设备/视口宽度，优先使用容器宽度；再减去左右边框的安全余量，避免被裁切
     const vw = typeof window !== 'undefined' ? (window.innerWidth || 0) : 0;
     const docW = typeof document !== 'undefined' ? (document.documentElement?.clientWidth || 0) : 0;
     const containerW = viewportRef?.clientWidth || 0;
-    const available = Math.max(containerW, docW, vw);
+    const SAFE_BORDER_GUARD = 2; // 默认 tailwind border(1px) * 2
+    let available = containerW > 0 ? containerW : Math.min(docW, vw);
+    available = Math.max(0, available - SAFE_BORDER_GUARD);
     const next = Math.min(1, Math.max(0.1, available / BASE_WIDTH));
-    const debug = { available, BASE_WIDTH, containerW, docW, vw, contentH: contentRef?.offsetHeight || 0, scale: next };
-    console.debug('[invoice-scale]', debug);
+    console.debug('[invoice-scale]', { available, BASE_WIDTH, containerW, docW, vw, guard: SAFE_BORDER_GUARD, scale: next });
     scale = Number.isFinite(next) && next > 0 ? next : 1;
   }
 
