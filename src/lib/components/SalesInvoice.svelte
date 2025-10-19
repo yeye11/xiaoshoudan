@@ -53,7 +53,7 @@
     isExporting = true;
 
     try {
-      const fileName = `销售单-${invoice.invoiceNumber}-${formatDate(invoice.date)}`;
+      const fileName = `销售单-${invoice.invoiceNumber}-${formatDate(invoice.createdAt)}`;
       await exportElementAsImage(salesInvoiceRef, fileName);
     } catch (error) {
       console.error('导出失败:', error);
@@ -76,7 +76,7 @@
     <div class="block md:hidden mb-4">
       <MobileImageExport
         targetElement={salesInvoiceRef}
-        fileName={`销售单-${invoice.invoiceNumber}-${formatDate(invoice.date)}`}
+        fileName={`销售单-${invoice.invoiceNumber}-${formatDate(invoice.createdAt)}`}
         showButton={true}
       />
     </div>
@@ -126,7 +126,7 @@
     <!-- 第二行（与上面共用同一套列轨，保证上下严格对齐） -->
     <div class="info-item" style="padding: 2px 4px;"><strong>客户地址：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.address || ''}>{invoice.customerInfo.address || ''}</span></div>
     <div class="info-item" style="padding: 2px 4px;"><strong>物流名称：</strong><span class="nowrap-ellipsis"></span></div>
-    <div class="info-item" style="padding: 2px 4px;"><strong>开单日期：</strong><span class="nowrap-ellipsis">{formatDate(invoice.date)}</span></div>
+    <div class="info-item" style="padding: 2px 4px;"><strong>开单日期：</strong><span class="nowrap-ellipsis">{formatDate(invoice.createdAt)}</span></div>
   </div>
 
   <!-- 商品明细表格 -->

@@ -13,6 +13,7 @@
   let sortBy = 'date';
   let sortOrder = 'desc';
   let showSearch = false;
+  let showSortOptions = true;
 
   // 统计数据
   let statistics = {
@@ -67,7 +68,7 @@
 
     // 今日销售
     const today = new Date().toISOString().split('T')[0];
-    const todayInvoices = invoices.filter(inv => inv.date === today);
+    const todayInvoices = invoices.filter(inv => inv.createdAt.split('T')[0] === today);
     statistics.todaySales = todayInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
   };
 
@@ -98,11 +99,11 @@
   const sortInvoices = () => {
     filteredInvoices.sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (sortBy) {
         case 'date':
-          aValue = new Date(a.date).getTime();
-          bValue = new Date(b.date).getTime();
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
           break;
         case 'amount':
           aValue = a.totalAmount;
@@ -115,7 +116,7 @@
         default:
           return 0;
       }
-      
+
       if (typeof aValue === 'string') {
         return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       } else {
@@ -284,6 +285,40 @@
   </div>
 </div>
 
+<!-- 排序选项栏 -->
+<div class="bg-white border-b border-gray-200 px-4 py-3">
+  <div class="flex items-center space-x-2 overflow-x-auto">
+    <span class="text-sm text-gray-600 whitespace-nowrap font-medium">排序:</span>
+    <button
+      on:click={() => toggleSort('date')}
+      class="px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+             {sortBy === 'date'
+               ? 'bg-red-500 text-white'
+               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+    >
+      日期 {sortBy === 'date' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+    </button>
+    <button
+      on:click={() => toggleSort('amount')}
+      class="px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+             {sortBy === 'amount'
+               ? 'bg-red-500 text-white'
+               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+    >
+      金额 {sortBy === 'amount' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+    </button>
+    <button
+      on:click={() => toggleSort('customer')}
+      class="px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+             {sortBy === 'customer'
+               ? 'bg-red-500 text-white'
+               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+    >
+      客户 {sortBy === 'customer' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+    </button>
+  </div>
+</div>
+
 <!-- 销售单列表 -->
 <div class="p-4">
   {#if filteredInvoices.length === 0}
@@ -325,7 +360,7 @@
           
           <div class="flex items-center justify-between text-sm text-gray-500">
             <div class="flex items-center space-x-4">
-              <span>{formatDate(invoice.date)}</span>
+              <span>{formatDate(invoice.createdAt)}</span>
               <span>制单人: {invoice.createdBy}</span>
             </div>
             <div class="flex items-center">

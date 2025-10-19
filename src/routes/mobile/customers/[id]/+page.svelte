@@ -57,11 +57,11 @@
   const sortInvoices = () => {
     customerInvoices.sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (sortBy) {
         case 'date':
-          aValue = new Date(a.date).getTime();
-          bValue = new Date(b.date).getTime();
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
           break;
         case 'amount':
           aValue = a.totalAmount;
@@ -70,7 +70,7 @@
         default:
           return 0;
       }
-      
+
       return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
     });
   };
@@ -350,7 +350,7 @@
               <div class="flex items-center justify-between">
                 <div>
                   <div class="font-medium text-gray-900">{invoice.invoiceNumber}</div>
-                  <div class="text-sm text-gray-500">{formatDate(invoice.date)}</div>
+                  <div class="text-sm text-gray-500">{formatDate(invoice.createdAt)}</div>
                 </div>
                 <div class="text-right">
                   <div class="font-medium text-gray-900">{formatCurrency(invoice.totalAmount)}</div>

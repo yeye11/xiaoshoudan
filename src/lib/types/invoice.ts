@@ -152,6 +152,8 @@ export interface Invoice {
   deliveryDate?: string; // 送货日期
   paymentStatus: 'unpaid' | 'partial' | 'paid'; // 付款状态
   paidAmount: number; // 已付金额
+  createdAt: string; // 创建时间戳 (ISO 8601)
+  updatedAt: string; // 更新时间戳 (ISO 8601)
 }
 
 // 费用收入记录
@@ -217,25 +219,30 @@ export const createEmptyInvoiceItem = (): InvoiceItem => ({
 });
 
 // 用于生成新发票的默认值
-export const createEmptyInvoice = (companyInfo: CompanyInfo): Invoice => ({
-  id: crypto.randomUUID(),
-  invoiceNumber: generateInvoiceNumber(),
-  date: new Date().toISOString().split('T')[0],
-  customerInfo: {
-    name: '',
-    address: '',
-    phone: '',
-    email: ''
-  },
-  companyInfo,
-  items: [createEmptyInvoiceItem()],
-  totalAmount: 0,
-  createdBy: '',
-  status: 'draft',
-  type: 'sale',
-  paymentStatus: 'unpaid',
-  paidAmount: 0
-});
+export const createEmptyInvoice = (companyInfo: CompanyInfo): Invoice => {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    invoiceNumber: generateInvoiceNumber(),
+    date: now.split('T')[0],
+    customerInfo: {
+      name: '',
+      address: '',
+      phone: '',
+      email: ''
+    },
+    companyInfo,
+    items: [createEmptyInvoiceItem()],
+    totalAmount: 0,
+    createdBy: '',
+    status: 'draft',
+    type: 'sale',
+    paymentStatus: 'unpaid',
+    paidAmount: 0,
+    createdAt: now,
+    updatedAt: now
+  };
+};
 
 // 生成发票编号
 export const generateInvoiceNumber = (): string => {

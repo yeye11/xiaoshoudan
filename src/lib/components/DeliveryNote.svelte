@@ -16,7 +16,7 @@
     isExporting = true;
 
     try {
-      const fileName = `送货单-${invoice.invoiceNumber}-${formatDate(invoice.date)}`;
+      const fileName = `送货单-${invoice.invoiceNumber}-${formatDate(invoice.createdAt)}`;
       await exportElementAsImage(deliveryNoteRef, fileName);
     } catch (error) {
       console.error('导出失败:', error);

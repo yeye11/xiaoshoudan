@@ -68,10 +68,10 @@
 
     // 销售统计
     statistics.totalSales = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.todaySales = invoices.filter(inv => inv.date === today).reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.weekSales = invoices.filter(inv => inv.date >= weekStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.monthSales = invoices.filter(inv => inv.date >= monthStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.yearSales = invoices.filter(inv => inv.date >= yearStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
+    statistics.todaySales = invoices.filter(inv => inv.createdAt.split('T')[0] === today).reduce((sum, inv) => sum + inv.totalAmount, 0);
+    statistics.weekSales = invoices.filter(inv => inv.createdAt.split('T')[0] >= weekStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
+    statistics.monthSales = invoices.filter(inv => inv.createdAt.split('T')[0] >= monthStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
+    statistics.yearSales = invoices.filter(inv => inv.createdAt.split('T')[0] >= yearStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
 
     // 客户统计
     statistics.totalCustomers = customers.length;
@@ -93,19 +93,19 @@
   const calculateSalesTrend = (invoices: Invoice[]) => {
     const last7Days = [];
     const now = new Date();
-    
+
     for (let i = 6; i >= 0; i--) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const dateStr = date.toISOString().split('T')[0];
-      const dayInvoices = invoices.filter(inv => inv.date === dateStr);
+      const dayInvoices = invoices.filter(inv => inv.createdAt.split('T')[0] === dateStr);
       const amount = dayInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-      
+
       last7Days.push({
         date: dateStr,
         amount
       });
     }
-    
+
     salesTrend = last7Days;
   };
 
