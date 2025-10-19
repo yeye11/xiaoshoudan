@@ -27,8 +27,8 @@
   };
 </script>
 
-<header class="sticky top-0 z-40 {backgroundColor} {textColor} shadow-sm">
-  <div class="flex items-center justify-between h-14 px-4">
+<header class="sticky top-0 z-40 {backgroundColor} {textColor} shadow-sm" style="padding-top: constant(safe-area-inset-top); padding-top: env(safe-area-inset-top);">
+  <div class="flex items-center justify-between h-16 px-4">
     <!-- 左侧：返回按钮或占位 -->
     <div class="flex items-center">
       {#if showBack}

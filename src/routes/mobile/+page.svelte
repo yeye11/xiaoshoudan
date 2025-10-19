@@ -123,64 +123,25 @@
   </div>
 </MobileHeader>
 
-<div class="p-4 space-y-6">
-  <!-- 快速统计卡片 -->
-  <div class="grid grid-cols-2 gap-4">
-    <div class="bg-white rounded-lg p-4 shadow-sm border">
-      <div class="text-sm text-gray-600">今日销售</div>
-      <div class="text-xl font-bold text-green-600">{formatCurrency(statistics.todaySales)}</div>
-    </div>
-    <div class="bg-white rounded-lg p-4 shadow-sm border">
-      <div class="text-sm text-gray-600">本月销售</div>
-      <div class="text-xl font-bold text-blue-600">{formatCurrency(statistics.monthSales)}</div>
-    </div>
-  </div>
-
+<div class="p-2">
   <!-- 功能模块网格 -->
-  <div class="grid grid-cols-2 gap-4">
+  <div class="flex flex-wrap -mx-0">
     {#each businessModules as module}
-      <a
-        href={module.href}
-        class="bg-white rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center space-y-3"
-      >
-        <div class="w-12 h-12 {module.color} rounded-lg flex items-center justify-center">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={module.icon}></path>
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-900">{module.name}</span>
-      </a>
+      <div class="w-1/2 px-0 mb-0">
+        <a
+          href={module.href}
+          class="bg-white rounded-lg p-3 shadow-sm border hover:shadow-md transition-shadow duration-200 flex flex-col items-center justify-center space-y-2 w-full"
+        >
+          <div class="w-9 h-9 {module.color} rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={module.icon}></path>
+            </svg>
+          </div>
+          <span class="text-sm font-medium text-gray-900">{module.name}</span>
+        </a>
+      </div>
     {/each}
   </div>
 
-  <!-- 快速操作 -->
-  <div class="bg-white rounded-lg p-4 shadow-sm border">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">快速操作</h3>
-    <div class="grid grid-cols-2 gap-3">
-      <a
-        href="/mobile/sales/new"
-        class="bg-blue-500 text-white rounded-lg p-3 text-center font-medium hover:bg-blue-600 transition-colors"
-      >
-        创建销售单
-      </a>
-      <a
-        href="/mobile/customers/new"
-        class="bg-green-500 text-white rounded-lg p-3 text-center font-medium hover:bg-green-600 transition-colors"
-      >
-        添加客户
-      </a>
-      <a
-        href="/mobile/products/new"
-        class="bg-orange-500 text-white rounded-lg p-3 text-center font-medium hover:bg-orange-600 transition-colors"
-      >
-        添加产品
-      </a>
-      <a
-        href="/mobile/inventory"
-        class="bg-purple-500 text-white rounded-lg p-3 text-center font-medium hover:bg-purple-600 transition-colors"
-      >
-        查看库存
-      </a>
-    </div>
-  </div>
+
 </div>
