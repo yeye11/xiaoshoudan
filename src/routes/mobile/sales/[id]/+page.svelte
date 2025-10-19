@@ -19,6 +19,7 @@
   let viewportRef: HTMLElement | null = null;
   let contentRef: HTMLElement | null = null;
   let scale = 1;
+  let containerH: string | null = null; // 跟随“实际绘制高度”（scale 后）
   const resizeHandler = () => updateScale();
 
   onMount(() => {
@@ -49,6 +50,10 @@
     const next = Math.min(1, Math.max(0.1, available / BASE_WIDTH));
     console.debug('[invoice-scale]', { available, BASE_WIDTH, containerW, docW, vw, guard: SAFE_BORDER_GUARD, scale: next });
     scale = Number.isFinite(next) && next > 0 ? next : 1;
+
+    // 参考“314.93 那个容器”的计算：读取绘制后的真实高度
+    const rect = contentRef?.getBoundingClientRect();
+    containerH = rect ? `${rect.height}px` : null;
   }
 
   const loadInvoice = () => {
@@ -187,7 +192,7 @@
     </div>
   {:else if invoice}
     <!-- 使用专业的销售单格式 -->
-    <div bind:this={invoiceContainer} class="bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div bind:this={invoiceContainer} class="bg-white rounded-lg shadow-sm border overflow-hidden" style="height: {containerH ?? 'auto'};">
       <div bind:this={viewportRef} style="position: relative; width: 100%; display: flex; justify-content: center;">
         <div bind:this={contentRef} style="width: {BASE_WIDTH}px; transform: scale({scale}); transform-origin: top center;">
           <SalesInvoice {invoice} showActions={false} fixedLayout={true} />
