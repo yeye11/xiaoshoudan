@@ -3,6 +3,8 @@
   import { numberToChineseSimple } from '$lib/utils/numberToChinese.ts';
   import { exportElementAsImage, formatDate as formatDateUtil, IMAGE_EXPORT_CONFIG } from '$lib/utils/imageExport.ts';
   import MobileImageExport from './MobileImageExport.svelte';
+  import { onMount } from 'svelte';
+
 
   export let invoice: Invoice;
   export let showActions = true;
@@ -17,6 +19,26 @@
 
   // 格式化金额
   const formatCurrency = (amount: number): string => amount.toFixed(2);
+
+  // 从“我的资料”读取用户信息，用于抬头与制单人显示（不再使用“经理”兜底）
+  type UserProfile = { name?: string; company?: string; address?: string; phone?: string; email?: string; taxId?: string };
+  let userProfile: UserProfile = {};
+  const loadUserProfile = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem('user_info');
+      if (stored) userProfile = JSON.parse(stored) || {};
+    } catch (e) {
+      console.warn('读取用户资料失败', e);
+    }
+  };
+  onMount(loadUserProfile);
+
+  // 显示逻辑：优先“我的资料”，若为空则回退到发票中保存的公司信息/制单人
+  $: headerCompanyName = String((userProfile.company && userProfile.company.trim()) || invoice?.companyInfo?.name || '');
+  $: headerAddress = String((userProfile.address && userProfile.address.trim()) || invoice?.companyInfo?.address || '');
+  $: headerPhone = String((userProfile.phone && userProfile.phone.trim()) || invoice?.companyInfo?.phone || '');
+  $: displayCreatedBy = String((userProfile.name && userProfile.name.trim()) || invoice?.createdBy || '');
 
   // 使用统一的日期格式化函数
   const formatDate = formatDateUtil;
@@ -87,10 +109,10 @@
 >
   <!-- 公司抬头 -->
   <div class="text-center" data-no-export-nudge style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
-    <h1 style="font-size: 16px; font-weight: bold; margin: 0 0 2px 0; color: #000;">{invoice.companyInfo.name}</h1>
+    <h1 style="font-size: 16px; font-weight: bold; margin: 0 0 2px 0; color: #000;">{headerCompanyName}</h1>
     <div style="font-size: 11px; margin: 1px 0; color: #333;">
-      <span>地址：{invoice.companyInfo.address}</span>
-      <span style="margin-left: 20px;">电话：{invoice.companyInfo.phone}</span>
+      <span>地址：{headerAddress}</span>
+      <span style="margin-left: 20px;">电话：{headerPhone}</span>
     </div>
     <h2 style="font-size: 16px; font-weight: bold; margin: 2px 0 0 0; color: #000; letter-spacing: 8px;">销 售 单</h2>
   </div>
@@ -100,7 +122,7 @@
     <!-- 第一行 -->
     <div class="info-item" style="padding: 2px 4px;"><strong>客户名称：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.name}>{invoice.customerInfo.name}</span></div>
     <div class="info-item" style="padding: 2px 4px;"><strong>客户电话：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.phone || ''}>{invoice.customerInfo.phone || ''}</span></div>
-    <div class="info-item" style="padding: 2px 4px;"><strong>制单人：</strong><span class="nowrap-ellipsis" title={invoice.createdBy}>{invoice.createdBy}</span></div>
+    <div class="info-item" style="padding: 2px 4px;"><strong>制单人：</strong><span class="nowrap-ellipsis" title={displayCreatedBy}>{displayCreatedBy}</span></div>
     <!-- 第二行（与上面共用同一套列轨，保证上下严格对齐） -->
     <div class="info-item" style="padding: 2px 4px;"><strong>客户地址：</strong><span class="nowrap-ellipsis" title={invoice.customerInfo.address || ''}>{invoice.customerInfo.address || ''}</span></div>
     <div class="info-item" style="padding: 2px 4px;"><strong>物流名称：</strong><span class="nowrap-ellipsis"></span></div>

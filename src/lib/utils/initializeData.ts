@@ -118,7 +118,7 @@ function initializeDefaultProduct() {
     // 初始化单位选项
     const storedUnits = localStorage.getItem('product_units');
     if (!storedUnits) {
-      const defaultUnits = ['件', '张', '米', '平方米', '箱', '包', '套'];
+      const defaultUnits = ['张', '件', '米', '平方米', '箱', '包', '套'];
       localStorage.setItem('product_units', JSON.stringify(defaultUnits));
       console.log('✅ 默认单位选项已创建');
     }
@@ -129,18 +129,18 @@ function initializeDefaultProduct() {
 
 /**
  * 获取当前登录用户名称
- * 目前返回固定值"经理"，将来可以从用户登录信息中获取
+ * 从“我的资料”(localStorage.user_info) 读取 name；若无则返回空字符串（不再使用“经理”兜底）
  */
 export function getCurrentUserName(): string {
   try {
     const stored = localStorage.getItem('user_info');
     if (stored) {
       const u = JSON.parse(stored);
-      return (u.name && String(u.name).trim()) || '经理';
+      return (u?.name && String(u.name).trim()) || '';
     }
   } catch (e) {
-    console.warn('读取 user_info 失败，使用默认制单人', e);
+    console.warn('读取 user_info 失败', e);
   }
-  return '经理';
+  return '';
 }
 
