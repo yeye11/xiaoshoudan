@@ -190,12 +190,6 @@
 
 <!-- 操作按钮 -->
 <div class="no-print flex justify-center space-x-4 mt-6 mb-8">
-  <button
-    on:click={() => window.print()}
-    class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors font-medium"
-  >
-    🖨️ 打印/保存PDF
-  </button>
 
   <button
     on:click={exportAsImage}

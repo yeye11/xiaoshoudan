@@ -244,7 +244,7 @@
         on:click={handlePrint}
         class="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
       >
-        打印
+        打印/保存PDF
       </button>
       {#if invoice.status === 'draft'}
         <button
