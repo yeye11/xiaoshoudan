@@ -1,27 +1,28 @@
 <script lang="ts">
   import type { Invoice } from '$lib/types/invoice.ts';
   import { numberToChineseSimple } from '$lib/utils/numberToChinese.ts';
-  import { exportElementAsImage, formatDate as formatDateUtil } from '$lib/utils/imageExport.ts';
+  import { exportElementAsImage, formatDate as formatDateUtil, IMAGE_EXPORT_CONFIG } from '$lib/utils/imageExport.ts';
   import MobileImageExport from './MobileImageExport.svelte';
 
   export let invoice: Invoice;
   export let showActions = true;
+  // 固定布局：在基准宽度（fixedCssWidth）下用绝对像素布局，外层再整体缩放
+  export let fixedLayout: boolean = false;
 
   let salesInvoiceRef: HTMLElement;
   let isExporting = false;
+  const BASE_CSS_WIDTH = IMAGE_EXPORT_CONFIG.fixedCssWidth;
+  $: rootWidth = fixedLayout ? `${BASE_CSS_WIDTH}px` : '100%';
+  $: rootMaxWidth = fixedLayout ? `${BASE_CSS_WIDTH}px` : '600px';
 
   // 格式化金额
-  const formatCurrency = (amount: number): string => {
-    return amount.toFixed(2);
-  };
+  const formatCurrency = (amount: number): string => amount.toFixed(2);
 
   // 使用统一的日期格式化函数
   const formatDate = formatDateUtil;
 
   // 生成空行
-  const generateEmptyRows = (count: number) => {
-    return Array(count).fill(null);
-  };
+  const generateEmptyRows = (count: number) => Array(count).fill(null);
 
   // 导出为图片的函数
   const exportAsImage = async () => {
@@ -81,7 +82,8 @@
 <div
   bind:this={salesInvoiceRef}
   class="sales-invoice print:shadow-none"
-  style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
+  class:fixed-layout={fixedLayout}
+  style="width: {rootWidth}; max-width: {rootMaxWidth}; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; font-family: 'Microsoft YaHei', 'SimSun', serif; background-color: white;"
 >
   <!-- 公司抬头 -->
   <div class="text-center" data-no-export-nudge style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #999;">
@@ -288,7 +290,7 @@
 
   /* 移动端适配 */
   @media (max-width: 768px) {
-    .sales-invoice {
+    .sales-invoice:not(.fixed-layout) {
       width: 100% !important;
       height: auto !important;
       padding: 15px !important;

@@ -5,7 +5,8 @@
   import type { Invoice, Customer } from '$lib/types/invoice.ts';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
+  import { IMAGE_EXPORT_CONFIG } from '$lib/utils/imageExport';
 
   let invoice: Invoice | null = null;
   let customer: Customer | null = null;
@@ -14,10 +15,40 @@
   let error = '';
   let invoiceContainer: HTMLElement | null = null;
 
+  const BASE_WIDTH = IMAGE_EXPORT_CONFIG.fixedCssWidth;
+  let viewportRef: HTMLElement | null = null;
+  let contentRef: HTMLElement | null = null;
+  let scale = 1;
+  const resizeHandler = () => updateScale();
+
   onMount(() => {
-    invoiceId = $page.params.id;
+    invoiceId = $page.params.id as string;
     loadInvoice();
+    // 初次渲染后按设备宽度计算缩放
+    setTimeout(updateScale, 0);
+    window.addEventListener('resize', resizeHandler);
   });
+
+  onDestroy(() => {
+    window.removeEventListener('resize', resizeHandler);
+  });
+
+  $: if (invoice) {
+    tick().then(() => updateScale());
+  }
+
+  async function updateScale() {
+    await tick();
+    // 取设备/视口宽度，避免内部测量为 0
+    const vw = typeof window !== 'undefined' ? (window.innerWidth || 0) : 0;
+    const docW = typeof document !== 'undefined' ? (document.documentElement?.clientWidth || 0) : 0;
+    const containerW = viewportRef?.clientWidth || 0;
+    const available = Math.max(containerW, docW, vw);
+    const next = Math.min(1, Math.max(0.1, available / BASE_WIDTH));
+    const debug = { available, BASE_WIDTH, containerW, docW, vw, contentH: contentRef?.offsetHeight || 0, scale: next };
+    console.debug('[invoice-scale]', debug);
+    scale = Number.isFinite(next) && next > 0 ? next : 1;
+  }
 
   const loadInvoice = () => {
     try {
@@ -34,11 +65,11 @@
         }
 
         // 加载客户信息
-        if (invoice.customerId) {
+        if (invoice && invoice.customerId) {
           const storedCustomers = localStorage.getItem('customers');
           if (storedCustomers) {
             const customers: Customer[] = JSON.parse(storedCustomers);
-            customer = customers.find(c => c.id === invoice.customerId) || null;
+            customer = customers.find(c => c.id === invoice!.customerId) || null;
           }
         }
       } else {
@@ -83,30 +114,27 @@
     return `¥${amount.toFixed(2)}`;
   };
 
-  // 格式化日期
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('zh-CN');
-  };
-
   // 获取状态显示
   const getStatusDisplay = (status: string) => {
     const statusMap = {
-      'draft': { name: '草稿', color: 'text-yellow-600 bg-yellow-100' },
-      'sent': { name: '已发送', color: 'text-blue-600 bg-blue-100' },
-      'paid': { name: '已付款', color: 'text-green-600 bg-green-100' },
-      'cancelled': { name: '已取消', color: 'text-red-600 bg-red-100' }
-    };
-    return statusMap[status] || statusMap['draft'];
+      draft: { name: '草稿', color: 'text-yellow-600 bg-yellow-100' },
+      sent: { name: '已发送', color: 'text-blue-600 bg-blue-100' },
+      paid: { name: '已付款', color: 'text-green-600 bg-green-100' },
+      cancelled: { name: '已取消', color: 'text-red-600 bg-red-100' }
+    } as const;
+    const key = status as keyof typeof statusMap;
+    return statusMap[key] ?? statusMap.draft;
   };
 
   // 获取支付状态显示
   const getPaymentStatusDisplay = (paymentStatus: string) => {
     const statusMap = {
-      'unpaid': { name: '未付款', color: 'text-red-600' },
-      'partial': { name: '部分付款', color: 'text-yellow-600' },
-      'paid': { name: '已付款', color: 'text-green-600' }
-    };
-    return statusMap[paymentStatus] || statusMap['unpaid'];
+      unpaid: { name: '未付款', color: 'text-red-600' },
+      partial: { name: '部分付款', color: 'text-yellow-600' },
+      paid: { name: '已付款', color: 'text-green-600' }
+    } as const;
+    const key = paymentStatus as keyof typeof statusMap;
+    return statusMap[key] ?? statusMap.unpaid;
   };
 </script>
 
@@ -159,7 +187,11 @@
   {:else if invoice}
     <!-- 使用专业的销售单格式 -->
     <div bind:this={invoiceContainer} class="bg-white rounded-lg shadow-sm border overflow-hidden">
-      <SalesInvoice {invoice} showActions={false} />
+      <div bind:this={viewportRef} style="position: relative; width: 100%; display: flex; justify-content: center;">
+        <div bind:this={contentRef} style="width: {BASE_WIDTH}px; transform: scale({scale}); transform-origin: top center;">
+          <SalesInvoice {invoice} showActions={false} fixedLayout={true} />
+        </div>
+      </div>
     </div>
 
     <!-- 移动端图片导出按钮 -->
