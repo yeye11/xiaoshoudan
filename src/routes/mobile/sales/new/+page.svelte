@@ -51,11 +51,60 @@
     }
   };
 
+  let pendingCartItemChecked = false;
+  let processedCartItems = new Set<string>(); // 记录已处理的购物车项目
+
   onMount(() => {
     loadData();
     refreshCompanyInfoFromProfile();
-    initializeInvoice();
+
+    // 检查是否有保存的草稿
+    const savedDraft = sessionStorage.getItem('salesInvoiceDraft');
+    if (savedDraft) {
+      try {
+        invoice = JSON.parse(savedDraft);
+        console.log('📋 恢复销售单草稿，商品数量:', invoice?.items.length);
+      } catch (e) {
+        console.error('恢复草稿失败:', e);
+        initializeInvoice();
+      }
+    } else {
+      initializeInvoice();
+    }
   });
+
+  // 检查是否有待处理的购物车项目（从产品选择页"保存"按钮返回）
+  $: if (invoice && !pendingCartItemChecked) {
+    try {
+      const itemData = sessionStorage.getItem('pendingCartItem');
+      const itemIndex = sessionStorage.getItem('pendingCartItemIndex');
+
+      if (itemData) {
+        const item = JSON.parse(itemData) as InvoiceItem;
+        const idx = parseInt(itemIndex || '-1', 10);
+
+        if (idx >= 0 && idx < invoice.items.length) {
+          // 更新现有项目
+          invoice.items[idx] = item;
+        } else {
+          // 添加新项目
+          invoice.items.push(item);
+        }
+
+        updateTotalAmount();
+
+        // 清理 sessionStorage
+        sessionStorage.removeItem('pendingCartItem');
+        sessionStorage.removeItem('pendingCartItemIndex');
+        sessionStorage.removeItem('pendingCustomerId');
+      }
+
+      pendingCartItemChecked = true;
+    } catch (e) {
+      console.error('处理待处理购物车项目失败:', e);
+      pendingCartItemChecked = true;
+    }
+  }
 
   const loadData = () => {
     try {
@@ -76,6 +125,7 @@
   };
 
   const initializeInvoice = () => {
+    console.log('🔄 初始化销售单');
     invoice = createEmptyInvoice(companyInfo);
     // 初始化为不含默认商品
     invoice.items = [];
@@ -141,9 +191,8 @@
       item.productId = product.id;
       item.productName = product.name;
 
-      // 设置默认规格
-      const defaultSpec = product.specifications.find(s => s.isDefault);
-      item.specification = defaultSpec ? defaultSpec.name : '';
+      // 不自动设置规格，让用户手动选择
+      item.specification = '';
 
       // 设置默认价格
       const defaultPrice = product.prices.find(p => p.type === 'sale' && p.isDefault);
@@ -159,8 +208,8 @@
       newItem.productId = product.id;
       newItem.productName = product.name;
 
-      const defaultSpec = product.specifications.find(s => s.isDefault);
-      newItem.specification = defaultSpec ? defaultSpec.name : '';
+      // 不自动设置规格，让用户手动选择
+      newItem.specification = '';
 
       const defaultPrice = product.prices.find(p => p.type === 'sale' && p.isDefault);
       newItem.unitPrice = defaultPrice ? defaultPrice.price : 0;
@@ -184,10 +233,19 @@
     updateTotalAmount();
   };
 
+  // 保存草稿到 sessionStorage
+  const saveDraft = () => {
+    if (invoice) {
+      sessionStorage.setItem('salesInvoiceDraft', JSON.stringify(invoice));
+      console.log('💾 保存销售单草稿，商品数量:', invoice.items.length);
+    }
+  };
+
   // 更新总金额
   const updateTotalAmount = () => {
     if (!invoice) return;
     invoice.totalAmount = calculateTotalAmount(invoice.items);
+    saveDraft(); // 每次更新总金额时保存草稿
   };
 
   // 添加商品项目
@@ -292,6 +350,10 @@
       // 保存到localStorage
       localStorage.setItem('invoice_history', JSON.stringify(invoices));
 
+      // 清除草稿
+      sessionStorage.removeItem('salesInvoiceDraft');
+      console.log('🗑️ 清除销售单草稿');
+
       // 返回销售单列表
       goto('/mobile/sales');
     } catch (error) {
@@ -315,6 +377,50 @@
   // 监听从选择产品页返回的选择结果
   $: if ($page?.url && products.length > 0 && invoice) {
     const sp = $page.url.searchParams;
+
+    // 处理新的 cartItem 参数（来自编辑模态框）
+    const cartItemData = sp.get('cartItem');
+    if (cartItemData) {
+      // 生成唯一标识，防止重复处理
+      const cartItemKey = `${cartItemData}_${sp.get('index')}`;
+
+      console.log('🔍 检测到 cartItem:', { cartItemKey, hasProcessed: processedCartItems.has(cartItemKey), currentItems: invoice.items.length });
+
+      if (!processedCartItems.has(cartItemKey)) {
+        processedCartItems.add(cartItemKey);
+
+        try {
+          const item = JSON.parse(decodeURIComponent(cartItemData)) as InvoiceItem;
+          const idx = parseInt(sp.get('index') || '-1', 10);
+          const itemIndex = isNaN(idx) ? -1 : idx;
+
+          console.log('✅ 处理 cartItem:', { itemIndex, productName: item.productName, beforeCount: invoice.items.length });
+
+          if (itemIndex >= 0 && itemIndex < invoice.items.length) {
+            // 更新现有项目
+            invoice.items[itemIndex] = item;
+            console.log('📝 更新现有项目:', itemIndex);
+          } else {
+            // 添加新项目
+            invoice.items.push(item);
+            console.log('➕ 添加新项目，当前总数:', invoice.items.length);
+          }
+
+          updateTotalAmount();
+
+          // 清理URL参数
+          const params = new URLSearchParams($page.url.search);
+          params.delete('cartItem');
+          params.delete('index');
+          const qs = params.toString();
+          goto(`${$page.url.pathname}${qs ? '?' + qs : ''}`, { replaceState: true, noScroll: true, keepFocus: true });
+        } catch (e) {
+          console.error('解析购物车项目失败:', e);
+        }
+      }
+    }
+
+    // 处理旧的 pickProductId 参数（向后兼容）
     const picked = sp.get('pickProductId');
     if (picked) {
       const idx = parseInt(sp.get('index') || '-1', 10);
@@ -496,7 +602,10 @@
   <div class="flex space-x-3 pb-6">
     <button
       type="button"
-      on:click={() => goto('/mobile/sales')}
+      on:click={() => {
+        sessionStorage.removeItem('salesInvoiceDraft');
+        goto('/mobile/sales');
+      }}
       class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
     >
       取消

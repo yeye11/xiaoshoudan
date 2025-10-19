@@ -1,6 +1,8 @@
 <script lang="ts">
   import MobileHeader from '$lib/components/MobileHeader.svelte';
-  import type { Product } from '$lib/types/invoice.ts';
+  import ProductEditModal from '$lib/components/ProductEditModal.svelte';
+  import type { Product, InvoiceItem } from '$lib/types/invoice.ts';
+  import { createEmptyInvoiceItem, calculateItemAmount } from '$lib/types/invoice.ts';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -8,7 +10,15 @@
   let products: Product[] = [];
   let filtered: Product[] = [];
   let keyword = '';
-  let showSearch = true;
+
+  // 购物车状态
+  let cart: InvoiceItem[] = [];
+
+  // 编辑模态框状态
+  let showEditModal = false;
+  let editingProduct: Product | null = null;
+  let editingItem: InvoiceItem | null = null;
+  let editingCartIndex = -1; // 正在编辑的购物车项目索引
 
   onMount(() => {
     loadProducts();
@@ -39,11 +49,96 @@
     );
   };
 
-  const pick = (productId: string) => {
-    const idx = Number($page.url.searchParams.get('index') || -1);
-    const cid = $page.url.searchParams.get('customerId');
-    // 返回到新建销售单页面并携带选择结果，并保留客户ID
-    goto(`/mobile/sales/new?pickProductId=${encodeURIComponent(productId)}&index=${idx}${cid ? `&customerId=${cid}` : ''}`);
+  const pick = (product: Product) => {
+    editingProduct = product;
+    editingItem = createEmptyInvoiceItem();
+    editingItem.productId = product.id;
+    editingItem.productName = product.name;
+    editingItem.unit = product.unit;
+    editingItem.quantity = 1;
+
+    // 设置默认单价
+    const defaultPrice = product.prices.find(p => p.type === 'sale' && p.isDefault) || product.prices[0];
+    if (defaultPrice) {
+      editingItem.unitPrice = defaultPrice.price;
+    }
+
+    // 规格不设置默认值，用户可以选择或不选
+    editingItem.specification = '';
+
+    // 计算金额
+    editingItem.amount = calculateItemAmount(editingItem.quantity, editingItem.unitPrice);
+    showEditModal = true;
+  };
+
+  const handleClose = () => {
+    showEditModal = false;
+    editingProduct = null;
+    editingItem = null;
+  };
+
+  const saveProductChanges = () => {
+    // 保存产品的规格变化到 localStorage
+    if (editingProduct) {
+      try {
+        const stored = localStorage.getItem('products');
+        const allProducts: Product[] = stored ? JSON.parse(stored) : [];
+        const productIndex = allProducts.findIndex(p => p.id === editingProduct.id);
+
+        if (productIndex >= 0) {
+          allProducts[productIndex] = editingProduct;
+          localStorage.setItem('products', JSON.stringify(allProducts));
+          console.log('✅ 产品规格已保存');
+        }
+      } catch (e) {
+        console.error('保存产品失败:', e);
+      }
+    }
+  };
+
+  const handleSave = (event: CustomEvent) => {
+    const { item } = event.detail;
+    if (!item) return;
+
+    try {
+      const idx = Number($page?.url?.searchParams?.get('index') || -1);
+      const cid = $page?.url?.searchParams?.get('customerId');
+
+      // 保存产品的规格变化
+      saveProductChanges();
+
+      // 将编辑的项目保存到 sessionStorage
+      const itemData = JSON.stringify(item);
+      sessionStorage.setItem('pendingCartItem', itemData);
+      sessionStorage.setItem('pendingCartItemIndex', idx.toString());
+      if (cid) {
+        sessionStorage.setItem('pendingCustomerId', cid);
+      }
+
+      // 关闭弹窗，停留在当前页面
+      handleClose();
+    } catch (e) {
+      console.error('保存项目失败:', e);
+    }
+  };
+
+  const handleSaveAndReturn = (event: CustomEvent) => {
+    const { item } = event.detail;
+    if (!item) return;
+
+    try {
+      const idx = Number($page?.url?.searchParams?.get('index') || -1);
+      const cid = $page?.url?.searchParams?.get('customerId');
+
+      // 保存产品的规格变化
+      saveProductChanges();
+
+      // 编码购物车项目为 URL 参数
+      const itemData = encodeURIComponent(JSON.stringify(item));
+      goto(`/mobile/sales/new?cartItem=${itemData}&index=${idx}${cid ? `&customerId=${cid}` : ''}`);
+    } catch (e) {
+      console.error('保存项目失败:', e);
+    }
   };
 
   // 响应式搜索
@@ -81,7 +176,7 @@
     <div class="space-y-2">
       {#each filtered as p}
         <button class="w-full text-left bg-white rounded-lg p-4 shadow-sm border hover:shadow-md transition-shadow"
-                on:click={() => pick(p.id)} aria-label={`选择 ${p.name}`}>
+                on:click={() => pick(p)} aria-label={`选择 ${p.name}`}>
           <div class="flex items-start justify-between">
             <div class="flex-1">
               <div class="font-medium text-gray-900">{p.name}</div>
@@ -113,3 +208,12 @@
   {/if}
 </div>
 
+<!-- 使用独立的编辑模态框组件 -->
+<ProductEditModal
+  bind:show={showEditModal}
+  bind:product={editingProduct}
+  bind:item={editingItem}
+  on:close={handleClose}
+  on:save={handleSave}
+  on:saveAndReturn={handleSaveAndReturn}
+/>

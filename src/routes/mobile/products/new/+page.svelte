@@ -97,15 +97,8 @@
       // 清理价格数据（移除无效的价格）
       product.prices = product.prices.filter(price => price.price > 0);
 
-      // 如果没有规格，添加一个默认规格
-      if (product.specifications.length === 0) {
-        product.specifications.push({
-          ...createEmptySpecification(),
-          name: '默认规格',
-          isDefault: true
-        });
-      } else {
-        // 确保至少有一个默认规格
+      // 如果有规格，确保至少有一个默认规格
+      if (product.specifications.length > 0) {
         if (!product.specifications.some(spec => spec.isDefault)) {
           product.specifications[0].isDefault = true;
         }

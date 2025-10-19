@@ -78,13 +78,7 @@ function initializeDefaultProduct() {
       name: '默认产品',
       barcode: '',
       category: '装饰材料',
-      specifications: [
-        {
-          id: crypto.randomUUID(),
-          name: '1220*2440',
-          isDefault: true
-        }
-      ],
+      specifications: [],
       attributes: [],
       unit: '件',
       prices: [
