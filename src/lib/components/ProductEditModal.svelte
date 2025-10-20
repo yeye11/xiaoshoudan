@@ -22,10 +22,6 @@
     dispatch('save', { item });
   };
 
-  const saveAndReturn = () => {
-    dispatch('saveAndReturn', { item });
-  };
-
   const openNewSpecModal = () => {
     newSpecName = '';
     newSpecCode = '';
@@ -52,6 +48,22 @@
       console.log('添加规格后:', product.specifications);
       item.specification = newSpecName.trim();
       closeNewSpecModal();
+    }
+  };
+
+  // 处理输入框聚焦时清空默认值0
+  const handleFocus = (event: FocusEvent) => {
+    const input = event.target as HTMLInputElement;
+    if (input.value === '0') {
+      input.value = '';
+    }
+  };
+
+  // 处理输入框失焦时如果为空则设置为0
+  const handleBlur = (event: FocusEvent) => {
+    const input = event.target as HTMLInputElement;
+    if (input.value === '') {
+      item!.unitPrice = 0;
     }
   };
 
@@ -136,112 +148,118 @@
       </div>
 
       <!-- 内容区域 -->
-      <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <!-- 库存数量 -->
-        <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
-          <div class="text-sm text-orange-700 font-medium">库存数量</div>
-          <div class="text-2xl font-bold text-orange-600 mt-1">0</div>
-        </div>
-
-        <!-- 单价 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">单价</label>
-          <input
-            type="number"
-            bind:value={item.unitPrice}
-            min="0"
-            step="0.01"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-        </div>
-
-        <!-- 单位 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">单位</label>
-          <select
-            bind:value={item.unit}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          >
-            <option value="件">件</option>
-            <option value="个">个</option>
-            <option value="台">台</option>
-            <option value="套">套</option>
-            <option value="箱">箱</option>
-            <option value="盒">盒</option>
-            <option value="瓶">瓶</option>
-            <option value="包">包</option>
-            <option value="袋">袋</option>
-            <option value="张">张</option>
-            <option value="米">米</option>
-            <option value="千克">千克</option>
-            <option value="克">克</option>
-            <option value="升">升</option>
-            <option value="毫升">毫升</option>
-          </select>
-        </div>
-
-        <!-- 规格型号 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">规格型号</label>
-          <div class="flex flex-wrap gap-2">
-            {#if product.specifications && product.specifications.length > 0}
-              {#each product.specifications as spec (spec.id)}
-                <button
-                  type="button"
-                  on:click={() => item.specification = spec.name}
-                  class="w-35 h-10 flex items-center justify-center text-sm rounded-lg border-2 transition-colors overflow-hidden {item.specification === spec.name ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'}"
-                >
-                  <span class="truncate px-2">{spec.name}</span>
-                </button>
-              {/each}
-            {/if}
-            <button
-              type="button"
-              on:click={openNewSpecModal}
-              class="w-24 h-10 flex items-center justify-center text-sm rounded-lg border-2 border-dashed border-gray-300 bg-white text-gray-500 hover:border-orange-500 hover:text-orange-500 transition-colors"
-            >
-              + 新建规格
-            </button>
-          </div>
-        </div>
-
-        <!-- 销售数量 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">销售数量</label>
-          <div class="flex items-center gap-3">
-            <button
-              type="button"
-              on:click={() => {
-                if (item.quantity > 1) {
-                  item.quantity--;
-                }
-              }}
-              class="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              -
-            </button>
+      <div class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        <!-- 第一行：单价和金额 -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- 单价 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">单价</label>
             <input
               type="number"
-              bind:value={item.quantity}
-              min="1"
-              step="1"
-              class="flex-1 px-3 py-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              bind:value={item.unitPrice}
+              on:focus={handleFocus}
+              on:blur={handleBlur}
+              min="0"
+              step="0.01"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
-            <button
-              type="button"
-              on:click={() => {
-                item.quantity++;
-              }}
-              class="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              +
-            </button>
+          </div>
+
+          <!-- 金额 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">金额</label>
+            <input
+              type="text"
+              value={item.amount.toFixed(2)}
+              readonly
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+            />
           </div>
         </div>
+
+        <!-- 第二行：产品名称、单位、数量 -->
+        <div class="grid grid-cols-[1fr_auto_auto] gap-2 items-end">
+          <!-- 产品名称 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">产品名称</label>
+            <input
+              type="text"
+              bind:value={item.productName}
+              readonly
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+            />
+          </div>
+
+          <!-- 单位 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">单位</label>
+            <select
+              bind:value={item.unit}
+              class="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              <option value="张">张</option>
+              <option value="件">件</option>
+              <option value="个">个</option>
+              <option value="台">台</option>
+              <option value="套">套</option>
+              <option value="箱">箱</option>
+              <option value="盒">盒</option>
+              <option value="瓶">瓶</option>
+              <option value="包">包</option>
+              <option value="袋">袋</option>
+              <option value="米">米</option>
+              <option value="千克">千克</option>
+              <option value="克">克</option>
+              <option value="升">升</option>
+              <option value="毫升">毫升</option>
+            </select>
+          </div>
+
+          <!-- 数量 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">数量</label>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                on:click={() => {
+                  if (item.quantity > 1) {
+                    item.quantity--;
+                  }
+                }}
+                class="w-8 h-[42px] flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-lg"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                bind:value={item.quantity}
+                min="1"
+                step="1"
+                class="w-14 px-1 py-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                on:click={() => {
+                  item.quantity++;
+                }}
+                class="w-8 h-[42px] flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-lg"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 规格型号（如果有的话，显示为小字） -->
+        {#if product.specifications && product.specifications.length > 0}
+          <div class="text-xs text-gray-500 -mt-1">
+            规格：{product.specifications.map(spec => spec.name).join('、')}
+          </div>
+        {/if}
       </div>
 
       <!-- 底部操作栏 -->
-      <div class="sticky bottom-0 bg-white border-t border-gray-200 px-4 pt-3 pb-24 flex-shrink-0">
+      <div class="sticky bottom-0 bg-white border-t border-gray-200 px-4 pt-3 pb-32 flex-shrink-0 shadow-lg">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,22 +268,13 @@
             <span class="text-lg font-bold text-gray-900">¥{item.amount.toFixed(2)}</span>
           </div>
         </div>
-        <div class="flex gap-3">
-          <button
-            type="button"
-            on:click={save}
-            class="flex-1 bg-teal-500 text-white py-3 rounded-lg font-medium hover:bg-teal-600 transition-colors"
-          >
-            保存
-          </button>
-          <button
-            type="button"
-            on:click={saveAndReturn}
-            class="flex-1 bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors"
-          >
-            保存并返回
-          </button>
-        </div>
+        <button
+          type="button"
+          on:click={save}
+          class="w-full bg-teal-500 text-white py-3 rounded-lg font-medium hover:bg-teal-600 transition-colors"
+        >
+          保存
+        </button>
       </div>
     </div>
   </div>

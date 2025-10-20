@@ -286,10 +286,8 @@
   // 删除商品项目
   const removeItem = (index: number) => {
     if (!invoice) return;
-    if (invoice.items.length > 1) {
-      invoice.items.splice(index, 1);
-      updateTotalAmount();
-    }
+    invoice.items.splice(index, 1);
+    updateTotalAmount();
   };
 
   // 复制商品项目
@@ -520,81 +518,41 @@
       <p class="text-red-500 text-sm">{errors.items}</p>
     {/if}
 
-    <div class="space-y-3">
+    <div class="space-y-2">
       {#each invoice.items as item, index}
-        <div class="border border-gray-200 rounded-lg p-3">
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1">
-              <div class="text-sm">
-                <span class="font-medium text-gray-900">{item.productName || '未选择商品'}</span>
-                {#if item.specification}
-                  <span class="text-gray-600 ml-2">规格: {item.specification}</span>
-                {/if}
-                <span class="text-gray-600 ml-2">单位: {item.unit}</span>
-              </div>
+        <div class="border border-gray-200 rounded-lg p-2.5 bg-white">
+          <!-- 第一行：产品名称 单位 数量 删除按钮 -->
+          <div class="flex items-center justify-between mb-1.5 text-sm">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <span class="font-medium text-gray-900 truncate">{item.productName || '未选择商品'}</span>
+              <span class="text-gray-500 text-xs whitespace-nowrap">单位:{item.unit}</span>
             </div>
-            <div class="flex space-x-2">
+            <div class="flex items-center gap-2">
+              <div class="text-xs text-gray-600 whitespace-nowrap">
+                数量: <span class="font-medium text-gray-900">{item.quantity}</span>
+              </div>
               <button
-                on:click={() => editItem(index)}
-                class="p-1 text-blue-500 hover:bg-blue-50 rounded"
+                type="button"
+                on:click={() => removeItem(index)}
+                class="text-red-500 hover:text-red-700 p-1"
+                title="删除"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                 </svg>
               </button>
-              <button
-                on:click={() => duplicateItem(index)}
-                class="p-1 text-green-500 hover:bg-green-50 rounded"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-              </button>
-              {#if invoice.items.length > 1}
-                <button
-                  on:click={() => removeItem(index)}
-                  class="p-1 text-red-500 hover:bg-red-50 rounded"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                  </svg>
-                </button>
-              {/if}
             </div>
           </div>
 
-          <!-- 数量和价格 -->
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">数量</label>
-              <input
-                type="number"
-                bind:value={item.quantity}
-                on:input={() => updateItemAmount(index)}
-                min="0"
-                step="1"
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-500 focus:border-transparent"
-              />
+          <!-- 第二行：单价和金额 -->
+          <div class="flex items-center justify-between text-xs pr-7">
+            <div class="text-gray-600">
+              单价: <span class="font-medium text-gray-900">¥{formatCurrency(item.unitPrice)}</span>
             </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">单价</label>
-              <input
-                type="number"
-                bind:value={item.unitPrice}
-                on:input={() => updateItemAmount(index)}
-                min="0"
-                step="0.01"
-                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">金额</label>
-              <div class="px-2 py-1 text-sm bg-gray-50 rounded font-medium">
-                {formatCurrency(item.amount)}
-              </div>
+            <div class="text-gray-600">
+              金额: <span class="font-bold text-red-600 text-sm">¥{formatCurrency(item.amount)}</span>
             </div>
           </div>
-
         </div>
       {/each}
     </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   // 底部导航项目
   const navItems = [
@@ -37,6 +38,12 @@
   $: currentPath = $page.url.pathname;
   $: activeItem = navItems.find(item => currentPath.startsWith(item.href)) || navItems[0];
 
+  // 导航处理函数
+  const handleNavClick = (href: string, event: MouseEvent) => {
+    event.preventDefault();
+    goto(href);
+  };
+
   // 移动端布局始终显示底部导航
 </script>
 
@@ -50,8 +57,8 @@
   <nav class="fixed bottom-0 left-0 right-0 bg-white z-50" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
     <div class="flex items-center justify-around h-16">
       {#each navItems as item}
-        <a
-          href={item.href}
+        <button
+          on:click={(e) => handleNavClick(item.href, e)}
           class="flex flex-col items-center justify-center flex-1 py-2 transition-colors duration-200
                  {currentPath.startsWith(item.href) ? item.activeColor : 'text-gray-500'}"
         >
@@ -59,7 +66,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={item.icon}></path>
           </svg>
           <span class="text-xs font-medium">{item.name}</span>
-        </a>
+        </button>
       {/each}
     </div>
   </nav>
