@@ -57,7 +57,11 @@
 
   // 响应式计算金额
   $: if (item) {
-    item.amount = calculateItemAmount(item.quantity, item.unitPrice);
+    const newAmount = calculateItemAmount(item.quantity, item.unitPrice);
+    if (item.amount !== newAmount) {
+      item.amount = newAmount;
+      console.log('更新金额:', item.productName, '数量:', item.quantity, '单价:', item.unitPrice, '金额:', item.amount);
+    }
   }
 </script>
 

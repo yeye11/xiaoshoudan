@@ -71,6 +71,27 @@
     } else {
       initializeInvoice();
     }
+
+    // 检查是否有从产品选择页返回的购物车数据
+    const selectedProducts = sessionStorage.getItem('selectedProducts');
+    if (selectedProducts) {
+      try {
+        const products = JSON.parse(selectedProducts) as InvoiceItem[];
+        console.log('🛒 接收到购物车数据:', products.length, '个商品');
+
+        // 将购物车商品添加到发票
+        if (invoice) {
+          invoice.items = [...invoice.items, ...products];
+          updateTotalAmount();
+          console.log('✅ 已添加购物车商品，当前总数:', invoice.items.length);
+        }
+
+        // 清除 sessionStorage
+        sessionStorage.removeItem('selectedProducts');
+      } catch (e) {
+        console.error('处理购物车数据失败:', e);
+      }
+    }
   });
 
   // 检查是否有待处理的购物车项目（从产品选择页"保存"按钮返回）
