@@ -56,7 +56,7 @@
       {#if showSearch}
         <button
           on:click={handleSearch}
-          class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
+          class="p-2 mr-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
           aria-label="搜索"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,8 +78,6 @@
             </svg>
           </button>
         </slot>
-      {:else}
-        <div class="w-10"></div>
       {/if}
     </div>
   </div>

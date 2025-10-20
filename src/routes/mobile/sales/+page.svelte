@@ -173,10 +173,6 @@
   };
 
   // 导航
-  const createInvoice = () => {
-    goto('/mobile/sales/new');
-  };
-
   const viewInvoice = (invoiceId: string) => {
     goto(`/mobile/sales/${invoiceId}`);
   };
@@ -187,27 +183,14 @@
   }
 </script>
 
-<MobileHeader 
-  title="销售" 
+<MobileHeader
+  title="销售"
   showBack={true}
   showSearch={true}
-  showActions={true}
+  showActions={false}
   backgroundColor="bg-red-500"
   on:search={toggleSearch}
-  on:action={createInvoice}
->
-  <div slot="actions">
-    <button
-      on:click={createInvoice}
-      class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
-      aria-label="创建销售单"
-    >
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-      </svg>
-    </button>
-  </div>
-</MobileHeader>
+/>
 
 <!-- 搜索栏 -->
 {#if showSearch}
@@ -327,16 +310,8 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
       </svg>
       <p class="text-gray-500 mb-4">
-        {searchKeyword || filterStatus !== 'all' ? '暂时没有数据哦~' : '还没有销售单'}
+        {searchKeyword || filterStatus !== 'all' ? '暂时没有数据哦~' : '还没有销售单，请从客户页面创建'}
       </p>
-      {#if !searchKeyword && filterStatus === 'all'}
-        <button
-          on:click={createInvoice}
-          class="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
-        >
-          创建第一个销售单
-        </button>
-      {/if}
     </div>
   {:else}
     <div class="space-y-3">
