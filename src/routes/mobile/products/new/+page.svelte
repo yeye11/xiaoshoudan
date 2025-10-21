@@ -13,27 +13,30 @@
   // 选择器状态
   let showCategoryPicker = false;
   let showUnitPicker = false;
-  let showSpecificationManager = false;
-  let showPriceManager = false;
 
   // 选项数据
   let categories: string[] = ['未分类', '装饰材料', '建筑材料', '五金配件'];
   let units: string[] = ['张', '件', '个', '套', '米', '平方米', '立方米', '吨', '公斤', '盒', '包'];
 
-  // 当前编辑的规格和价格
-  let editingSpecification: ProductSpecification | null = null;
-  let editingPrice: ProductPrice | null = null;
-
   onMount(() => {
     loadOptions();
-    // 默认添加一个规格和价格
+    // 默认添加一个规格
     if (product.specifications.length === 0) {
       product.specifications.push(createEmptySpecification());
     }
-    if (product.prices.length === 0) {
-      product.prices.push(createEmptyPrice('sale'));
-    }
+    // 确保三个价格类型都存在
+    ensureAllPriceTypes();
   });
+
+  // 确保三个价格类型都存在
+  const ensureAllPriceTypes = () => {
+    const priceTypes: Array<'sale' | 'purchase' | 'wholesale'> = ['sale', 'purchase', 'wholesale'];
+    priceTypes.forEach(type => {
+      if (!product.prices.find(p => p.type === type)) {
+        product.prices.push(createEmptyPrice(type));
+      }
+    });
+  };
 
   const loadOptions = () => {
     try {
@@ -251,35 +254,39 @@
   };
 
   // 价格管理
-  const addPrice = (type: 'sale' | 'purchase' | 'wholesale' = 'sale') => {
-    product.prices.push(createEmptyPrice(type));
-  };
 
-  const removePrice = (index: number) => {
-    if (product.prices.length > 1) {
-      product.prices.splice(index, 1);
+  // 根据类型设置默认价格
+  const setDefaultPriceByType = (type: 'sale' | 'purchase' | 'wholesale') => {
+    const priceIndex = product.prices.findIndex(p => p.type === type);
+    if (priceIndex !== -1) {
+      product.prices.forEach((price, i) => {
+        if (price.type === type) {
+          price.isDefault = i === priceIndex;
+        }
+      });
     }
   };
 
-  const setDefaultPrice = (index: number) => {
-    const priceType = product.prices[index].type;
-    product.prices.forEach((price, i) => {
-      if (price.type === priceType) {
-        price.isDefault = i === index;
-      }
-    });
+  // 获取指定类型的价格对象
+  const getPriceByType = (type: 'sale' | 'purchase' | 'wholesale') => {
+    return product.prices.find(p => p.type === type);
+  };
+
+  // 更新指定类型的价格值
+  const updatePriceByType = (type: 'sale' | 'purchase' | 'wholesale', value: number) => {
+    const price = product.prices.find(p => p.type === type);
+    if (price) {
+      price.price = value;
+    }
   };
 
   // 标签管理
   const addTag = () => {
-    const newTag = prompt('请输入标签:');
-    if (newTag && newTag.trim() && !product.tags.includes(newTag.trim())) {
-      product.tags.push(newTag.trim());
-    }
+    product.tags = [...product.tags, ''];
   };
 
   const removeTag = (index: number) => {
-    product.tags.splice(index, 1);
+    product.tags = product.tags.filter((_, i) => i !== index);
   };
 
   // 生成条形码
@@ -363,18 +370,24 @@
     <!-- 产品分类 -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">产品分类</label>
-      <button
-        type="button"
-        on:click={() => showCategoryPicker = true}
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-left focus:ring-2 focus:ring-orange-500 focus:border-transparent flex items-center justify-between"
-      >
-        <span class="{product.category ? 'text-gray-900' : 'text-gray-500'}">
-          {product.category || '请选择产品分类'}
-        </span>
-        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-      </button>
+      <div class="flex items-center gap-2">
+        <input
+          type="text"
+          bind:value={product.category}
+          placeholder="请输入或选择产品分类"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        />
+        <button
+          type="button"
+          on:click={() => showCategoryPicker = true}
+          class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          aria-label="选择产品分类"
+        >
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- 单位 -->
@@ -382,19 +395,24 @@
       <label class="block text-sm font-medium text-gray-700 mb-1">
         单位
       </label>
-      <button
-        type="button"
-        on:click={() => showUnitPicker = true}
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-left focus:ring-2 focus:ring-orange-500 focus:border-transparent flex items-center justify-between
-               {errors.unit ? 'border-red-500' : ''}"
-      >
-        <span class="{product.unit ? 'text-gray-900' : 'text-gray-500'}">
-          {product.unit || '请选择单位'}
-        </span>
-        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-      </button>
+      <div class="flex items-center gap-2">
+        <input
+          type="text"
+          bind:value={product.unit}
+          placeholder="请输入或选择单位"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent
+                 {errors.unit ? 'border-red-500' : ''}"
+        />
+        <button
+          type="button"
+          on:click={() => showUnitPicker = true}
+          class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+      </div>
       {#if errors.unit}
         <p class="text-red-500 text-sm mt-1">{errors.unit}</p>
       {/if}
@@ -453,70 +471,78 @@
 
   <!-- 价格管理 -->
   <div class="bg-white rounded-lg p-4 shadow-sm border space-y-4">
-    <div class="flex items-center justify-between">
-      <h3 class="font-medium text-gray-900">价格管理</h3>
-      <div class="flex space-x-2">
-        <button
-          type="button"
-          on:click={() => addPrice('sale')}
-          class="text-orange-500 text-sm font-medium"
-        >
-          + 销售价
-        </button>
-        <button
-          type="button"
-          on:click={() => addPrice('purchase')}
-          class="text-orange-500 text-sm font-medium"
-        >
-          + 采购价
-        </button>
-      </div>
-    </div>
+    <h3 class="font-medium text-gray-900">价格管理</h3>
 
     {#if errors.prices}
       <p class="text-red-500 text-sm">{errors.prices}</p>
     {/if}
 
     <div class="space-y-3">
-      {#each product.prices as price, index}
-        <div class="flex items-center space-x-2">
-          <select
-            bind:value={price.type}
-            class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          >
-            <option value="sale">销售价</option>
-            <option value="purchase">采购价</option>
-            <option value="wholesale">批发价</option>
-          </select>
-          <input
-            type="number"
-            bind:value={price.price}
-            placeholder="0.00"
-            step="0.01"
-            min="0"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-          <button
-            type="button"
-            on:click={() => setDefaultPrice(index)}
-            class="px-3 py-2 text-sm rounded-lg transition-colors
-                   {price.isDefault ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-          >
-            默认
-          </button>
-          {#if product.prices.length > 1}
-            <button
-              type="button"
-              on:click={() => removePrice(index)}
-              class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </button>
-          {/if}
-        </div>
-      {/each}
+      <!-- 吊牌价 -->
+      <div class="flex items-center space-x-2">
+        <div class="w-16 text-sm text-gray-700 flex-shrink-0">吊牌价</div>
+        <input
+          type="number"
+          value={getPriceByType('sale')?.price ?? 0}
+          on:input={(e) => updatePriceByType('sale', parseFloat(e.currentTarget.value) || 0)}
+          placeholder="0"
+          step="0.01"
+          min="0"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        />
+        <button
+          type="button"
+          on:click={() => setDefaultPriceByType('sale')}
+          class="px-3 py-2 text-sm rounded-lg transition-colors flex-shrink-0
+                 {getPriceByType('sale')?.isDefault ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+        >
+          默认
+        </button>
+      </div>
+
+      <!-- 采购价 -->
+      <div class="flex items-center space-x-2">
+        <div class="w-16 text-sm text-gray-700 flex-shrink-0">采购价</div>
+        <input
+          type="number"
+          value={getPriceByType('purchase')?.price ?? 0}
+          on:input={(e) => updatePriceByType('purchase', parseFloat(e.currentTarget.value) || 0)}
+          placeholder="0"
+          step="0.01"
+          min="0"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        />
+        <button
+          type="button"
+          on:click={() => setDefaultPriceByType('purchase')}
+          class="px-3 py-2 text-sm rounded-lg transition-colors flex-shrink-0
+                 {getPriceByType('purchase')?.isDefault ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+        >
+          默认
+        </button>
+      </div>
+
+      <!-- 批发价 -->
+      <div class="flex items-center space-x-2">
+        <div class="w-16 text-sm text-gray-700 flex-shrink-0">批发价</div>
+        <input
+          type="number"
+          value={getPriceByType('wholesale')?.price ?? 0}
+          on:input={(e) => updatePriceByType('wholesale', parseFloat(e.currentTarget.value) || 0)}
+          placeholder="0"
+          step="0.01"
+          min="0"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        />
+        <button
+          type="button"
+          on:click={() => setDefaultPriceByType('wholesale')}
+          class="px-3 py-2 text-sm rounded-lg transition-colors flex-shrink-0
+                 {getPriceByType('wholesale')?.isDefault ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+        >
+          默认
+        </button>
+      </div>
     </div>
   </div>
 
@@ -533,26 +559,29 @@
       </button>
     </div>
 
-    {#if product.tags.length > 0}
-      <div class="flex flex-wrap gap-2">
-        {#each product.tags as tag, index}
-          <span class="inline-flex items-center bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
-            {tag}
+    <div class="space-y-2">
+      {#each product.tags as tag, index}
+        <div class="flex items-center space-x-2">
+          <input
+            type="text"
+            bind:value={product.tags[index]}
+            placeholder="请输入标签"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          />
+          {#if product.tags.length > 1}
             <button
               type="button"
               on:click={() => removeTag(index)}
-              class="ml-2 text-gray-400 hover:text-gray-600"
+              class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
             </button>
-          </span>
-        {/each}
-      </div>
-    {:else}
-      <p class="text-gray-500 text-sm">暂无标签</p>
-    {/if}
+          {/if}
+        </div>
+      {/each}
+    </div>
   </div>
 
   <!-- 备注 -->
