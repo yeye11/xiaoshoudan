@@ -18,7 +18,7 @@
 
   // 选项数据
   let categories: string[] = ['未分类', '装饰材料', '建筑材料', '五金配件'];
-  let units: string[] = ['件', '个', '套', '米', '平方米', '立方米', '吨', '公斤', '盒', '包'];
+  let units: string[] = ['张', '件', '个', '套', '米', '平方米', '立方米', '吨', '公斤', '盒', '包'];
 
   // 当前编辑的规格和价格
   let editingSpecification: ProductSpecification | null = null;

@@ -200,18 +200,14 @@
               <option value="张">张</option>
               <option value="件">件</option>
               <option value="个">个</option>
-              <option value="台">台</option>
               <option value="套">套</option>
-              <option value="箱">箱</option>
-              <option value="盒">盒</option>
-              <option value="瓶">瓶</option>
-              <option value="包">包</option>
-              <option value="袋">袋</option>
               <option value="米">米</option>
-              <option value="千克">千克</option>
-              <option value="克">克</option>
-              <option value="升">升</option>
-              <option value="毫升">毫升</option>
+              <option value="平方米">平方米</option>
+              <option value="立方米">立方米</option>
+              <option value="吨">吨</option>
+              <option value="公斤">公斤</option>
+              <option value="盒">盒</option>
+              <option value="包">包</option>
             </select>
           </div>
 

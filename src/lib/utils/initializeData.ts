@@ -112,7 +112,7 @@ function initializeDefaultProduct() {
     // 初始化单位选项
     const storedUnits = localStorage.getItem('product_units');
     if (!storedUnits) {
-      const defaultUnits = ['张', '件', '米', '平方米', '箱', '包', '套'];
+      const defaultUnits = ['张', '件', '个', '套', '米', '平方米', '立方米', '吨', '公斤', '盒', '包'];
       localStorage.setItem('product_units', JSON.stringify(defaultUnits));
       console.log('✅ 默认单位选项已创建');
     }
