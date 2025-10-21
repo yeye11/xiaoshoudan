@@ -88,72 +88,101 @@
     isSubmitting = true;
 
     try {
-      // 清理数据
-      product.name = product.name.trim();
+      // 检查是否输入了多个产品名称（用逗号分割）
+      const productNames = product.name.split(/[,，]/).map(name => name.trim()).filter(name => name);
 
-      // 清理规格数据（移除空的规格）
-      product.specifications = product.specifications.filter(spec => spec.name.trim());
-
-      // 清理价格数据（移除无效的价格）
-      product.prices = product.prices.filter(price => price.price > 0);
-
-      // 如果有规格，确保至少有一个默认规格
-      if (product.specifications.length > 0) {
-        if (!product.specifications.some(spec => spec.isDefault)) {
-          product.specifications[0].isDefault = true;
-        }
-      }
-
-      // 如果没有价格，添加一个默认价格
-      if (product.prices.length === 0) {
-        product.prices.push({
-          ...createEmptyPrice('sale'),
-          price: 0,
-          isDefault: true
-        });
-      } else {
-        // 确保至少有一个默认价格
-        if (!product.prices.some(price => price.isDefault)) {
-          product.prices[0].isDefault = true;
-        }
-      }
-
-      // 如果单位为空，设置默认单位
-      if (!product.unit.trim()) {
-        product.unit = '件';
-      }
-
-      // 如果分类为空，设置默认分类
-      if (!product.category.trim()) {
-        product.category = '未分类';
+      if (productNames.length === 0) {
+        errors.name = '产品名称不能为空';
+        isSubmitting = false;
+        return;
       }
 
       // 加载现有产品
       const stored = localStorage.getItem('products');
       const products: Product[] = stored ? JSON.parse(stored) : [];
 
-      // 检查产品名称是否重复
-      if (products.some(p => p.name === product.name)) {
-        errors.name = '产品名称已存在';
+      // 检查是否有重复的产品名称
+      const duplicateNames = productNames.filter(name => products.some(p => p.name === name));
+      if (duplicateNames.length > 0) {
+        errors.name = `以下产品名称已存在: ${duplicateNames.join(', ')}`;
         isSubmitting = false;
         return;
       }
 
-      // 添加新产品
-      product.updatedAt = new Date().toISOString();
-      products.push(product);
+      // 清理规格数据（移除空的规格）
+      const cleanedSpecifications = product.specifications.filter(spec => spec.name.trim());
+
+      // 清理价格数据（移除无效的价格）
+      const cleanedPrices = product.prices.filter(price => price.price > 0);
+
+      // 如果有规格，确保至少有一个默认规格
+      if (cleanedSpecifications.length > 0) {
+        if (!cleanedSpecifications.some(spec => spec.isDefault)) {
+          cleanedSpecifications[0].isDefault = true;
+        }
+      }
+
+      // 如果没有价格，添加一个默认价格
+      let finalPrices = cleanedPrices;
+      if (finalPrices.length === 0) {
+        finalPrices = [{
+          ...createEmptyPrice('sale'),
+          price: 0,
+          isDefault: true
+        }];
+      } else {
+        // 确保至少有一个默认价格
+        if (!finalPrices.some(price => price.isDefault)) {
+          finalPrices[0].isDefault = true;
+        }
+      }
+
+      // 如果单位为空，设置默认单位
+      const finalUnit = product.unit.trim() || '件';
+
+      // 如果分类为空，设置默认分类
+      const finalCategory = product.category.trim() || '未分类';
+
+      // 为每个产品名称创建一个产品
+      const newProducts: Product[] = productNames.map(name => ({
+        id: crypto.randomUUID(),
+        name: name,
+        barcode: product.barcode,
+        category: finalCategory,
+        unit: finalUnit,
+        specifications: cleanedSpecifications.map(spec => ({
+          ...spec,
+          id: crypto.randomUUID() // 每个产品的规格都有独立的ID
+        })),
+        prices: finalPrices.map(price => ({
+          ...price,
+          id: crypto.randomUUID() // 每个产品的价格都有独立的ID
+        })),
+        tags: [...product.tags],
+        notes: product.notes,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
+
+      // 添加所有新产品
+      products.push(...newProducts);
 
       // 保存到localStorage
       localStorage.setItem('products', JSON.stringify(products));
 
       // 保存选项
-      if (product.category && !categories.includes(product.category)) {
-        categories.push(product.category);
+      if (finalCategory && !categories.includes(finalCategory)) {
+        categories.push(finalCategory);
       }
-      if (product.unit && !units.includes(product.unit)) {
-        units.push(product.unit);
+      if (finalUnit && !units.includes(finalUnit)) {
+        units.push(finalUnit);
       }
       saveOptions();
+
+      // 显示成功消息
+      if (productNames.length > 1) {
+        alert(`成功创建 ${productNames.length} 个产品！`);
+      }
 
       // 返回产品列表
       goto('/mobile/products');
@@ -205,19 +234,20 @@
 
   // 规格管理
   const addSpecification = () => {
-    product.specifications.push(createEmptySpecification());
+    product.specifications = [...product.specifications, createEmptySpecification()];
   };
 
   const removeSpecification = (index: number) => {
     if (product.specifications.length > 1) {
-      product.specifications.splice(index, 1);
+      product.specifications = product.specifications.filter((_, i) => i !== index);
     }
   };
 
   const setDefaultSpecification = (index: number) => {
-    product.specifications.forEach((spec, i) => {
-      spec.isDefault = i === index;
-    });
+    product.specifications = product.specifications.map((spec, i) => ({
+      ...spec,
+      isDefault: i === index
+    }));
   };
 
   // 价格管理
@@ -299,12 +329,14 @@
       <input
         type="text"
         bind:value={product.name}
-        placeholder="请输入产品名称"
+        placeholder="请输入产品名称（可用逗号分割多个产品）"
         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent
                {errors.name ? 'border-red-500' : ''}"
       />
       {#if errors.name}
         <p class="text-red-500 text-sm mt-1">{errors.name}</p>
+      {:else}
+        <p class="text-gray-500 text-xs mt-1">提示：可输入多个产品名称，用逗号分割，如：苹果,香蕉,橙子</p>
       {/if}
     </div>
 

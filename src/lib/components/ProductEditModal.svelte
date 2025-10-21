@@ -250,10 +250,39 @@
           </div>
         </div>
 
-        <!-- 规格型号（如果有的话，显示为小字） -->
+        <!-- 规格型号选择 -->
         {#if product.specifications && product.specifications.length > 0}
-          <div class="text-xs text-gray-500 -mt-1">
-            规格：{product.specifications.map(spec => spec.name).join('、')}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">规格型号</label>
+            <div class="flex items-center gap-2">
+              <select
+                bind:value={item.specification}
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="">请选择规格</option>
+                {#each product.specifications as spec}
+                  <option value={spec.name}>{spec.name}</option>
+                {/each}
+              </select>
+              <button
+                type="button"
+                on:click={openNewSpecModal}
+                class="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap text-sm"
+              >
+                + 新建
+              </button>
+            </div>
+          </div>
+        {:else}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">规格型号</label>
+            <button
+              type="button"
+              on:click={openNewSpecModal}
+              class="w-full px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-orange-500 hover:text-orange-500 transition-colors text-sm"
+            >
+              + 添加规格型号
+            </button>
           </div>
         {/if}
       </div>

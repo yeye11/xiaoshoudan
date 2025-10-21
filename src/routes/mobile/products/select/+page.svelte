@@ -66,8 +66,9 @@
       editingItem.unitPrice = defaultPrice.price;
     }
 
-    // 规格不设置默认值，用户可以选择或不选
-    editingItem.specification = '';
+    // 设置默认规格
+    const defaultSpec = product.specifications.find(s => s.isDefault);
+    editingItem.specification = defaultSpec ? defaultSpec.name : (product.specifications[0]?.name || '');
 
     // 计算金额
     editingItem.amount = calculateItemAmount(editingItem.quantity, editingItem.unitPrice);
