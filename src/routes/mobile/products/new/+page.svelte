@@ -18,6 +18,10 @@
   let categories: string[] = ['未分类', '装饰材料', '建筑材料', '五金配件'];
   let units: string[] = ['张', '件', '个', '套', '米', '平方米', '立方米', '吨', '公斤', '盒', '包'];
 
+  // 全局标签和规格列表
+  let globalTags: string[] = [];
+  let globalSpecs: string[] = [];
+
   onMount(() => {
     loadOptions();
     // 默认添加一个规格
@@ -52,6 +56,18 @@
       if (storedUnits) {
         const parsed = JSON.parse(storedUnits);
         units = [...new Set([...units, ...parsed])];
+      }
+
+      // 加载全局标签
+      const storedTags = localStorage.getItem('global_tags');
+      if (storedTags) {
+        globalTags = JSON.parse(storedTags);
+      }
+
+      // 加载全局规格
+      const storedSpecs = localStorage.getItem('global_specifications');
+      if (storedSpecs) {
+        globalSpecs = JSON.parse(storedSpecs);
       }
     } catch (error) {
       console.error('加载选项数据失败:', error);
@@ -428,7 +444,7 @@
         on:click={addSpecification}
         class="text-orange-500 text-sm font-medium"
       >
-        + 添加
+        + 添加自定义
       </button>
     </div>
 
@@ -436,7 +452,42 @@
       <p class="text-red-500 text-sm">{errors.specifications}</p>
     {/if}
 
+    <!-- 全局规格列表 -->
+    {#if globalSpecs.length > 0}
+      <div>
+        <div class="text-xs text-gray-500 mb-2">全局规格（点击添加）</div>
+        <div class="flex flex-wrap gap-2">
+          {#each globalSpecs as spec}
+            <button
+              type="button"
+              on:click={() => {
+                const exists = product.specifications.some(s => s.name === spec);
+                if (!exists) {
+                  product.specifications = [...product.specifications, {
+                    id: crypto.randomUUID(),
+                    name: spec,
+                    isDefault: product.specifications.length === 0
+                  }];
+                }
+              }}
+              class="px-3 py-1.5 rounded-lg text-sm transition-colors border
+                     {product.specifications.some(s => s.name === spec)
+                       ? 'bg-orange-500 text-white border-orange-500'
+                       : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'}"
+            >
+              {spec}
+              {#if product.specifications.some(s => s.name === spec)}
+                <span class="ml-1">✓</span>
+              {/if}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    <!-- 当前产品规格 -->
     <div class="space-y-3">
+      <div class="text-xs text-gray-500">当前产品规格</div>
       {#each product.specifications as spec, index}
         <div class="flex items-center space-x-2">
           <input
@@ -555,32 +606,67 @@
         on:click={addTag}
         class="text-orange-500 text-sm font-medium"
       >
-        + 添加
+        + 添加自定义
       </button>
     </div>
 
+    <!-- 全局标签列表 -->
+    {#if globalTags.length > 0}
+      <div>
+        <div class="text-xs text-gray-500 mb-2">全局标签（点击添加）</div>
+        <div class="flex flex-wrap gap-2">
+          {#each globalTags as tag}
+            <button
+              type="button"
+              on:click={() => {
+                if (!product.tags.includes(tag)) {
+                  product.tags = [...product.tags, tag];
+                }
+              }}
+              class="px-3 py-1.5 rounded-full text-sm transition-colors border
+                     {product.tags.includes(tag)
+                       ? 'bg-orange-500 text-white border-orange-500'
+                       : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'}"
+            >
+              {tag}
+              {#if product.tags.includes(tag)}
+                <span class="ml-1">✓</span>
+              {/if}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    <!-- 当前产品标签 -->
     <div class="space-y-2">
-      {#each product.tags as tag, index}
-        <div class="flex items-center space-x-2">
-          <input
-            type="text"
-            bind:value={product.tags[index]}
-            placeholder="请输入标签"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-          {#if product.tags.length > 1}
+      <div class="text-xs text-gray-500">当前产品标签</div>
+      {#if product.tags.length === 0}
+        <div class="text-center py-4 text-gray-400 text-sm">
+          暂无标签，点击上方全局标签或添加自定义标签
+        </div>
+      {:else}
+        {#each product.tags as tag, index}
+          <div class="flex items-center space-x-2">
+            <input
+              type="text"
+              bind:value={product.tags[index]}
+              placeholder="请输入标签"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
             <button
               type="button"
               on:click={() => removeTag(index)}
               class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              aria-label="删除标签"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
             </button>
-          {/if}
-        </div>
-      {/each}
+          </div>
+        {/each}
+      {/if}
     </div>
   </div>
 
@@ -662,6 +748,7 @@
           <button
             on:click={() => showUnitPicker = false}
             class="text-gray-400 hover:text-gray-600"
+            aria-label="关闭"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -688,3 +775,5 @@
     </div>
   </div>
 {/if}
+
+
