@@ -154,9 +154,16 @@
         customers: JSON.parse(localStorage.getItem('customers') || '[]'),
         products: JSON.parse(localStorage.getItem('products') || '[]'),
         invoices: JSON.parse(localStorage.getItem('invoice_history') || '[]'),
+        customerHistory: JSON.parse(localStorage.getItem('customer_product_history') || '[]'),
+        globalTags: JSON.parse(localStorage.getItem('global_tags') || '[]'),
+        globalSpecifications: JSON.parse(localStorage.getItem('global_specifications') || '[]'),
+        customerCategories: JSON.parse(localStorage.getItem('customer_categories') || '[]'),
+        productCategories: JSON.parse(localStorage.getItem('product_categories') || '[]'),
+        productUnits: JSON.parse(localStorage.getItem('product_units') || '[]'),
         userInfo,
         settings,
-        exportTime: new Date().toISOString()
+        exportTime: new Date().toISOString(),
+        version: '1.0.0'
       };
 
       const dataStr = JSON.stringify(allData, null, 2);
@@ -175,6 +182,192 @@
     } catch (error) {
       console.error('导出数据失败:', error);
       alert('导出失败，请重试');
+    }
+  };
+
+  // 导入数据
+  let fileInput: HTMLInputElement;
+
+  const triggerImport = () => {
+    fileInput?.click();
+  };
+
+  const handleImport = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importedData = JSON.parse(text);
+
+      // 验证数据格式
+      if (!importedData.customers || !importedData.products || !importedData.invoices) {
+        alert('数据格式不正确，请选择有效的导出文件');
+        return;
+      }
+
+      // 询问导入方式
+      const mode = confirm(
+        '选择导入方式：\n\n' +
+        '【确定】= 合并模式（保留现有数据，添加新数据）\n' +
+        '【取消】= 覆盖模式（清除现有数据，完全替换）'
+      );
+
+      if (mode) {
+        // 合并模式
+        mergeImportData(importedData);
+      } else {
+        // 覆盖模式
+        const confirmOverwrite = confirm(
+          '⚠️ 警告：覆盖模式将删除所有现有数据！\n\n' +
+          '确定要继续吗？此操作不可恢复！'
+        );
+
+        if (confirmOverwrite) {
+          overwriteImportData(importedData);
+        } else {
+          return;
+        }
+      }
+
+      // 重新加载数据
+      loadUserInfo();
+      loadSettings();
+      calculateDataStats();
+
+      alert('数据导入成功！');
+
+      // 清空文件选择
+      input.value = '';
+    } catch (error) {
+      console.error('导入数据失败:', error);
+      alert('导入失败：文件格式错误或数据损坏');
+      input.value = '';
+    }
+  };
+
+  // 合并导入数据
+  const mergeImportData = (importedData: any) => {
+    try {
+      // 合并客户数据
+      const existingCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
+      const mergedCustomers = [...existingCustomers];
+
+      importedData.customers.forEach((newCustomer: any) => {
+        const exists = mergedCustomers.find(c => c.id === newCustomer.id);
+        if (!exists) {
+          mergedCustomers.push(newCustomer);
+        }
+      });
+      localStorage.setItem('customers', JSON.stringify(mergedCustomers));
+
+      // 合并产品数据
+      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      const mergedProducts = [...existingProducts];
+
+      importedData.products.forEach((newProduct: any) => {
+        const exists = mergedProducts.find(p => p.id === newProduct.id);
+        if (!exists) {
+          mergedProducts.push(newProduct);
+        }
+      });
+      localStorage.setItem('products', JSON.stringify(mergedProducts));
+
+      // 合并销售单数据
+      const existingInvoices = JSON.parse(localStorage.getItem('invoice_history') || '[]');
+      const mergedInvoices = [...existingInvoices];
+
+      importedData.invoices.forEach((newInvoice: any) => {
+        const exists = mergedInvoices.find(i => i.id === newInvoice.id);
+        if (!exists) {
+          mergedInvoices.push(newInvoice);
+        }
+      });
+      localStorage.setItem('invoice_history', JSON.stringify(mergedInvoices));
+
+      // 合并其他数据
+      if (importedData.customerHistory) {
+        const existingHistory = JSON.parse(localStorage.getItem('customer_product_history') || '[]');
+        const mergedHistory = [...existingHistory];
+
+        importedData.customerHistory.forEach((newHistory: any) => {
+          const exists = mergedHistory.find(h =>
+            h.customerId === newHistory.customerId && h.productId === newHistory.productId
+          );
+          if (!exists) {
+            mergedHistory.push(newHistory);
+          }
+        });
+        localStorage.setItem('customer_product_history', JSON.stringify(mergedHistory));
+      }
+
+      // 合并全局标签和规格
+      if (importedData.globalTags) {
+        const existingTags = JSON.parse(localStorage.getItem('global_tags') || '[]');
+        const mergedTags = [...new Set([...existingTags, ...importedData.globalTags])];
+        localStorage.setItem('global_tags', JSON.stringify(mergedTags));
+      }
+
+      if (importedData.globalSpecifications) {
+        const existingSpecs = JSON.parse(localStorage.getItem('global_specifications') || '[]');
+        const mergedSpecs = [...new Set([...existingSpecs, ...importedData.globalSpecifications])];
+        localStorage.setItem('global_specifications', JSON.stringify(mergedSpecs));
+      }
+
+      console.log('✅ 数据合并完成');
+    } catch (error) {
+      console.error('合并数据失败:', error);
+      throw error;
+    }
+  };
+
+  // 覆盖导入数据
+  const overwriteImportData = (importedData: any) => {
+    try {
+      // 直接覆盖所有数据
+      localStorage.setItem('customers', JSON.stringify(importedData.customers || []));
+      localStorage.setItem('products', JSON.stringify(importedData.products || []));
+      localStorage.setItem('invoice_history', JSON.stringify(importedData.invoices || []));
+
+      if (importedData.customerHistory) {
+        localStorage.setItem('customer_product_history', JSON.stringify(importedData.customerHistory));
+      }
+
+      if (importedData.globalTags) {
+        localStorage.setItem('global_tags', JSON.stringify(importedData.globalTags));
+      }
+
+      if (importedData.globalSpecifications) {
+        localStorage.setItem('global_specifications', JSON.stringify(importedData.globalSpecifications));
+      }
+
+      if (importedData.customerCategories) {
+        localStorage.setItem('customer_categories', JSON.stringify(importedData.customerCategories));
+      }
+
+      if (importedData.productCategories) {
+        localStorage.setItem('product_categories', JSON.stringify(importedData.productCategories));
+      }
+
+      if (importedData.productUnits) {
+        localStorage.setItem('product_units', JSON.stringify(importedData.productUnits));
+      }
+
+      // 可选：导入用户信息和设置
+      if (importedData.userInfo) {
+        localStorage.setItem('user_info', JSON.stringify(importedData.userInfo));
+      }
+
+      if (importedData.settings) {
+        localStorage.setItem('app_settings', JSON.stringify(importedData.settings));
+      }
+
+      console.log('✅ 数据覆盖完成');
+    } catch (error) {
+      console.error('覆盖数据失败:', error);
+      throw error;
     }
   };
 
@@ -318,6 +511,25 @@
   <div class="bg-white rounded-lg p-4 shadow-sm border">
     <h3 class="font-medium text-gray-900 mb-4">数据管理</h3>
     <div class="space-y-3">
+      <!-- 隐藏的文件选择器 -->
+      <input
+        type="file"
+        accept=".json"
+        bind:this={fileInput}
+        on:change={handleImport}
+        class="hidden"
+      />
+
+      <button
+        on:click={triggerImport}
+        class="w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <span>导入数据</span>
+      </button>
+
       <button
         on:click={exportData}
         class="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
