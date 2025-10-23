@@ -247,40 +247,37 @@
         </div>
 
         <!-- 规格型号选择 -->
-        {#if product.specifications && product.specifications.length > 0}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">规格型号</label>
-            <div class="flex items-center gap-2">
-              <select
-                bind:value={item.specification}
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              >
-                <option value="">请选择规格</option>
-                {#each product.specifications as spec}
-                  <option value={spec.name}>{spec.name}</option>
-                {/each}
-              </select>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">规格型号</label>
+          {#if product.specifications && product.specifications.length > 0}
+            <div class="grid grid-cols-3 gap-2">
+              {#each product.specifications as spec}
+                <button
+                  type="button"
+                  on:click={() => item.specification = spec.name}
+                  class="px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium {item.specification === spec.name ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300'}"
+                >
+                  {spec.name}
+                </button>
+              {/each}
               <button
                 type="button"
                 on:click={openNewSpecModal}
-                class="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap text-sm"
+                class="px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 bg-white text-gray-500 hover:border-orange-500 hover:text-orange-500 transition-all text-sm font-medium"
               >
                 + 新建
               </button>
             </div>
-          </div>
-        {:else}
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">规格型号</label>
+          {:else}
             <button
               type="button"
               on:click={openNewSpecModal}
-              class="w-full px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-orange-500 hover:text-orange-500 transition-colors text-sm"
+              class="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-orange-500 hover:text-orange-500 transition-colors text-sm"
             >
               + 添加规格型号
             </button>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
 
       <!-- 底部操作栏 -->
