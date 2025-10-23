@@ -6,10 +6,15 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import { getCustomerProductHistory } from '$lib/utils/customerHistory';
 
   let products: Product[] = [];
   let filtered: Product[] = [];
   let keyword = '';
+
+  // 获取当前客户ID
+  let customerId = '';
+  $: customerId = $page?.url?.searchParams?.get('customerId') || '';
 
   // 购物车状态
   let cart: InvoiceItem[] = [];
@@ -57,18 +62,45 @@
     editingItem = createEmptyInvoiceItem();
     editingItem.productId = product.id;
     editingItem.productName = product.name;
-    editingItem.unit = product.unit;
-    editingItem.quantity = 1;
 
-    // 设置默认单价
-    const defaultPrice = product.prices.find(p => p.type === 'sale' && p.isDefault) || product.prices[0];
-    if (defaultPrice) {
-      editingItem.unitPrice = defaultPrice.price;
+    // 尝试获取客户的历史购买信息
+    const history = customerId ? getCustomerProductHistory(customerId, product.id) : null;
+
+    if (history) {
+      // 使用历史购买信息
+      editingItem.unit = history.unit;
+      editingItem.unitPrice = history.unitPrice;
+      editingItem.specification = history.specification;
+      editingItem.quantity = 1; // 数量默认为1，不使用历史数量
+      console.log('📋 使用客户历史购买信息:', {
+        product: product.name,
+        unit: history.unit,
+        price: history.unitPrice,
+        spec: history.specification,
+        lastDate: history.date
+      });
+    } else {
+      // 使用产品默认信息
+      editingItem.unit = product.unit;
+      editingItem.quantity = 1;
+
+      // 设置默认单价
+      const defaultPrice = product.prices.find(p => p.type === 'sale' && p.isDefault) || product.prices[0];
+      if (defaultPrice) {
+        editingItem.unitPrice = defaultPrice.price;
+      }
+
+      // 设置默认规格
+      const defaultSpec = product.specifications.find(s => s.isDefault);
+      editingItem.specification = defaultSpec ? defaultSpec.name : (product.specifications[0]?.name || '');
+
+      console.log('📋 使用产品默认信息:', {
+        product: product.name,
+        unit: editingItem.unit,
+        price: editingItem.unitPrice,
+        spec: editingItem.specification
+      });
     }
-
-    // 设置默认规格
-    const defaultSpec = product.specifications.find(s => s.isDefault);
-    editingItem.specification = defaultSpec ? defaultSpec.name : (product.specifications[0]?.name || '');
 
     // 计算金额
     editingItem.amount = calculateItemAmount(editingItem.quantity, editingItem.unitPrice);

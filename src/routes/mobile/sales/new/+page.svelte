@@ -6,6 +6,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { saveCustomerOrderHistory } from '$lib/utils/customerHistory';
 
   // 表单数据
   let invoice: Invoice | null = null;
@@ -368,6 +369,23 @@
 
       // 保存到localStorage
       localStorage.setItem('invoice_history', JSON.stringify(invoices));
+
+      // 保存客户购买历史
+      if (invoice.customerId && invoice.items.length > 0) {
+        const historyItems = invoice.items
+          .filter(item => item.productId) // 只保存有产品ID的项目
+          .map(item => ({
+            productId: item.productId!,
+            unitPrice: item.unitPrice,
+            unit: item.unit,
+            specification: item.specification,
+            quantity: item.quantity
+          }));
+
+        if (historyItems.length > 0) {
+          saveCustomerOrderHistory(invoice.customerId, historyItems);
+        }
+      }
 
       // 清除草稿
       sessionStorage.removeItem('salesInvoiceDraft');
