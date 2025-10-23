@@ -10,7 +10,7 @@
   import { createEventDispatcher } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { getDefaultBackPath } from '$lib/utils/navigation';
+  import { getDefaultBackPath, getPreviousPage } from '$lib/utils/navigation';
 
   const dispatch = createEventDispatcher();
 
@@ -18,20 +18,30 @@
     // 先触发自定义事件，允许页面自定义返回行为
     const event = dispatch('back', {}, { cancelable: true });
 
-    // 如果事件没有被取消，使用默认行为
+    // 如果事件没有被取消，使用统一的“智能返回”策略
     if (!event.defaultPrevented) {
       const currentPath = $page.url.pathname;
 
-      // 检查浏览器历史记录长度
-      // 如果历史记录长度 > 1，说明可以后退
+      // 1) 优先使用浏览器历史（不改写我们的记录）
       if (typeof window !== 'undefined' && window.history.length > 1) {
-        // 使用浏览器的后退功能
+        console.log('⬅️ 使用浏览器历史返回');
         window.history.back();
-      } else {
-        // 如果没有历史记录，使用默认的父级路径
-        const backPath = getDefaultBackPath(currentPath);
-        goto(backPath);
+        return;
       }
+
+      // 2) 其次尝试应用内历史上一条不同的路径
+      const previous = getPreviousPage(currentPath);
+      if (previous && previous !== currentPath) {
+        console.log('⬅️ 使用应用历史返回:', previous);
+        // replaceState 避免形成 A↔B 的来回跳
+        goto(previous, { replaceState: true });
+        return;
+      }
+
+      // 3) 最后回退到默认父级（同样使用 replaceState 防抖）
+      const backPath = getDefaultBackPath(currentPath);
+      console.log('⬅️ 使用默认父级返回:', backPath);
+      goto(backPath, { replaceState: true });
     }
   };
 

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import MobileHeader from '$lib/components/MobileHeader.svelte';
   import type { Product } from '$lib/types/invoice';
   import { createEmptySpecification, createEmptyPrice } from '$lib/types/invoice';
 
@@ -272,24 +273,12 @@
     }
   };
 
-  // 返回
-  const goBack = () => {
-    goto('/mobile/products');
-  };
 </script>
 
 {#if product}
 <div class="min-h-screen bg-gray-50 pb-20">
-  <!-- 头部 -->
-  <div class="sticky top-0 bg-orange-500 text-white px-4 py-3 flex items-center justify-between z-10">
-    <button on:click={goBack} class="p-2 -ml-2">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-      </svg>
-    </button>
-    <h1 class="text-lg font-medium">编辑产品</h1>
-    <div class="w-10"></div>
-  </div>
+  <!-- 统一头部（使用全局 MobileHeader，保证高度与返回逻辑一致） -->
+  <MobileHeader title="编辑产品" showBack={true} backgroundColor="bg-orange-500" />
 
   <!-- 表单内容 -->
   <div class="p-4 space-y-4">
