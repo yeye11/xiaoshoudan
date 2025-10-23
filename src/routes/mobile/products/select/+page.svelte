@@ -233,13 +233,24 @@
 </MobileHeader>
 
 <!-- 搜索框 - sticky定位在header下方 -->
-<div class="sticky top-16 z-30 bg-white border-b border-gray-200 p-3">
+<div class="sticky top-16 z-30 bg-white border-b border-gray-200 p-3 space-y-2">
   <input
     type="text"
     bind:value={keyword}
     placeholder="搜索产品名称、分类、条码、标签"
     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
   />
+
+  <!-- 添加产品按钮 -->
+  <a
+    href="/mobile/products/new?returnUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
+    class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors shadow-sm"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
+    <span>添加新产品</span>
+  </a>
 </div>
 
 <!-- 列表 -->

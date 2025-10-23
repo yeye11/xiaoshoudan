@@ -4,11 +4,16 @@
   import { createEmptyProduct, createEmptySpecification, createEmptyPrice } from '$lib/types/invoice.ts';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
 
   // 表单数据
   let product: Product = createEmptyProduct();
   let errors: Record<string, string> = {};
   let isSubmitting = false;
+
+  // 获取返回地址参数
+  let returnUrl = '';
+  $: returnUrl = $page.url.searchParams.get('returnUrl') || '/mobile/products';
 
   // 选择器状态
   let showCategoryPicker = false;
@@ -203,8 +208,8 @@
         alert(`成功创建 ${productNames.length} 个产品！`);
       }
 
-      // 返回产品列表
-      goto('/mobile/products');
+      // 返回到来源页面
+      goto(returnUrl);
     } catch (error) {
       console.error('保存产品失败:', error);
       errors.general = '保存失败，请重试';
@@ -685,7 +690,7 @@
   <div class="flex space-x-3 pb-6">
     <button
       type="button"
-      on:click={() => goto('/mobile/products')}
+      on:click={() => goto(returnUrl)}
       class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
     >
       取消
