@@ -28,6 +28,12 @@
       const stored = localStorage.getItem('customers');
       if (stored) {
         customers = JSON.parse(stored);
+        // 按添加时间倒序排序（最新的在前面）
+        customers.sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return timeB - timeA;
+        });
         filteredCustomers = customers;
       }
     } catch (error) {
@@ -100,6 +106,31 @@
   const getCustomerDebt = (customer: Customer): number => {
     // 这里应该根据实际的销售单数据计算
     return customer.initialDebt;
+  };
+
+  // 删除客户
+  const deleteCustomer = (event: Event, customerId: string, customerName: string) => {
+    event.stopPropagation(); // 阻止事件冒泡，避免触发查看详情
+
+    const confirmed = confirm(`确定要删除客户"${customerName}"吗？\n\n此操作不可恢复！`);
+    if (!confirmed) return;
+
+    try {
+      // 从列表中删除
+      customers = customers.filter(c => c.id !== customerId);
+      filteredCustomers = filteredCustomers.filter(c => c.id !== customerId);
+
+      // 保存到 localStorage
+      saveCustomers();
+
+      // 可选：同时删除相关的销售单和历史记录
+      // 这里可以根据需要决定是否删除相关数据
+
+      alert('客户已删除');
+    } catch (error) {
+      console.error('删除客户失败:', error);
+      alert('删除失败，请重试');
+    }
   };
 
   // 响应式搜索
@@ -192,10 +223,24 @@
     <div class="space-y-3">
       {#each filteredCustomers as customer}
         <div
-          class="bg-white rounded-lg p-4 shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+          class="bg-white rounded-lg p-4 shadow-sm border hover:shadow-md transition-shadow cursor-pointer relative"
           on:click={() => viewCustomer(customer.id)}
+          role="button"
+          tabindex="0"
+          on:keydown={(e) => e.key === 'Enter' && viewCustomer(customer.id)}
         >
-          <div class="flex items-start justify-between">
+          <!-- 删除按钮 -->
+          <button
+            on:click={(e) => deleteCustomer(e, customer.id, customer.name)}
+            class="absolute top-3 right-3 p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors z-10"
+            aria-label="删除客户"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+
+          <div class="flex items-start justify-between pr-8">
             <div class="flex-1">
               <h3 class="font-medium text-gray-900 mb-1">{customer.name}</h3>
               <div class="text-sm text-gray-600 space-y-1">
@@ -224,7 +269,7 @@
                 {/if}
               </div>
             </div>
-            
+
             <!-- 欠款信息 -->
             {#if getCustomerDebt(customer) > 0}
               <div class="text-right">
