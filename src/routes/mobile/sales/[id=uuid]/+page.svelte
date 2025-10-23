@@ -6,6 +6,8 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy, tick } from 'svelte';
   import { IMAGE_EXPORT_CONFIG } from '$lib/utils/imageExport';
+  import { printElement } from '$lib/utils/printExport';
+  import { isMobileDevice } from '$lib/utils/deviceDetect';
 
   let invoice: Invoice | null = null;
   let customer: Customer | null = null;
@@ -22,10 +24,21 @@
   const resizeHandler = () => updateScale();
 
   onMount(() => {
+    // 1. 加载销售单数据
     invoiceId = $page.params.id as string;
     loadInvoice();
-    // 初次渲染后按设备宽度计算缩放
-    setTimeout(updateScale, 0);
+
+    // 2. 检测设备类型
+    isMobile = isMobileDevice();
+    console.log('📱 设备检测 - 是否为移动设备:', isMobile);
+
+    // 3. 初次渲染后按设备宽度计算缩放
+    setTimeout(() => {
+      updateScale();
+      console.log('📱 页面加载完成');
+    }, 100);
+
+    // 4. 监听窗口大小变化
     window.addEventListener('resize', resizeHandler);
   });
 
@@ -47,7 +60,6 @@
     let available = containerW > 0 ? containerW : Math.min(docW, vw);
     available = Math.max(0, available - SAFE_BORDER_GUARD);
     const next = Math.min(1, Math.max(0.1, available / BASE_WIDTH));
-    console.debug('[invoice-scale]', { available, BASE_WIDTH, containerW, docW, vw, guard: SAFE_BORDER_GUARD, scale: next });
     scale = Number.isFinite(next) && next > 0 ? next : 1;
 
     // 参考“314.93 那个容器”的计算：读取绘制后的真实高度
@@ -92,72 +104,33 @@
     goto(`/mobile/sales/${invoiceId}/edit`);
   };
 
-  const handlePrint = () => {
-    // 将要打印的区域克隆到 body 直下的隔离容器中，避免祖先被隐藏导致内容不可见
-    const cls = 'printing-only';
-    const overlayId = 'print-overlay';
+  // 检测是否为移动设备
+  let isMobile = false;
 
-    // 优先使用 contentRef（实际内容），如果不存在则使用 invoiceContainer
-    const target = (contentRef || invoiceContainer) as HTMLElement | null;
+  // 获取打印/导出按钮的标签
+  function getPrintButtonLabel(): string {
+    return isMobile ? '保存PDF' : '打印';
+  }
 
+  // 打印功能
+  const handlePrint = async () => {
+    const target = contentRef || invoiceContainer;
     if (!target) {
-      console.error('打印目标元素未找到', { contentRef, invoiceContainer });
-      alert('打印功能暂时不可用，请稍后再试');
+      alert('无法打印：未找到销售单内容');
       return;
     }
 
     try {
-      // 清理可能存在的旧 overlay
-      const existingOverlay = document.getElementById(overlayId);
-      if (existingOverlay) {
-        existingOverlay.remove();
-      }
-
-      const overlay = document.createElement('div');
-      overlay.id = overlayId;
-      overlay.className = 'print-isolate';
-
-      // 深拷贝目标区域，去掉内部的缩放 transform
-      const clone = target.cloneNode(true) as HTMLElement;
-
-      // 移除所有 transform 样式
-      clone.style.transform = 'none';
-      clone.querySelectorAll<HTMLElement>('[style*="transform"]').forEach((n) => {
-        n.style.transform = 'none';
-      });
-
-      overlay.appendChild(clone);
-      document.body.appendChild(overlay);
-
-      const cleanup = () => {
-        document.body.classList.remove(cls);
-        const overlayToRemove = document.getElementById(overlayId);
-        if (overlayToRemove) {
-          overlayToRemove.remove();
-        }
-        window.removeEventListener('afterprint', cleanup);
-      };
-
-      document.body.classList.add(cls);
-
-      // 使用 setTimeout 确保 DOM 更新完成
-      setTimeout(() => {
-        window.print();
-      }, 100);
-
-      window.addEventListener('afterprint', cleanup);
+      await printElement(target as HTMLElement);
     } catch (error) {
       console.error('打印失败:', error);
-      alert('打印失败，请重试');
-
-      // 清理可能残留的样式
-      document.body.classList.remove(cls);
-      const overlayToRemove = document.getElementById(overlayId);
-      if (overlayToRemove) {
-        overlayToRemove.remove();
-      }
+      alert(`打印失败：${error instanceof Error ? error.message : '未知错误'}`);
     }
   };
+
+
+
+
 
   const handleDelete = () => {
     if (confirm('确定要删除这个销售单吗？')) {
@@ -226,7 +199,8 @@
     <button
       on:click={handlePrint}
       class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
-      aria-label="打印"
+      aria-label={getPrintButtonLabel()}
+      title={getPrintButtonLabel()}
     >
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
@@ -285,29 +259,35 @@
     </div>
 
     <!-- 操作按钮 -->
-    <div class="flex space-x-3 pb-6 mt-6">
+    <div class="space-y-3 pb-6 mt-6">
+      <!-- 第一行：编辑和删除（仅草稿状态） -->
       {#if invoice.status === 'draft'}
-        <button
-          on:click={handleEdit}
-          class="flex-1 bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors"
-        >
-          编辑
-        </button>
+        <div class="flex space-x-3">
+          <button
+            on:click={handleEdit}
+            class="flex-1 bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors"
+          >
+            编辑
+          </button>
+          <button
+            on:click={handleDelete}
+            class="flex-1 bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors"
+          >
+            删除
+          </button>
+        </div>
       {/if}
-      <button
-        on:click={handlePrint}
-        class="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
-      >
-        打印/保存PDF
-      </button>
-      {#if invoice.status === 'draft'}
+
+      <!-- 第二行：打印/保存PDF功能（根据设备类型自动选择） -->
+      <div class="flex space-x-3">
+        <!-- 智能打印/保存PDF按钮 -->
         <button
-          on:click={handleDelete}
-          class="flex-1 bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors"
+          on:click={handlePrint}
+          class="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
         >
-          删除
+          {getPrintButtonLabel()}
         </button>
-      {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -317,19 +297,56 @@
   /* 采用“打印隔离层”方案：把要打印的内容克隆到 #print-overlay，
      仅保留该层，其余根节点隐藏，避免祖先被隐藏导致目标不可见 */
   @media print {
-    :global(body.printing-only > :not(#print-overlay)) { display: none !important; }
-    :global(#print-overlay) { display: block !important; }
-
-    :global(#print-overlay .print-target) {
-      position: static !important;
-      width: 190mm !important; max-width: 190mm !important;
-      margin: 0 auto !important; padding: 0 !important; box-shadow: none !important; border: 0 !important;
-      background: white !important;
-      transform: none !important;
-      page-break-inside: avoid !important; break-inside: avoid !important;
-      max-height: 277mm !important; overflow: hidden !important;
+    /* 隐藏除了打印overlay之外的所有内容 */
+    :global(body.printing-only > :not(#print-overlay)) {
+      display: none !important;
     }
 
-    :global(#print-overlay .print-target [style*="transform: scale"]) { transform: none !important; }
+    /* 显示打印overlay */
+    :global(#print-overlay) {
+      display: block !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: white !important;
+      z-index: 9999 !important;
+    }
+
+    /* 打印目标样式 */
+    :global(#print-overlay .print-target),
+    :global(#print-overlay > *) {
+      position: static !important;
+      width: 190mm !important;
+      max-width: 190mm !important;
+      margin: 0 auto !important;
+      padding: 10mm !important;
+      box-shadow: none !important;
+      border: 0 !important;
+      background: white !important;
+      transform: none !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      overflow: visible !important;
+    }
+
+    /* 移除所有transform */
+    :global(#print-overlay *[style*="transform"]) {
+      transform: none !important;
+    }
+
+    /* 确保销售单内容可见 */
+    :global(#print-overlay .sales-invoice) {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
+    /* 打印页面设置 */
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
   }
 </style>

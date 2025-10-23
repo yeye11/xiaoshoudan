@@ -166,6 +166,13 @@
     goto(`/mobile/sales/new${cid ? `?customerId=${cid}` : ''}`);
   };
 
+  // 处理返回按钮
+  const handleBack = () => {
+    // 返回到新建销售单页面（不保存购物车）
+    const cid = $page?.url?.searchParams?.get('customerId');
+    goto(`/mobile/sales/new${cid ? `?customerId=${cid}` : ''}`);
+  };
+
   const handleClose = () => {
     showEditModal = false;
     editingProduct = null;
@@ -261,6 +268,7 @@
   title="选择产品"
   showBack={true}
   backgroundColor="bg-orange-500"
+  on:back={handleBack}
 >
 </MobileHeader>
 

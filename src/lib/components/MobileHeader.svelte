@@ -8,13 +8,30 @@
 
   // 事件处理
   import { createEventDispatcher } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
+  import { getDefaultBackPath } from '$lib/utils/navigation';
+
   const dispatch = createEventDispatcher();
 
   const handleBack = () => {
-    dispatch('back');
-    // 默认行为：返回上一页
-    if (typeof window !== 'undefined') {
-      window.history.back();
+    // 先触发自定义事件，允许页面自定义返回行为
+    const event = dispatch('back', {}, { cancelable: true });
+
+    // 如果事件没有被取消，使用默认行为
+    if (!event.defaultPrevented) {
+      const currentPath = $page.url.pathname;
+
+      // 检查浏览器历史记录长度
+      // 如果历史记录长度 > 1，说明可以后退
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        // 使用浏览器的后退功能
+        window.history.back();
+      } else {
+        // 如果没有历史记录，使用默认的父级路径
+        const backPath = getDefaultBackPath(currentPath);
+        goto(backPath);
+      }
     }
   };
 

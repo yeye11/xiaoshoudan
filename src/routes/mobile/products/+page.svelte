@@ -141,8 +141,8 @@
   }
 </script>
 
-<MobileHeader 
-  title="产品" 
+<MobileHeader
+  title="产品"
   showBack={true}
   showSearch={true}
   showActions={true}

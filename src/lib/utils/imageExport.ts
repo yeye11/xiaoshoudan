@@ -229,6 +229,12 @@ export const exportElementAsImage = async (
     // 移除 oklch 颜色
     removeOklchColors(clone);
 
+    // 隐藏所有按钮和不需要导出的元素
+    const elementsToHide = clone.querySelectorAll('button, .no-print, .print\\:hidden');
+    elementsToHide.forEach((el) => {
+      (el as HTMLElement).style.display = 'none';
+    });
+
     // 在克隆体上做最小化的导出专用调整
     centerTableCellsForExport(clone, -6);       // 单元格内容垂直/水平居中，并整体上移 6px
     nudgeNonTableTextUp(clone, -6);             // 表格外的文本整体上移 6px，修正基线
