@@ -11,6 +11,11 @@
   let searchCategory = 'all';
   let showSearch = false;
 
+  // 排序相关
+  type SortType = 'time' | 'name' | 'debt';
+  let sortBy: SortType = 'time';
+  let sortOrder: 'asc' | 'desc' = 'desc'; // asc: 升序, desc: 降序
+
   // 搜索类别
   const searchCategories = [
     { id: 'all', name: '全部' },
@@ -28,17 +33,59 @@
       const stored = localStorage.getItem('customers');
       if (stored) {
         customers = JSON.parse(stored);
-        // 按添加时间倒序排序（最新的在前面）
-        customers.sort((a, b) => {
-          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return timeB - timeA;
-        });
+        sortCustomers();
         filteredCustomers = customers;
       }
     } catch (error) {
       console.error('加载客户数据失败:', error);
     }
+  };
+
+  // 排序客户列表
+  const sortCustomers = () => {
+    customers.sort((a, b) => {
+      let compareResult = 0;
+
+      switch (sortBy) {
+        case 'time':
+          // 按时间排序
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          compareResult = timeB - timeA; // 默认倒序（最新的在前）
+          break;
+
+        case 'name':
+          // 按名称排序（中文拼音）
+          compareResult = a.name.localeCompare(b.name, 'zh-CN');
+          break;
+
+        case 'debt':
+          // 按欠款金额排序
+          const debtA = getCustomerDebt(a);
+          const debtB = getCustomerDebt(b);
+          compareResult = debtB - debtA; // 默认从大到小
+          break;
+      }
+
+      // 根据排序方向调整结果
+      return sortOrder === 'desc' ? compareResult : -compareResult;
+    });
+
+    // 更新过滤后的列表
+    handleSearch();
+  };
+
+  // 切换排序方式
+  const changeSortBy = (newSortBy: SortType) => {
+    if (sortBy === newSortBy) {
+      // 如果点击的是当前排序方式，则切换升序/降序
+      sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    } else {
+      // 如果是新的排序方式，使用默认排序方向
+      sortBy = newSortBy;
+      sortOrder = 'desc'; // 默认降序
+    }
+    sortCustomers();
   };
 
   const saveCustomers = () => {
@@ -189,8 +236,8 @@
         <button
           on:click={() => searchCategory = category.id}
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {searchCategory === category.id 
-                   ? 'bg-blue-500 text-white' 
+                 {searchCategory === category.id
+                   ? 'bg-blue-500 text-white'
                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
         >
           {category.name}
@@ -199,6 +246,73 @@
     </div>
   </div>
 {/if}
+
+<!-- 排序栏 -->
+<div class="bg-white border-b border-gray-200 px-4 py-3">
+  <div class="flex items-center space-x-2">
+    <span class="text-sm text-gray-600">排序：</span>
+
+    <!-- 按时间排序 -->
+    <button
+      on:click={() => changeSortBy('time')}
+      class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1
+             {sortBy === 'time'
+               ? 'bg-blue-500 text-white'
+               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+    >
+      <span>时间</span>
+      {#if sortBy === 'time'}
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {#if sortOrder === 'desc'}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          {:else}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+          {/if}
+        </svg>
+      {/if}
+    </button>
+
+    <!-- 按名称排序 -->
+    <button
+      on:click={() => changeSortBy('name')}
+      class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1
+             {sortBy === 'name'
+               ? 'bg-blue-500 text-white'
+               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+    >
+      <span>名称</span>
+      {#if sortBy === 'name'}
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {#if sortOrder === 'desc'}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          {:else}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+          {/if}
+        </svg>
+      {/if}
+    </button>
+
+    <!-- 按欠款排序 -->
+    <button
+      on:click={() => changeSortBy('debt')}
+      class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1
+             {sortBy === 'debt'
+               ? 'bg-blue-500 text-white'
+               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+    >
+      <span>欠款</span>
+      {#if sortBy === 'debt'}
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {#if sortOrder === 'desc'}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          {:else}
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+          {/if}
+        </svg>
+      {/if}
+    </button>
+  </div>
+</div>
 
 <!-- 客户列表 -->
 <div class="p-4">
