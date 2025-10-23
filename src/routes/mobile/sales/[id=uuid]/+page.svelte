@@ -96,31 +96,67 @@
     // 将要打印的区域克隆到 body 直下的隔离容器中，避免祖先被隐藏导致内容不可见
     const cls = 'printing-only';
     const overlayId = 'print-overlay';
-    const target = invoiceContainer as HTMLElement | null;
-    if (!target) return;
 
-    const overlay = document.createElement('div');
-    overlay.id = overlayId;
-    overlay.className = 'print-isolate';
+    // 优先使用 contentRef（实际内容），如果不存在则使用 invoiceContainer
+    const target = (contentRef || invoiceContainer) as HTMLElement | null;
 
-    // 深拷贝目标区域，去掉内部的缩放 transform
-    const clone = target.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll<HTMLElement>('[style*="transform: scale"]').forEach((n) => {
-      n.style.transform = 'none';
-    });
+    if (!target) {
+      console.error('打印目标元素未找到', { contentRef, invoiceContainer });
+      alert('打印功能暂时不可用，请稍后再试');
+      return;
+    }
 
-    overlay.appendChild(clone);
-    document.body.appendChild(overlay);
+    try {
+      // 清理可能存在的旧 overlay
+      const existingOverlay = document.getElementById(overlayId);
+      if (existingOverlay) {
+        existingOverlay.remove();
+      }
 
-    const cleanup = () => {
+      const overlay = document.createElement('div');
+      overlay.id = overlayId;
+      overlay.className = 'print-isolate';
+
+      // 深拷贝目标区域，去掉内部的缩放 transform
+      const clone = target.cloneNode(true) as HTMLElement;
+
+      // 移除所有 transform 样式
+      clone.style.transform = 'none';
+      clone.querySelectorAll<HTMLElement>('[style*="transform"]').forEach((n) => {
+        n.style.transform = 'none';
+      });
+
+      overlay.appendChild(clone);
+      document.body.appendChild(overlay);
+
+      const cleanup = () => {
+        document.body.classList.remove(cls);
+        const overlayToRemove = document.getElementById(overlayId);
+        if (overlayToRemove) {
+          overlayToRemove.remove();
+        }
+        window.removeEventListener('afterprint', cleanup);
+      };
+
+      document.body.classList.add(cls);
+
+      // 使用 setTimeout 确保 DOM 更新完成
+      setTimeout(() => {
+        window.print();
+      }, 100);
+
+      window.addEventListener('afterprint', cleanup);
+    } catch (error) {
+      console.error('打印失败:', error);
+      alert('打印失败，请重试');
+
+      // 清理可能残留的样式
       document.body.classList.remove(cls);
-      overlay.remove();
-      window.removeEventListener('afterprint', cleanup);
-    };
-
-    document.body.classList.add(cls);
-    requestAnimationFrame(() => window.print());
-    window.addEventListener('afterprint', cleanup);
+      const overlayToRemove = document.getElementById(overlayId);
+      if (overlayToRemove) {
+        overlayToRemove.remove();
+      }
+    }
   };
 
   const handleDelete = () => {
