@@ -148,8 +148,10 @@
   };
 
   // 导出数据
-  const exportData = () => {
+  const exportData = async () => {
     try {
+      console.log('📊 开始导出数据...');
+
       const allData = {
         customers: JSON.parse(localStorage.getItem('customers') || '[]'),
         products: JSON.parse(localStorage.getItem('products') || '[]'),
@@ -166,21 +168,14 @@
         version: '1.0.0'
       };
 
-      const dataStr = JSON.stringify(allData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
+      // 使用新的导出工具，支持多层备用方案
+      const { exportJsonData } = await import('$lib/utils/jsonExport');
+      const fileName = `cypridina-data-${new Date().toISOString().split('T')[0]}`;
 
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `cypridina-data-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      alert('数据导出成功！');
+      await exportJsonData(allData, fileName);
+      console.log('✅ 数据导出成功！');
     } catch (error) {
-      console.error('导出数据失败:', error);
+      console.error('❌ 导出数据失败:', error);
       alert('导出失败，请重试');
     }
   };
