@@ -44,8 +44,12 @@
   const { data, errors, isSubmitting } = form;
 
   onMount(() => {
-    // 设置默认日期为今天
-    $data.date = new Date().toISOString().split('T')[0];
+    // 设置默认日期为今天（使用本地时间）
+    const now = new Date();
+    const today = now.getFullYear() + '-' +
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0');
+    $data.date = today;
 
     // 加载所有客户
     customers = StorageManager.getCustomers();

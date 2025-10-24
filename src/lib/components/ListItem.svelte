@@ -44,7 +44,7 @@
 </script>
 
 <div
-  class="list-item border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
+  class="list-item bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
   on:click={handleClick}
   on:keydown={handleKeydown}
   role="button"
@@ -56,17 +56,16 @@
         type="checkbox"
         checked={selected}
         on:change={() => onSelect?.(item)}
-        class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+        class="w-4 h-4 text-blue-600 rounded"
       />
     {/if}
 
     <div class="flex-1 min-w-0">
       {#if fields.length > 0}
-        <div class="space-y-1">
+        <div class="space-y-2">
           {#each fields as field}
-            <div class="flex justify-between items-start gap-2">
-              <span class="text-sm font-medium text-gray-600">{field.label}:</span>
-              <span class="text-sm text-gray-900 text-right">{formatValue(item[field.key], field.format)}</span>
+            <div class="text-sm text-gray-900">
+              <span class="font-medium text-gray-700">{field.label}:</span><span class="text-gray-900">{formatValue(item[field.key], field.format)}</span>
             </div>
           {/each}
         </div>
@@ -100,7 +99,19 @@
 
 <style>
   .list-item {
-    background-color: white;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .list-item:focus,
+  .list-item:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .list-item::before,
+  .list-item::after {
+    display: none !important;
   }
 </style>
 

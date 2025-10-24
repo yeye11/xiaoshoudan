@@ -220,11 +220,14 @@ export const createEmptyInvoiceItem = (): InvoiceItem => ({
 
 // 用于生成新发票的默认值
 export const createEmptyInvoice = (companyInfo: CompanyInfo): Invoice => {
-  const now = new Date().toISOString();
+  const now = new Date();
+  const today = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0');
   return {
     id: crypto.randomUUID(),
     invoiceNumber: generateInvoiceNumber(),
-    date: now.split('T')[0],
+    date: today,
     customerInfo: {
       name: '',
       address: '',

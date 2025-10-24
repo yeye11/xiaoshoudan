@@ -53,8 +53,8 @@
     on:input={handleChange}
     on:blur
     on:focus
-    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors
-           {error ? 'border-red-500 focus:ring-red-500' : ''}
+    class="w-full px-3 py-2 border border-gray-300 rounded-lg transition-colors
+           {error ? 'border-red-500' : ''}
            {disabled ? 'bg-gray-100 cursor-not-allowed' : ''}"
   />
 

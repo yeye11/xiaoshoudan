@@ -119,7 +119,7 @@
         <p>暂无销售单数据</p>
       </div>
     {:else}
-      <div class="divide-y">
+      <div class="p-2 flex flex-col gap-3">
         {#each $filteredItems as invoice (invoice.id)}
           <ListItem
             item={invoice}
