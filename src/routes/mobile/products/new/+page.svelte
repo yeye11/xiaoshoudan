@@ -5,6 +5,7 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
+  import { StorageManager } from '$lib/utils/storage';
 
   // 表单数据
   let product: Product = createEmptyProduct();
@@ -50,30 +51,18 @@
   const loadOptions = () => {
     try {
       // 加载产品分类
-      const storedCategories = localStorage.getItem('product_categories');
-      if (storedCategories) {
-        const parsed = JSON.parse(storedCategories);
-        categories = [...new Set([...categories, ...parsed])];
-      }
+      const storedCategories = StorageManager.getProductCategories();
+      categories = [...new Set([...categories, ...storedCategories])];
 
       // 加载单位选项
-      const storedUnits = localStorage.getItem('product_units');
-      if (storedUnits) {
-        const parsed = JSON.parse(storedUnits);
-        units = [...new Set([...units, ...parsed])];
-      }
+      const storedUnits = JSON.parse(localStorage.getItem('product_units') || '[]');
+      units = [...new Set([...units, ...storedUnits])];
 
       // 加载全局标签
-      const storedTags = localStorage.getItem('global_tags');
-      if (storedTags) {
-        globalTags = JSON.parse(storedTags);
-      }
+      globalTags = JSON.parse(localStorage.getItem('global_tags') || '[]');
 
       // 加载全局规格
-      const storedSpecs = localStorage.getItem('global_specifications');
-      if (storedSpecs) {
-        globalSpecs = JSON.parse(storedSpecs);
-      }
+      globalSpecs = JSON.parse(localStorage.getItem('global_specifications') || '[]');
     } catch (error) {
       console.error('加载选项数据失败:', error);
     }
@@ -122,8 +111,7 @@
       }
 
       // 加载现有产品
-      const stored = localStorage.getItem('products');
-      const products: Product[] = stored ? JSON.parse(stored) : [];
+      const products = StorageManager.getProducts();
 
       // 检查是否有重复的产品名称
       const duplicateNames = productNames.filter(name => products.some(p => p.name === name));
@@ -192,16 +180,17 @@
       products.push(...newProducts);
 
       // 保存到localStorage
-      localStorage.setItem('products', JSON.stringify(products));
+      StorageManager.saveProducts(products);
 
       // 保存选项
       if (finalCategory && !categories.includes(finalCategory)) {
         categories.push(finalCategory);
+        StorageManager.saveProductCategories(categories);
       }
       if (finalUnit && !units.includes(finalUnit)) {
         units.push(finalUnit);
+        localStorage.setItem('product_units', JSON.stringify(units));
       }
-      saveOptions();
 
       // 显示成功消息
       if (productNames.length > 1) {

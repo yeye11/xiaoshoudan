@@ -2,49 +2,13 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { IMAGE_EXPORT_CONFIG } from './imageExport';
 import { isMobileDevice } from './deviceDetect';
+import { savePDFWithAndroid } from './androidHelpers';
 import {
   removeOklchColors,
   centerTableCellsForExport,
   nudgeNonTableTextUp,
   nudgeTitleUpForExport
 } from './exportHelpers';
-
-/**
- * 使用 Android 原生接口保存 PDF 文件
- */
-async function savePDFWithAndroid(pdf: jsPDF, fileName: string): Promise<void> {
-  try {
-    console.log('📱 使用 Android 原生方法保存 PDF:', fileName);
-
-    // 获取 PDF 的 Base64 数据
-    const pdfBase64 = pdf.output('dataurlstring').split(',')[1];
-
-    console.log('📦 Base64 数据长度:', pdfBase64.length);
-
-    // 调用 Android 原生方法
-    // @ts-ignore - AndroidImageSaver 是在 Android WebView 中注入的
-    if (window.AndroidImageSaver && typeof window.AndroidImageSaver.savePDF === 'function') {
-      console.log('🚀 调用 AndroidImageSaver.savePDF()');
-      // @ts-ignore
-      const success = window.AndroidImageSaver.savePDF(pdfBase64, fileName);
-
-      if (success) {
-        console.log('✅ Android 原生保存成功！');
-        alert(`✅ PDF 已保存！\n\n文件名：${fileName}`);
-      } else {
-        console.error('❌ Android 原生保存失败');
-        alert(`❌ 保存失败，请检查权限设置`);
-      }
-    } else {
-      console.error('❌ AndroidImageSaver.savePDF 不可用');
-      alert(`❌ 保存功能不可用，请确保在 Android 应用中运行`);
-    }
-  } catch (error: any) {
-    console.error('❌ Android 原生保存失败:', error);
-    alert(`❌ 保存失败：${error.message}`);
-    throw error;
-  }
-}
 
 /**
  * 打印HTML元素

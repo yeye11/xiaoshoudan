@@ -1,6 +1,8 @@
 <script lang="ts">
   import MobileHeader from '$lib/components/MobileHeader.svelte';
   import { onMount } from 'svelte';
+  import { StorageManager } from '$lib/utils/storage';
+  import { validators, validateForm, hasErrors } from '$lib/utils/validation';
 
   // 用户信息
   let userInfo = {
@@ -31,7 +33,7 @@
   // 编辑界面状态与表单
   let showEdit = false;
   let editForm: typeof userInfo = { ...userInfo };
-  let editErrors: { name?: string; phone?: string } = {};
+  let editErrors: Record<string, string> = {};
 
   const openEdit = () => {
     editForm = { ...userInfo };
@@ -55,88 +57,38 @@
   };
 
   const validateEdit = () => {
-    editErrors = {};
-    if (!editForm.name || !editForm.name.trim()) editErrors.name = '请填写姓名';
-    const digits = (editForm.phone || '').replace(/\D/g, '');
-    if (editForm.phone && digits.length < 6) editErrors.phone = '电话号码格式不正确';
-    return Object.keys(editErrors).length === 0;
+    editErrors = validateForm(editForm, {
+      name: validators.name,
+      phone: validators.phone
+    });
+    return !hasErrors(editErrors);
   };
 
   const saveEdit = () => {
     if (!validateEdit()) return;
     userInfo = { ...userInfo, ...editForm };
-    saveUserInfo();
+    StorageManager.saveUserInfo(userInfo);
     showEdit = false;
   };
 
-
   onMount(() => {
-    loadUserInfo();
-    loadSettings();
+    userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+    settings = { ...settings, ...StorageManager.getSettings() };
     calculateDataStats();
   });
 
-  const loadUserInfo = () => {
-    try {
-      const stored = localStorage.getItem('user_info');
-      if (stored) {
-        userInfo = { ...userInfo, ...JSON.parse(stored) };
-      }
-    } catch (error) {
-      console.error('加载用户信息失败:', error);
-    }
-  };
-
-  const loadSettings = () => {
-    try {
-      const stored = localStorage.getItem('app_settings');
-      if (stored) {
-        settings = { ...settings, ...JSON.parse(stored) };
-      }
-    } catch (error) {
-      console.error('加载设置失败:', error);
-    }
-  };
-
-  const saveUserInfo = () => {
-    try {
-      localStorage.setItem('user_info', JSON.stringify(userInfo));
-    } catch (error) {
-      console.error('保存用户信息失败:', error);
-    }
-  };
-
-  const saveSettings = () => {
-    try {
-      localStorage.setItem('app_settings', JSON.stringify(settings));
-    } catch (error) {
-      console.error('保存设置失败:', error);
-    }
-  };
-
   const calculateDataStats = () => {
-    try {
-      const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-      const products = JSON.parse(localStorage.getItem('products') || '[]');
-      const invoices = JSON.parse(localStorage.getItem('invoice_history') || '[]');
+    const customers = StorageManager.getCustomers();
+    const products = StorageManager.getProducts();
+    const invoices = StorageManager.getInvoices();
 
-      dataStats.customers = customers.length;
-      dataStats.products = products.length;
-      dataStats.invoices = invoices.length;
+    dataStats.customers = customers.length;
+    dataStats.products = products.length;
+    dataStats.invoices = invoices.length;
 
-      // 计算数据大小
-      const allData = {
-        customers,
-        products,
-        invoices,
-        userInfo,
-        settings
-      };
-      const dataSize = new Blob([JSON.stringify(allData)]).size;
-      dataStats.dataSize = formatFileSize(dataSize);
-    } catch (error) {
-      console.error('计算数据统计失败:', error);
-    }
+    const allData = { customers, products, invoices, userInfo, settings };
+    const dataSize = new Blob([JSON.stringify(allData)]).size;
+    dataStats.dataSize = formatFileSize(dataSize);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -153,14 +105,14 @@
       console.log('📊 开始导出数据...');
 
       const allData = {
-        customers: JSON.parse(localStorage.getItem('customers') || '[]'),
-        products: JSON.parse(localStorage.getItem('products') || '[]'),
-        invoices: JSON.parse(localStorage.getItem('invoice_history') || '[]'),
+        customers: StorageManager.getCustomers(),
+        products: StorageManager.getProducts(),
+        invoices: StorageManager.getInvoices(),
         customerHistory: JSON.parse(localStorage.getItem('customer_product_history') || '[]'),
         globalTags: JSON.parse(localStorage.getItem('global_tags') || '[]'),
         globalSpecifications: JSON.parse(localStorage.getItem('global_specifications') || '[]'),
-        customerCategories: JSON.parse(localStorage.getItem('customer_categories') || '[]'),
-        productCategories: JSON.parse(localStorage.getItem('product_categories') || '[]'),
+        customerCategories: StorageManager.getCustomerCategories(),
+        productCategories: StorageManager.getProductCategories(),
         productUnits: JSON.parse(localStorage.getItem('product_units') || '[]'),
         userInfo,
         settings,
@@ -168,7 +120,6 @@
         version: '1.0.0'
       };
 
-      // 使用新的导出工具，支持多层备用方案
       const { exportJsonData } = await import('$lib/utils/jsonExport');
       const fileName = `cypridina-data-${new Date().toISOString().split('T')[0]}`;
 
@@ -228,8 +179,8 @@
       }
 
       // 重新加载数据
-      loadUserInfo();
-      loadSettings();
+      userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+      settings = { ...settings, ...StorageManager.getSettings() };
       calculateDataStats();
 
       alert('数据导入成功！');
@@ -247,7 +198,7 @@
   const mergeImportData = (importedData: any) => {
     try {
       // 合并客户数据
-      const existingCustomers = JSON.parse(localStorage.getItem('customers') || '[]');
+      const existingCustomers = StorageManager.getCustomers();
       const mergedCustomers = [...existingCustomers];
 
       importedData.customers.forEach((newCustomer: any) => {
@@ -256,10 +207,10 @@
           mergedCustomers.push(newCustomer);
         }
       });
-      localStorage.setItem('customers', JSON.stringify(mergedCustomers));
+      StorageManager.saveCustomers(mergedCustomers);
 
       // 合并产品数据
-      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      const existingProducts = StorageManager.getProducts();
       const mergedProducts = [...existingProducts];
 
       importedData.products.forEach((newProduct: any) => {
@@ -268,10 +219,10 @@
           mergedProducts.push(newProduct);
         }
       });
-      localStorage.setItem('products', JSON.stringify(mergedProducts));
+      StorageManager.saveProducts(mergedProducts);
 
       // 合并销售单数据
-      const existingInvoices = JSON.parse(localStorage.getItem('invoice_history') || '[]');
+      const existingInvoices = StorageManager.getInvoices();
       const mergedInvoices = [...existingInvoices];
 
       importedData.invoices.forEach((newInvoice: any) => {
@@ -280,7 +231,7 @@
           mergedInvoices.push(newInvoice);
         }
       });
-      localStorage.setItem('invoice_history', JSON.stringify(mergedInvoices));
+      StorageManager.saveInvoices(mergedInvoices);
 
       // 合并其他数据
       if (importedData.customerHistory) {
@@ -352,11 +303,11 @@
 
       // 可选：导入用户信息和设置
       if (importedData.userInfo) {
-        localStorage.setItem('user_info', JSON.stringify(importedData.userInfo));
+        StorageManager.saveUserInfo(importedData.userInfo);
       }
 
       if (importedData.settings) {
-        localStorage.setItem('app_settings', JSON.stringify(importedData.settings));
+        StorageManager.saveSettings(importedData.settings);
       }
 
       console.log('✅ 数据覆盖完成');
@@ -372,13 +323,7 @@
     if (confirmed) {
       const secondConfirm = confirm('请再次确认：这将删除所有客户、产品和销售单数据！');
       if (secondConfirm) {
-        localStorage.removeItem('customers');
-        localStorage.removeItem('products');
-        localStorage.removeItem('invoice_history');
-        localStorage.removeItem('customer_categories');
-        localStorage.removeItem('product_categories');
-        localStorage.removeItem('product_units');
-
+        StorageManager.clearAllData();
         calculateDataStats();
         alert('数据已清除');
       }
@@ -388,7 +333,7 @@
   // 切换设置
   const toggleSetting = (key: keyof typeof settings) => {
     settings[key] = !settings[key];
-    saveSettings();
+    StorageManager.saveSettings(settings);
   };
 </script>
 

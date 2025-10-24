@@ -4,6 +4,8 @@
   import { createEmptyCustomer } from '$lib/types/invoice.ts';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { StorageManager } from '$lib/utils/storage';
+  import { validators, validateForm as validateFormUtil } from '$lib/utils/validation';
 
   // 表单数据
   let customer: Customer = createEmptyCustomer();
@@ -20,11 +22,8 @@
 
   const loadCategories = () => {
     try {
-      const stored = localStorage.getItem('customer_categories');
-      if (stored) {
-        const storedCategories = JSON.parse(stored);
-        categories = [...new Set([...categories, ...storedCategories])];
-      }
+      const storedCategories = StorageManager.getCustomerCategories();
+      categories = [...new Set([...categories, ...storedCategories])];
     } catch (error) {
       console.error('加载客户分类失败:', error);
     }
@@ -32,7 +31,7 @@
 
   const saveCategories = () => {
     try {
-      localStorage.setItem('customer_categories', JSON.stringify(categories));
+      StorageManager.saveCustomerCategories(categories);
     } catch (error) {
       console.error('保存客户分类失败:', error);
     }
@@ -75,8 +74,7 @@
 
     try {
       // 加载现有客户
-      const stored = localStorage.getItem('customers');
-      const customers: Customer[] = stored ? JSON.parse(stored) : [];
+      const customers = StorageManager.getCustomers();
 
       // 检查客户名称是否重复
       if (customers.some(c => c.name === customer.name.trim())) {
@@ -91,7 +89,7 @@
       customers.push(customer);
 
       // 保存到localStorage
-      localStorage.setItem('customers', JSON.stringify(customers));
+      StorageManager.saveCustomers(customers);
 
       // 保存分类
       if (customer.category && !categories.includes(customer.category)) {

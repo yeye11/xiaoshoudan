@@ -1,4 +1,6 @@
 import html2canvas from 'html2canvas';
+import { removeOklchColors } from './exportHelpers';
+import { blobToBase64, hasAndroidImageSaver, downloadBlobAsBrowser } from './androidHelpers';
 
 /**
  * 统一的图片导出配置
@@ -35,30 +37,6 @@ export const formatDate = (dateString: string | undefined): string => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
-
-/**
- * 移除元素中的 oklch 颜色（html2canvas 不支持）
- * @param element - 要处理的HTML元素
- */
-const removeOklchColors = (element: HTMLElement): void => {
-  const allElements = element.querySelectorAll('*');
-  allElements.forEach((el) => {
-    const htmlEl = el as HTMLElement;
-    const computedStyle = window.getComputedStyle(htmlEl);
-
-    // 检查并替换 oklch 颜色
-    if (computedStyle.color && computedStyle.color.includes('oklch')) {
-      htmlEl.style.color = '#000000';
-    }
-    if (computedStyle.backgroundColor && computedStyle.backgroundColor.includes('oklch')) {
-      htmlEl.style.backgroundColor = 'transparent';
-    }
-    if (computedStyle.borderColor && computedStyle.borderColor.includes('oklch')) {
-      htmlEl.style.borderColor = '#000000';
-    }
-  });
-};
-
 
 
 /**
@@ -275,31 +253,22 @@ export const exportElementAsImage = async (
             }
 
             const fullName = `${fileName}${IMAGE_EXPORT_CONFIG.fileExtension}`;
-            const w: any = window as any;
+
             // 优先：Android 原生接口（保存到相册）
-            if (w.AndroidImageSaver && typeof w.AndroidImageSaver.saveImage === 'function') {
+            if (hasAndroidImageSaver()) {
               try {
-                const base64 = await new Promise<string>((res, rej) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => res(String(reader.result).split(',')[1]);
-                  reader.onerror = rej;
-                  reader.readAsDataURL(blob);
-                });
+                const base64 = await blobToBase64(blob);
+                const w: any = window as any;
                 const ok = w.AndroidImageSaver.saveImage(base64, fullName);
-                if (!ok) console.warn('AndroidImageSaver.saveImage 返回 false，回退到浏览器下载');
                 if (ok) { resolve(); return; }
+                console.warn('AndroidImageSaver.saveImage 返回 false，回退到浏览器下载');
               } catch (e) {
                 console.warn('调用 Android 原生保存失败，回退到浏览器下载:', e);
               }
             }
 
             // 回退：浏览器下载（WebView/浏览器环境）
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fullName;
-            link.click();
-            URL.revokeObjectURL(url);
+            downloadBlobAsBrowser(blob, fullName);
             resolve();
           } catch (e) {
             reject(e);

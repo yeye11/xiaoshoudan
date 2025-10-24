@@ -7,6 +7,8 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { saveCustomerOrderHistory } from '$lib/utils/customerHistory';
+  import { StorageManager } from '$lib/utils/storage';
+  import { InvoiceCalculator } from '$lib/utils/invoiceCalculations';
 
   // 表单数据
   let invoice: Invoice | null = null;
@@ -33,9 +35,8 @@
   let companyInfo = { ...FALLBACK_COMPANY_INFO };
   const refreshCompanyInfoFromProfile = () => {
     try {
-      const stored = localStorage.getItem('user_info');
-      if (stored) {
-        const u = JSON.parse(stored);
+      const u = StorageManager.getUserInfo();
+      if (u && u.company) {
         companyInfo = {
           name: u.company || FALLBACK_COMPANY_INFO.name,
           address: u.address || FALLBACK_COMPANY_INFO.address,
@@ -130,17 +131,8 @@
 
   const loadData = () => {
     try {
-      // 加载客户
-      const storedCustomers = localStorage.getItem('customers');
-      if (storedCustomers) {
-        customers = JSON.parse(storedCustomers);
-      }
-
-      // 加载产品
-      const storedProducts = localStorage.getItem('products');
-      if (storedProducts) {
-        products = JSON.parse(storedProducts);
-      }
+      customers = StorageManager.getCustomers();
+      products = StorageManager.getProducts();
     } catch (error) {
       console.error('加载数据失败:', error);
     }
@@ -361,14 +353,13 @@
       invoice.paidAmount = 0;
 
       // 加载现有销售单
-      const stored = localStorage.getItem('invoice_history');
-      const invoices: Invoice[] = stored ? JSON.parse(stored) : [];
+      const invoices = StorageManager.getInvoices();
 
       // 添加新销售单
       invoices.push(invoice);
 
       // 保存到localStorage
-      localStorage.setItem('invoice_history', JSON.stringify(invoices));
+      StorageManager.saveInvoices(invoices);
 
       // 保存客户购买历史
       if (invoice.customerId && invoice.items.length > 0) {

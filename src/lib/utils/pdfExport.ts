@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { Invoice, Customer } from '$lib/types/invoice';
 import { IMAGE_EXPORT_CONFIG } from './imageExport';
+import { savePDFWithAndroid } from './androidHelpers';
 import {
   removeOklchColors,
   centerTableCellsForExport,
@@ -26,45 +27,6 @@ const DEFAULT_PDF_OPTIONS: Required<PDFExportOptions> = {
   orientation: 'portrait',
   format: 'a4'
 };
-
-/**
- * 使用 Android 原生接口保存 PDF 文件
- * @param pdf - jsPDF 实例
- * @param fileName - 文件名
- */
-async function savePDFWithAndroid(pdf: jsPDF, fileName: string): Promise<void> {
-  try {
-    console.log('📱 使用 Android 原生方法保存 PDF:', fileName);
-
-    // 获取 PDF 的 Base64 数据
-    const pdfBase64 = pdf.output('dataurlstring').split(',')[1];
-
-    console.log('📦 Base64 数据长度:', pdfBase64.length);
-
-    // 调用 Android 原生方法
-    // @ts-ignore - AndroidImageSaver 是在 Android WebView 中注入的
-    if (window.AndroidImageSaver && typeof window.AndroidImageSaver.savePDF === 'function') {
-      console.log('🚀 调用 AndroidImageSaver.savePDF()');
-      // @ts-ignore
-      const success = window.AndroidImageSaver.savePDF(pdfBase64, fileName);
-
-      if (success) {
-        console.log('✅ Android 原生保存成功！');
-        // Toast 会在 Android 端显示，这里不需要 alert
-      } else {
-        console.error('❌ Android 原生保存失败');
-        alert(`❌ 保存失败，请检查权限设置`);
-      }
-    } else {
-      console.error('❌ AndroidImageSaver.savePDF 不可用');
-      alert(`❌ 保存功能不可用，请确保在 Android 应用中运行`);
-    }
-  } catch (error: any) {
-    console.error('❌ Android 原生保存失败:', error);
-    alert(`❌ 保存失败：${error.message}`);
-    throw error;
-  }
-}
 
 /**
  * 将 HTML 元素导出为 PDF（单页）
@@ -469,15 +431,11 @@ export async function exportInvoiceAsPDF(
     const fullFileName = `${fileName}.pdf`;
     console.log('💾 正在保存 PDF:', fullFileName);
 
-    // 检查是否有 Android 原生接口
-    // @ts-ignore
-    const hasAndroidPDFSaver = window.AndroidImageSaver && typeof window.AndroidImageSaver.savePDF === 'function';
-
-    if (hasAndroidPDFSaver) {
-      console.log('📱 检测到 Android 原生接口，使用原生方法保存');
+    // 尝试 Android 原生接口，否则使用浏览器下载
+    try {
       await savePDFWithAndroid(pdf, fullFileName);
-    } else {
-      console.log('🌐 使用浏览器下载 API 保存文件');
+    } catch (e) {
+      console.log('🌐 回退到浏览器下载 API');
       pdf.save(fullFileName);
     }
 

@@ -2,6 +2,8 @@
   import MobileHeader from '$lib/components/MobileHeader.svelte';
   import type { Invoice, Customer, Product } from '$lib/types/invoice.ts';
   import { onMount } from 'svelte';
+  import { StorageManager } from '$lib/utils/storage';
+  import { StatisticsCalculator } from '$lib/utils/statisticsCalculator';
 
   // 数据统计
   let statistics = {
@@ -11,16 +13,16 @@
     weekSales: 0,
     monthSales: 0,
     yearSales: 0,
-    
+
     // 客户统计
     totalCustomers: 0,
     activeCustomers: 0,
     totalDebt: 0,
-    
+
     // 产品统计
     totalProducts: 0,
     activeProducts: 0,
-    
+
     // 订单统计
     totalOrders: 0,
     paidOrders: 0,
@@ -29,9 +31,9 @@
   };
 
   // 图表数据
-  let salesTrend: { date: string; amount: number }[] = [];
-  let topCustomers: { name: string; amount: number; count: number }[] = [];
-  let topProducts: { name: string; amount: number; count: number }[] = [];
+  let salesTrend: { date: string; sales: number; count: number }[] = [];
+  let topCustomers: any[] = [];
+  let topProducts: any[] = [];
 
   onMount(() => {
     loadStatistics();
@@ -39,45 +41,37 @@
 
   const loadStatistics = () => {
     try {
-      // 加载数据
-      const invoices: Invoice[] = JSON.parse(localStorage.getItem('invoice_history') || '[]');
-      const customers: Customer[] = JSON.parse(localStorage.getItem('customers') || '[]');
-      const products: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
+      const invoices = StorageManager.getInvoices();
+      const customers = StorageManager.getCustomers();
+      const products = StorageManager.getProducts();
 
-      // 计算基础统计
       calculateBasicStatistics(invoices, customers, products);
-      
-      // 计算销售趋势
       calculateSalesTrend(invoices);
-      
-      // 计算排行榜
-      calculateTopCustomers(invoices);
-      calculateTopProducts(invoices);
-      
+      calculateTopCustomers(invoices, customers);
+      calculateTopProducts(invoices, products);
     } catch (error) {
       console.error('加载统计数据失败:', error);
     }
   };
 
   const calculateBasicStatistics = (invoices: Invoice[], customers: Customer[], products: Product[]) => {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
 
     // 销售统计
-    statistics.totalSales = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.todaySales = invoices.filter(inv => inv.createdAt.split('T')[0] === today).reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.weekSales = invoices.filter(inv => inv.createdAt.split('T')[0] >= weekStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.monthSales = invoices.filter(inv => inv.createdAt.split('T')[0] >= monthStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
-    statistics.yearSales = invoices.filter(inv => inv.createdAt.split('T')[0] >= yearStart).reduce((sum, inv) => sum + inv.totalAmount, 0);
+    statistics.totalSales = StatisticsCalculator.calculateTotalSales(invoices);
+    statistics.todaySales = StatisticsCalculator.calculateTodaySales(invoices);
+
+    // 计算周销售额（最近7天）
+    const weekTrend = StatisticsCalculator.getSalesTrend(invoices, 7);
+    statistics.weekSales = weekTrend.reduce((sum, t) => sum + t.sales, 0);
+
+    statistics.monthSales = StatisticsCalculator.calculateMonthlySales(invoices);
+    statistics.yearSales = StatisticsCalculator.calculateYearlySales(invoices);
 
     // 客户统计
     statistics.totalCustomers = customers.length;
     statistics.activeCustomers = customers.filter(c => c.isActive).length;
-    statistics.totalDebt = customers.reduce((sum, c) => sum + c.initialDebt, 0) + 
-      invoices.filter(inv => inv.paymentStatus !== 'paid').reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0);
+    statistics.totalDebt = customers.reduce((sum, c) => sum + c.initialDebt, 0) +
+      StatisticsCalculator.calculateTotalUnpaid(invoices);
 
     // 产品统计
     statistics.totalProducts = products.length;
@@ -91,63 +85,15 @@
   };
 
   const calculateSalesTrend = (invoices: Invoice[]) => {
-    const last7Days = [];
-    const now = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateStr = date.toISOString().split('T')[0];
-      const dayInvoices = invoices.filter(inv => inv.createdAt.split('T')[0] === dateStr);
-      const amount = dayInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-
-      last7Days.push({
-        date: dateStr,
-        amount
-      });
-    }
-
-    salesTrend = last7Days;
+    salesTrend = StatisticsCalculator.getSalesTrend(invoices, 7);
   };
 
-  const calculateTopCustomers = (invoices: Invoice[]) => {
-    const customerStats = new Map<string, { amount: number; count: number }>();
-    
-    invoices.forEach(invoice => {
-      const customerName = invoice.customerInfo.name;
-      if (customerStats.has(customerName)) {
-        const stats = customerStats.get(customerName)!;
-        stats.amount += invoice.totalAmount;
-        stats.count += 1;
-      } else {
-        customerStats.set(customerName, { amount: invoice.totalAmount, count: 1 });
-      }
-    });
-    
-    topCustomers = Array.from(customerStats.entries())
-      .map(([name, stats]) => ({ name, ...stats }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5);
+  const calculateTopCustomers = (invoices: Invoice[], customers: Customer[]) => {
+    topCustomers = StatisticsCalculator.getTopCustomers(invoices, customers, 5);
   };
 
-  const calculateTopProducts = (invoices: Invoice[]) => {
-    const productStats = new Map<string, { amount: number; count: number }>();
-    
-    invoices.forEach(invoice => {
-      invoice.items.forEach(item => {
-        if (productStats.has(item.productName)) {
-          const stats = productStats.get(item.productName)!;
-          stats.amount += item.amount;
-          stats.count += item.quantity;
-        } else {
-          productStats.set(item.productName, { amount: item.amount, count: item.quantity });
-        }
-      });
-    });
-    
-    topProducts = Array.from(productStats.entries())
-      .map(([name, stats]) => ({ name, ...stats }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5);
+  const calculateTopProducts = (invoices: Invoice[], products: Product[]) => {
+    topProducts = StatisticsCalculator.getTopProducts(invoices, products, 5);
   };
 
   // 格式化金额
@@ -164,8 +110,9 @@
   // 获取增长率
   const getGrowthRate = (current: number, previous: number): string => {
     if (previous === 0) return current > 0 ? '+100%' : '0%';
-    const rate = ((current - previous) / previous * 100).toFixed(1);
-    return `${rate > 0 ? '+' : ''}${rate}%`;
+    const rateNum = (current - previous) / previous * 100;
+    const rate = rateNum.toFixed(1);
+    return `${rateNum > 0 ? '+' : ''}${rate}%`;
   };
 </script>
 
@@ -218,13 +165,13 @@
           <span class="text-sm text-gray-600">{formatDate(day.date)}</span>
           <div class="flex items-center space-x-2">
             <div class="w-20 bg-gray-200 rounded-full h-2">
-              <div 
-                class="bg-green-500 h-2 rounded-full" 
-                style="width: {Math.max(5, (day.amount / Math.max(...salesTrend.map(d => d.amount)) * 100))}%"
+              <div
+                class="bg-green-500 h-2 rounded-full"
+                style="width: {Math.max(5, (day.sales / Math.max(...salesTrend.map(d => d.sales)) * 100))}%"
               ></div>
             </div>
             <span class="text-sm font-medium text-gray-900 w-16 text-right">
-              {formatCurrency(day.amount)}
+              {formatCurrency(day.sales)}
             </span>
           </div>
         </div>
@@ -246,12 +193,12 @@
                 {index + 1}
               </div>
               <div>
-                <div class="font-medium text-gray-900">{customer.name}</div>
-                <div class="text-xs text-gray-500">{customer.count} 笔订单</div>
+                <div class="font-medium text-gray-900">{customer.customer.name}</div>
+                <div class="text-xs text-gray-500">订单数</div>
               </div>
             </div>
             <div class="text-right">
-              <div class="font-medium text-gray-900">{formatCurrency(customer.amount)}</div>
+              <div class="font-medium text-gray-900">{formatCurrency(customer.totalSales)}</div>
             </div>
           </div>
         {/each}
@@ -273,12 +220,12 @@
                 {index + 1}
               </div>
               <div>
-                <div class="font-medium text-gray-900">{product.name}</div>
-                <div class="text-xs text-gray-500">销量: {product.count}</div>
+                <div class="font-medium text-gray-900">{product.product.name}</div>
+                <div class="text-xs text-gray-500">销量: {product.totalQuantity}</div>
               </div>
             </div>
             <div class="text-right">
-              <div class="font-medium text-gray-900">{formatCurrency(product.amount)}</div>
+              <div class="font-medium text-gray-900">{formatCurrency(product.totalSales)}</div>
             </div>
           </div>
         {/each}
