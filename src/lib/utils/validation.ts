@@ -1,11 +1,74 @@
 /**
  * 验证工具函数 - 统一的表单验证逻辑
- * 
+ *
  * 功能：
  * - 提供常用的验证函数
  * - 统一验证规则
  * - 减少重复的验证代码
  */
+
+/**
+ * 通用字符串长度验证
+ */
+const validateStringLength = (
+  value: string,
+  minLength: number,
+  maxLength: number,
+  fieldName: string,
+  required: boolean = true
+): string | null => {
+  if (!value || !value.trim()) {
+    return required ? `请填写${fieldName}` : null;
+  }
+  const trimmed = value.trim();
+  if (trimmed.length < minLength) {
+    return `${fieldName}至少需要 ${minLength} 个字符`;
+  }
+  if (trimmed.length > maxLength) {
+    return `${fieldName}不能超过 ${maxLength} 个字符`;
+  }
+  return null;
+};
+
+/**
+ * 通用正则表达式验证
+ */
+const validateRegex = (
+  value: string,
+  regex: RegExp,
+  errorMessage: string,
+  required: boolean = false
+): string | null => {
+  if (!value) {
+    return required ? errorMessage : null;
+  }
+  if (!regex.test(value)) {
+    return errorMessage;
+  }
+  return null;
+};
+
+/**
+ * 通用数字范围验证
+ */
+const validateNumberRange = (
+  value: number,
+  min: number,
+  max: number,
+  fieldName: string,
+  required: boolean = true
+): string | null => {
+  if (value === null || value === undefined) {
+    return required ? `请填写${fieldName}` : null;
+  }
+  if (value < min) {
+    return `${fieldName}不能小于 ${min}`;
+  }
+  if (value > max) {
+    return `${fieldName}不能超过 ${max}`;
+  }
+  return null;
+};
 
 /**
  * 验证器对象 - 包含所有验证函数
@@ -14,78 +77,33 @@ export const validators = {
   /**
    * 验证姓名
    */
-  name: (value: string): string | null => {
-    if (!value || !value.trim()) {
-      return '请填写姓名';
-    }
-    if (value.trim().length < 2) {
-      return '姓名至少需要 2 个字符';
-    }
-    if (value.trim().length > 50) {
-      return '姓名不能超过 50 个字符';
-    }
-    return null;
-  },
+  name: (value: string): string | null => validateStringLength(value, 2, 50, '姓名'),
 
   /**
    * 验证电话号码
    */
   phone: (value: string): string | null => {
-    if (!value) {
-      return null; // 电话号码可选
-    }
     const phoneRegex = /^1[3-9]\d{9}$/;
-    if (!phoneRegex.test(value.replace(/\s/g, ''))) {
-      return '请输入有效的电话号码';
-    }
-    return null;
+    return validateRegex(value.replace(/\s/g, ''), phoneRegex, '请输入有效的电话号码', false);
   },
 
   /**
    * 验证邮箱
    */
   email: (value: string): string | null => {
-    if (!value) {
-      return null; // 邮箱可选
-    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      return '请输入有效的邮箱地址';
-    }
-    return null;
+    return validateRegex(value, emailRegex, '请输入有效的邮箱地址', false);
   },
 
   /**
    * 验证地址
    */
-  address: (value: string): string | null => {
-    if (!value) {
-      return null; // 地址可选
-    }
-    if (value.trim().length < 5) {
-      return '地址至少需要 5 个字符';
-    }
-    if (value.trim().length > 200) {
-      return '地址不能超过 200 个字符';
-    }
-    return null;
-  },
+  address: (value: string): string | null => validateStringLength(value, 5, 200, '地址', false),
 
   /**
    * 验证产品名称
    */
-  productName: (value: string): string | null => {
-    if (!value || !value.trim()) {
-      return '请填写产品名称';
-    }
-    if (value.trim().length < 2) {
-      return '产品名称至少需要 2 个字符';
-    }
-    if (value.trim().length > 100) {
-      return '产品名称不能超过 100 个字符';
-    }
-    return null;
-  },
+  productName: (value: string): string | null => validateStringLength(value, 2, 100, '产品名称'),
 
   /**
    * 验证数量
@@ -94,11 +112,8 @@ export const validators = {
     if (value === null || value === undefined) {
       return '请填写数量';
     }
-    if (value <= 0) {
-      return '数量必须大于 0';
-    }
-    if (!Number.isInteger(value)) {
-      return '数量必须是整数';
+    if (!Number.isInteger(value) || value <= 0) {
+      return '数量必须是大于 0 的整数';
     }
     return null;
   },
@@ -106,34 +121,12 @@ export const validators = {
   /**
    * 验证价格
    */
-  price: (value: number): string | null => {
-    if (value === null || value === undefined) {
-      return '请填写价格';
-    }
-    if (value < 0) {
-      return '价格不能为负数';
-    }
-    if (value > 999999.99) {
-      return '价格过高';
-    }
-    return null;
-  },
+  price: (value: number): string | null => validateNumberRange(value, 0, 999999.99, '价格'),
 
   /**
    * 验证金额
    */
-  amount: (value: number): string | null => {
-    if (value === null || value === undefined) {
-      return '请填写金额';
-    }
-    if (value < 0) {
-      return '金额不能为负数';
-    }
-    if (value > 9999999.99) {
-      return '金额过高';
-    }
-    return null;
-  },
+  amount: (value: number): string | null => validateNumberRange(value, 0, 9999999.99, '金额'),
 
   /**
    * 验证日期

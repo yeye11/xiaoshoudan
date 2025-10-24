@@ -1,205 +1,73 @@
 <script lang="ts">
   import MobileHeader from '$lib/components/MobileHeader.svelte';
+  import ListItem from '$lib/components/ListItem.svelte';
   import type { Customer } from '$lib/types/invoice.ts';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { StorageManager } from '$lib/utils/storage';
+  import { useList } from '$lib/composables/useList';
 
-  // 客户列表和搜索
-  let customers: Customer[] = [];
-  let filteredCustomers: Customer[] = [];
-  let searchKeyword = '';
-  let searchCategory = 'all';
-  let showSearch = false;
-
-  // 排序相关
-  type SortType = 'time' | 'name' | 'debt';
-  let sortBy: SortType = 'time';
-  let sortOrder: 'asc' | 'desc' = 'desc'; // asc: 升序, desc: 降序
-
-  // 搜索类别
-  const searchCategories = [
-    { id: 'all', name: '全部' },
-    { id: 'name', name: '客户' },
-    { id: 'phone', name: '客户电话' },
-    { id: 'attachment', name: '附件' }
-  ];
-
-  onMount(() => {
-    loadCustomers();
+  // 初始化列表
+  const list = useList({
+    initialData: [],
+    searchFields: ['name', 'phone', 'category'],
+    sortFields: ['name', 'createdAt'],
+    onDelete: async (item: Customer) => {
+      StorageManager.deleteCustomer(item.id);
+    },
+    onLoad: async () => {
+      return StorageManager.getCustomers();
+    }
   });
 
-  const loadCustomers = () => {
-    try {
-      const stored = localStorage.getItem('customers');
-      if (stored) {
-        customers = JSON.parse(stored);
-        sortCustomers();
-        filteredCustomers = customers;
-      }
-    } catch (error) {
-      console.error('加载客户数据失败:', error);
-    }
+  const { filteredItems, searchQuery, sortField, sortOrder, isDeleting, load } = list;
+
+  onMount(async () => {
+    await load();
+    // 默认按照创建时间倒序排序
+    sortField.set('createdAt');
+    sortOrder.set('desc');
+  });
+
+  // 编辑客户
+  const handleEdit = (customer: Customer) => {
+    goto(`/mobile/customers/${customer.id}/edit`);
   };
 
-  // 排序客户列表
-  const sortCustomers = () => {
-    customers.sort((a, b) => {
-      let compareResult = 0;
-
-      switch (sortBy) {
-        case 'time':
-          // 按时间排序
-          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          compareResult = timeB - timeA; // 默认倒序（最新的在前）
-          break;
-
-        case 'name':
-          // 按名称排序（中文拼音）
-          compareResult = a.name.localeCompare(b.name, 'zh-CN');
-          break;
-
-        case 'debt':
-          // 按欠款金额排序
-          const debtA = getCustomerDebt(a);
-          const debtB = getCustomerDebt(b);
-          compareResult = debtB - debtA; // 默认从大到小
-          break;
-      }
-
-      // 根据排序方向调整结果
-      return sortOrder === 'desc' ? compareResult : -compareResult;
-    });
-
-    // 更新过滤后的列表
-    handleSearch();
-  };
-
-  // 切换排序方式
-  const changeSortBy = (newSortBy: SortType) => {
-    if (sortBy === newSortBy) {
-      // 如果点击的是当前排序方式，则切换升序/降序
-      sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
-    } else {
-      // 如果是新的排序方式，使用默认排序方向
-      sortBy = newSortBy;
-      sortOrder = 'desc'; // 默认降序
-    }
-    sortCustomers();
-  };
-
-  const saveCustomers = () => {
-    try {
-      localStorage.setItem('customers', JSON.stringify(customers));
-    } catch (error) {
-      console.error('保存客户数据失败:', error);
-    }
-  };
-
-  // 搜索功能
-  const handleSearch = () => {
-    if (!searchKeyword.trim()) {
-      filteredCustomers = customers;
-      return;
-    }
-
-    const keyword = searchKeyword.toLowerCase();
-    filteredCustomers = customers.filter(customer => {
-      switch (searchCategory) {
-        case 'name':
-          return customer.name.toLowerCase().includes(keyword);
-        case 'phone':
-          return customer.phone.includes(keyword) || customer.backupPhone?.includes(keyword);
-        case 'attachment':
-          return customer.attachments?.some(att => att.toLowerCase().includes(keyword));
-        default:
-          return (
-            customer.name.toLowerCase().includes(keyword) ||
-            customer.phone.includes(keyword) ||
-            customer.backupPhone?.includes(keyword) ||
-            customer.email?.toLowerCase().includes(keyword) ||
-            customer.address?.toLowerCase().includes(keyword)
-          );
-      }
-    });
-  };
-
-  // 切换搜索显示
-  const toggleSearch = () => {
-    showSearch = !showSearch;
-    if (!showSearch) {
-      searchKeyword = '';
-      filteredCustomers = customers;
-    }
-  };
-
-  // 导航到客户详情
-  const viewCustomer = (customerId: string) => {
-    goto(`/mobile/customers/${customerId}`);
-  };
-
-  // 导航到新建客户
-  const createCustomer = () => {
-    goto('/mobile/customers/new');
-  };
-
-  // 格式化电话号码
-  const formatPhone = (phone: string): string => {
-    if (!phone) return '';
-    return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-  };
-
-  // 计算客户欠款（简化版）
-  const getCustomerDebt = (customer: Customer): number => {
-    // 这里应该根据实际的销售单数据计算
-    return customer.initialDebt;
+  // 查看客户详情
+  const handleView = (customer: Customer) => {
+    goto(`/mobile/customers/${customer.id}`);
   };
 
   // 删除客户
-  const deleteCustomer = (event: Event, customerId: string, customerName: string) => {
-    event.stopPropagation(); // 阻止事件冒泡，避免触发查看详情
-
-    const confirmed = confirm(`确定要删除客户"${customerName}"吗？\n\n此操作不可恢复！`);
-    if (!confirmed) return;
-
-    try {
-      // 从列表中删除
-      customers = customers.filter(c => c.id !== customerId);
-      filteredCustomers = filteredCustomers.filter(c => c.id !== customerId);
-
-      // 保存到 localStorage
-      saveCustomers();
-
-      // 可选：同时删除相关的销售单和历史记录
-      // 这里可以根据需要决定是否删除相关数据
-
-      alert('客户已删除');
-    } catch (error) {
-      console.error('删除客户失败:', error);
-      alert('删除失败，请重试');
+  const handleDelete = async (customer: Customer) => {
+    if (confirm(`确定要删除客户 "${customer.name}" 吗？`)) {
+      await list.delete(customer);
     }
   };
 
-  // 响应式搜索
-  $: if (searchKeyword !== undefined) {
-    handleSearch();
-  }
+  // 切换排序
+  const toggleSort = (field: keyof Customer) => {
+    if ($sortField === field) {
+      sortOrder.set($sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      sortField.set(field);
+      sortOrder.set('desc');
+    }
+  };
 </script>
 
-<MobileHeader 
-  title="客户" 
+<MobileHeader
+  title="客户管理"
   showBack={true}
-  showSearch={true}
   showActions={true}
   backgroundColor="bg-blue-500"
-  on:search={toggleSearch}
-  on:action={createCustomer}
 >
   <div slot="actions">
     <button
-      on:click={createCustomer}
+      on:click={() => goto('/mobile/customers/new')}
       class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
-      aria-label="添加客户"
+      aria-label="新建客户"
     >
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -208,194 +76,65 @@
   </div>
 </MobileHeader>
 
-<!-- 搜索栏 -->
-{#if showSearch}
-  <div class="bg-white border-b border-gray-200 p-4 space-y-3">
-    <div class="relative">
-      <input
-        type="text"
-        bind:value={searchKeyword}
-        placeholder="输入客户、客户电话、附件"
-        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      />
-      <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-      </svg>
+<div class="flex flex-col h-full">
+  <!-- 搜索栏 -->
+  <div class="bg-white border-b p-4 space-y-3">
+    <input
+      type="text"
+      bind:value={$searchQuery}
+      placeholder="搜索客户名称、电话..."
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+    
+    <!-- 排序按钮 -->
+    <div class="flex gap-2">
       <button
-        on:click={toggleSearch}
-        class="absolute right-3 top-2.5 text-blue-500 font-medium"
+        on:click={() => toggleSort('name')}
+        class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+        class:bg-blue-500={$sortField === 'name'}
+        class:text-white={$sortField === 'name'}
+        class:bg-gray-100={$sortField !== 'name'}
       >
-        搜索
+        名称 {$sortField === 'name' ? ($sortOrder === 'asc' ? '↑' : '↓') : ''}
+      </button>
+      <button
+        on:click={() => toggleSort('createdAt')}
+        class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+        class:bg-blue-500={$sortField === 'createdAt'}
+        class:text-white={$sortField === 'createdAt'}
+        class:bg-gray-100={$sortField !== 'createdAt'}
+      >
+        时间 {$sortField === 'createdAt' ? ($sortOrder === 'asc' ? '↑' : '↓') : ''}
       </button>
     </div>
-
-    <!-- 搜索类别 -->
-    <div class="flex space-x-2">
-      <span class="text-sm text-gray-600 py-2">搜索类别</span>
-      {#each searchCategories as category}
-        <button
-          on:click={() => searchCategory = category.id}
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors
-                 {searchCategory === category.id
-                   ? 'bg-blue-500 text-white'
-                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-        >
-          {category.name}
-        </button>
-      {/each}
-    </div>
   </div>
-{/if}
 
-<!-- 排序栏 -->
-<div class="bg-white border-b border-gray-200 px-4 py-3">
-  <div class="flex items-center space-x-2">
-    <span class="text-sm text-gray-600">排序：</span>
-
-    <!-- 按时间排序 -->
-    <button
-      on:click={() => changeSortBy('time')}
-      class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1
-             {sortBy === 'time'
-               ? 'bg-blue-500 text-white'
-               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-    >
-      <span>时间</span>
-      {#if sortBy === 'time'}
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {#if sortOrder === 'desc'}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          {:else}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-          {/if}
+  <!-- 客户列表 -->
+  <div class="flex-1 overflow-y-auto">
+    {#if $filteredItems.length === 0}
+      <div class="flex flex-col items-center justify-center h-full text-gray-500">
+        <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
         </svg>
-      {/if}
-    </button>
-
-    <!-- 按名称排序 -->
-    <button
-      on:click={() => changeSortBy('name')}
-      class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1
-             {sortBy === 'name'
-               ? 'bg-blue-500 text-white'
-               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-    >
-      <span>名称</span>
-      {#if sortBy === 'name'}
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {#if sortOrder === 'desc'}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          {:else}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-          {/if}
-        </svg>
-      {/if}
-    </button>
-
-    <!-- 按欠款排序 -->
-    <button
-      on:click={() => changeSortBy('debt')}
-      class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1
-             {sortBy === 'debt'
-               ? 'bg-blue-500 text-white'
-               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-    >
-      <span>欠款</span>
-      {#if sortBy === 'debt'}
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {#if sortOrder === 'desc'}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          {:else}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-          {/if}
-        </svg>
-      {/if}
-    </button>
+        <p>暂无客户数据</p>
+      </div>
+    {:else}
+      <div class="divide-y">
+        {#each $filteredItems as customer (customer.id)}
+          <ListItem
+            item={customer}
+            fields={[
+              { key: 'name', label: '名称' },
+              { key: 'phone', label: '电话' },
+              { key: 'category', label: '分类' }
+            ]}
+            onClick={() => handleView(customer)}
+            onEdit={() => handleEdit(customer)}
+            onDelete={() => handleDelete(customer)}
+            isDeleting={$isDeleting}
+          />
+        {/each}
+      </div>
+    {/if}
   </div>
-</div>
-
-<!-- 客户列表 -->
-<div class="p-4">
-  {#if filteredCustomers.length === 0}
-    <div class="text-center py-12">
-      <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-      </svg>
-      <p class="text-gray-500 mb-4">
-        {searchKeyword ? '暂时没有数据哦~' : '还没有客户数据'}
-      </p>
-      {#if !searchKeyword}
-        <button
-          on:click={createCustomer}
-          class="bg-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors"
-        >
-          添加第一个客户
-        </button>
-      {/if}
-    </div>
-  {:else}
-    <div class="space-y-3">
-      {#each filteredCustomers as customer}
-        <div
-          class="bg-white rounded-lg p-4 shadow-sm border hover:shadow-md transition-shadow cursor-pointer relative"
-          on:click={() => viewCustomer(customer.id)}
-          role="button"
-          tabindex="0"
-          on:keydown={(e) => e.key === 'Enter' && viewCustomer(customer.id)}
-        >
-          <!-- 删除按钮 -->
-          <button
-            on:click={(e) => deleteCustomer(e, customer.id, customer.name)}
-            class="absolute top-3 right-3 p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors z-10"
-            aria-label="删除客户"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
-
-          <div class="flex items-start justify-between pr-8">
-            <div class="flex-1">
-              <h3 class="font-medium text-gray-900 mb-1">{customer.name}</h3>
-              <div class="text-sm text-gray-600 space-y-1">
-                {#if customer.category}
-                  <div class="flex items-center">
-                    <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                    {customer.category}
-                  </div>
-                {/if}
-                {#if customer.phone}
-                  <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                    </svg>
-                    {formatPhone(customer.phone)}
-                  </div>
-                {/if}
-                {#if customer.address}
-                  <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="truncate">{customer.address}</span>
-                  </div>
-                {/if}
-              </div>
-            </div>
-
-            <!-- 欠款信息 -->
-            {#if getCustomerDebt(customer) > 0}
-              <div class="text-right">
-                <div class="text-xs text-gray-500">欠款</div>
-                <div class="text-sm font-medium text-red-600">
-                  ¥{getCustomerDebt(customer).toFixed(2)}
-                </div>
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/each}
-    </div>
-  {/if}
 </div>

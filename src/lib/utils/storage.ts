@@ -19,74 +19,132 @@ import type {
 } from '$lib/types/invoice';
 import { globalCache } from './cache';
 
+/**
+ * 通用 CRUD 操作基类
+ */
+class CRUDManager<T extends { id: string }> {
+  constructor(
+    private storageKey: string,
+    private cacheKey: string,
+    private cacheDuration: number = 5 * 60 * 1000
+  ) {}
+
+  /**
+   * 获取所有数据（使用缓存）
+   */
+  getAll(): T[] {
+    return globalCache.getOrSet(this.cacheKey, () => {
+      try {
+        const stored = localStorage.getItem(this.storageKey);
+        return stored ? JSON.parse(stored) : [];
+      } catch (error) {
+        console.error(`获取 ${this.storageKey} 失败:`, error);
+        return [];
+      }
+    }, this.cacheDuration);
+  }
+
+  /**
+   * 保存所有数据（并清除缓存）
+   */
+  saveAll(items: T[]): void {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(items));
+      globalCache.delete(this.cacheKey);
+    } catch (error) {
+      console.error(`保存 ${this.storageKey} 失败:`, error);
+      throw new Error(`保存 ${this.storageKey} 失败`);
+    }
+  }
+
+  /**
+   * 获取单个数据
+   */
+  getById(id: string): T | null {
+    const items = this.getAll();
+    return items.find(item => item.id === id) || null;
+  }
+
+  /**
+   * 添加数据
+   */
+  add(item: T): void {
+    const items = this.getAll();
+    items.push(item);
+    this.saveAll(items);
+  }
+
+  /**
+   * 更新数据
+   */
+  update(id: string, updates: Partial<T>): void {
+    const items = this.getAll();
+    const index = items.findIndex(item => item.id === id);
+    if (index >= 0) {
+      items[index] = { ...items[index], ...updates };
+      this.saveAll(items);
+    }
+  }
+
+  /**
+   * 删除数据
+   */
+  delete(id: string): void {
+    const items = this.getAll();
+    const filtered = items.filter(item => item.id !== id);
+    this.saveAll(filtered);
+  }
+}
+
 export class StorageManager {
+  // ==================== 初始化 CRUD 管理器 ====================
+
+  private static invoiceManager = new CRUDManager<Invoice>('invoice_history', 'invoices', 5 * 60 * 1000);
+  private static customerManager = new CRUDManager<Customer>('customers', 'customers', 5 * 60 * 1000);
+  private static productManager = new CRUDManager<Product>('products', 'products', 5 * 60 * 1000);
+
   // ==================== 销售单相关 ====================
-  
+
   /**
    * 获取所有销售单（使用缓存）
    */
   static getInvoices(): Invoice[] {
-    return globalCache.getOrSet('invoices', () => {
-      try {
-        const stored = localStorage.getItem('invoice_history');
-        return stored ? JSON.parse(stored) : [];
-      } catch (error) {
-        console.error('获取销售单失败:', error);
-        return [];
-      }
-    }, 5 * 60 * 1000); // 5 分钟缓存
+    return this.invoiceManager.getAll();
   }
 
   /**
    * 保存销售单列表（并清除缓存）
    */
   static saveInvoices(invoices: Invoice[]): void {
-    try {
-      localStorage.setItem('invoice_history', JSON.stringify(invoices));
-      // 清除缓存，下次读取时会重新加载
-      globalCache.delete('invoices');
-    } catch (error) {
-      console.error('保存销售单失败:', error);
-      throw new Error('保存销售单失败');
-    }
+    this.invoiceManager.saveAll(invoices);
   }
 
   /**
    * 获取单个销售单
    */
   static getInvoice(id: string): Invoice | null {
-    const invoices = this.getInvoices();
-    return invoices.find(inv => inv.id === id) || null;
+    return this.invoiceManager.getById(id);
   }
 
   /**
    * 添加销售单
    */
   static addInvoice(invoice: Invoice): void {
-    const invoices = this.getInvoices();
-    invoices.push(invoice);
-    this.saveInvoices(invoices);
+    this.invoiceManager.add(invoice);
   }
 
   /**
    * 更新销售单
    */
   static updateInvoice(id: string, updates: Partial<Invoice>): void {
-    const invoices = this.getInvoices();
-    const index = invoices.findIndex(inv => inv.id === id);
-    if (index >= 0) {
-      invoices[index] = { ...invoices[index], ...updates };
-      this.saveInvoices(invoices);
-    }
+    this.invoiceManager.update(id, updates);
   }
 
   /**
    * 删除销售单
    */
   static deleteInvoice(id: string): void {
-    const invoices = this.getInvoices();
-    const filtered = invoices.filter(inv => inv.id !== id);
-    this.saveInvoices(filtered);
+    this.invoiceManager.delete(id);
   }
 
   // ==================== 客户相关 ====================
@@ -95,67 +153,42 @@ export class StorageManager {
    * 获取所有客户（使用缓存）
    */
   static getCustomers(): Customer[] {
-    return globalCache.getOrSet('customers', () => {
-      try {
-        const stored = localStorage.getItem('customers');
-        return stored ? JSON.parse(stored) : [];
-      } catch (error) {
-        console.error('获取客户失败:', error);
-        return [];
-      }
-    }, 5 * 60 * 1000); // 5 分钟缓存
+    return this.customerManager.getAll();
   }
 
   /**
    * 保存客户列表（并清除缓存）
    */
   static saveCustomers(customers: Customer[]): void {
-    try {
-      localStorage.setItem('customers', JSON.stringify(customers));
-      // 清除缓存，下次读取时会重新加载
-      globalCache.delete('customers');
-    } catch (error) {
-      console.error('保存客户失败:', error);
-      throw new Error('保存客户失败');
-    }
+    this.customerManager.saveAll(customers);
   }
 
   /**
    * 获取单个客户
    */
   static getCustomer(id: string): Customer | null {
-    const customers = this.getCustomers();
-    return customers.find(c => c.id === id) || null;
+    return this.customerManager.getById(id);
   }
 
   /**
    * 添加客户
    */
   static addCustomer(customer: Customer): void {
-    const customers = this.getCustomers();
-    customers.push(customer);
-    this.saveCustomers(customers);
+    this.customerManager.add(customer);
   }
 
   /**
    * 更新客户
    */
   static updateCustomer(id: string, updates: Partial<Customer>): void {
-    const customers = this.getCustomers();
-    const index = customers.findIndex(c => c.id === id);
-    if (index >= 0) {
-      customers[index] = { ...customers[index], ...updates };
-      this.saveCustomers(customers);
-    }
+    this.customerManager.update(id, updates);
   }
 
   /**
    * 删除客户
    */
   static deleteCustomer(id: string): void {
-    const customers = this.getCustomers();
-    const filtered = customers.filter(c => c.id !== id);
-    this.saveCustomers(filtered);
+    this.customerManager.delete(id);
   }
 
   // ==================== 产品相关 ====================
@@ -164,67 +197,42 @@ export class StorageManager {
    * 获取所有产品（使用缓存）
    */
   static getProducts(): Product[] {
-    return globalCache.getOrSet('products', () => {
-      try {
-        const stored = localStorage.getItem('products');
-        return stored ? JSON.parse(stored) : [];
-      } catch (error) {
-        console.error('获取产品失败:', error);
-        return [];
-      }
-    }, 5 * 60 * 1000); // 5 分钟缓存
+    return this.productManager.getAll();
   }
 
   /**
    * 保存产品列表（并清除缓存）
    */
   static saveProducts(products: Product[]): void {
-    try {
-      localStorage.setItem('products', JSON.stringify(products));
-      // 清除缓存，下次读取时会重新加载
-      globalCache.delete('products');
-    } catch (error) {
-      console.error('保存产品失败:', error);
-      throw new Error('保存产品失败');
-    }
+    this.productManager.saveAll(products);
   }
 
   /**
    * 获取单个产品
    */
   static getProduct(id: string): Product | null {
-    const products = this.getProducts();
-    return products.find(p => p.id === id) || null;
+    return this.productManager.getById(id);
   }
 
   /**
    * 添加产品
    */
   static addProduct(product: Product): void {
-    const products = this.getProducts();
-    products.push(product);
-    this.saveProducts(products);
+    this.productManager.add(product);
   }
 
   /**
    * 更新产品
    */
   static updateProduct(id: string, updates: Partial<Product>): void {
-    const products = this.getProducts();
-    const index = products.findIndex(p => p.id === id);
-    if (index >= 0) {
-      products[index] = { ...products[index], ...updates };
-      this.saveProducts(products);
-    }
+    this.productManager.update(id, updates);
   }
 
   /**
    * 删除产品
    */
   static deleteProduct(id: string): void {
-    const products = this.getProducts();
-    const filtered = products.filter(p => p.id !== id);
-    this.saveProducts(filtered);
+    this.productManager.delete(id);
   }
 
   // ==================== 分类相关 ====================

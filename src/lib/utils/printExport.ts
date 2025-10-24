@@ -5,9 +5,9 @@ import { isMobileDevice } from './deviceDetect';
 import { savePDFWithAndroid } from './androidHelpers';
 import {
   removeOklchColors,
-  centerTableCellsForExport,
-  nudgeNonTableTextUp,
-  nudgeTitleUpForExport
+  prepareElementForExport,
+  applyExportStyleAdjustments,
+  calculateScale
 } from './exportHelpers';
 
 /**
@@ -23,53 +23,19 @@ export const printElement = async (element: HTMLElement): Promise<void> => {
   console.log('📱 是否为移动设备:', isMobile);
 
   try {
-    // 固定 CSS 宽度（仅用于打印克隆体，不修改原页面）
     const cssWidth = IMAGE_EXPORT_CONFIG.fixedCssWidth ?? Math.max(1, Math.round(element.getBoundingClientRect().width || element.offsetWidth));
     console.log('📏 CSS 宽度:', cssWidth);
 
-    // 等待 DOM 重排
     await new Promise(resolve => setTimeout(resolve, 50));
-
-    // 等待字体就绪
     try { await (document as any).fonts?.ready; } catch {}
 
-    // 克隆元素以避免修改原始DOM
-    const clone = element.cloneNode(true) as HTMLElement;
+    // 使用共享的准备函数
+    const { clone, offscreen } = prepareElementForExport(element, cssWidth);
+    const computedScale = calculateScale(cssWidth, IMAGE_EXPORT_CONFIG.fixedPixelWidth, IMAGE_EXPORT_CONFIG.scale);
 
-    // 创建离屏容器
-    const offscreen = document.createElement('div');
-    offscreen.style.position = 'fixed';
-    offscreen.style.left = '-10000px';
-    offscreen.style.top = '0';
-    offscreen.style.zIndex = '0';
-    offscreen.style.backgroundColor = '#ffffff';
-    offscreen.appendChild(clone);
-    document.body.appendChild(offscreen);
+    // 应用导出专用调整
+    applyExportStyleAdjustments(clone, -6);
 
-    // 固定克隆体 CSS 宽度，避免受设备影响产生不同换行
-    clone.style.setProperty('width', `${cssWidth}px`, 'important');
-    clone.style.setProperty('max-width', `${cssWidth}px`, 'important');
-    clone.style.setProperty('min-width', `${cssWidth}px`, 'important');
-
-    // 计算用于"固定图片像素宽度"的缩放倍率
-    const desiredPixelWidth = IMAGE_EXPORT_CONFIG.fixedPixelWidth ?? Math.round(cssWidth * IMAGE_EXPORT_CONFIG.scale);
-    const computedScale = Math.max(1, Math.min(4, desiredPixelWidth / cssWidth));
-
-    // 移除 oklch 颜色
-    removeOklchColors(clone);
-
-    // 隐藏所有按钮和不需要打印的元素
-    const elementsToHide = clone.querySelectorAll('button, .no-print, .print\\:hidden');
-    elementsToHide.forEach((el) => {
-      (el as HTMLElement).style.display = 'none';
-    });
-
-    // 应用导出专用调整（与图片导出和 PDF 导出一致）
-    centerTableCellsForExport(clone, -6);
-    nudgeNonTableTextUp(clone, -6);
-    nudgeTitleUpForExport(clone, -6);
-
-    // 使用 html2canvas 生成图片
     const canvas = await html2canvas(clone, {
       scale: computedScale,
       useCORS: IMAGE_EXPORT_CONFIG.useCORS,

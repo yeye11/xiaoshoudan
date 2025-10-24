@@ -393,6 +393,28 @@
   <!-- 应用设置 -->
   <div class="bg-white rounded-lg p-4 shadow-sm border">
     <h3 class="font-medium text-gray-900 mb-4">应用设置</h3>
+
+    <!-- 标签和规格管理入口 -->
+    <div class="mb-4 pb-4 border-b border-gray-200">
+      <a
+        href="/mobile/settings/tags-specs"
+        class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg hover:shadow-md transition-shadow"
+      >
+        <div class="flex items-center space-x-3">
+          <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+          </svg>
+          <div>
+            <div class="font-medium text-gray-900">标签和规格管理</div>
+            <div class="text-xs text-gray-600">管理全局标签和规格</div>
+          </div>
+        </div>
+        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <div>

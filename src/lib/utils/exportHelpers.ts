@@ -3,6 +3,22 @@
  * 用于图片、PDF 和打印导出
  */
 
+import html2canvas from 'html2canvas';
+
+/**
+ * 导出配置接口
+ */
+export interface ExportConfig {
+  fixedPixelWidth?: number;
+  fixedCssWidth?: number;
+  scale: number;
+  useCORS: boolean;
+  backgroundColor: string;
+  logging: boolean;
+  format: string;
+  quality: number;
+}
+
 /**
  * 移除元素中的 oklch 颜色（html2canvas 不支持）
  * @param element - 要处理的HTML元素
@@ -103,5 +119,72 @@ export const nudgeTitleUpForExport = (root: HTMLElement, dy: number = -6): void 
       el.style.willChange = 'transform';
     }
   });
+};
+
+/**
+ * 准备导出元素：克隆、隐藏按钮、应用导出样式
+ * @param element - 原始元素
+ * @param cssWidth - CSS 宽度
+ * @returns 准备好的克隆元素和离屏容器
+ */
+export const prepareElementForExport = (
+  element: HTMLElement,
+  cssWidth: number
+): { clone: HTMLElement; offscreen: HTMLElement } => {
+  // 克隆元素
+  const clone = element.cloneNode(true) as HTMLElement;
+
+  // 创建离屏容器
+  const offscreen = document.createElement('div');
+  offscreen.style.position = 'fixed';
+  offscreen.style.left = '-10000px';
+  offscreen.style.top = '0';
+  offscreen.style.zIndex = '0';
+  offscreen.style.backgroundColor = '#ffffff';
+  offscreen.appendChild(clone);
+  document.body.appendChild(offscreen);
+
+  // 固定克隆体 CSS 宽度
+  clone.style.setProperty('width', `${cssWidth}px`, 'important');
+  clone.style.setProperty('max-width', `${cssWidth}px`, 'important');
+  clone.style.setProperty('min-width', `${cssWidth}px`, 'important');
+
+  // 移除 oklch 颜色
+  removeOklchColors(clone);
+
+  // 隐藏按钮和不需要导出的元素
+  const elementsToHide = clone.querySelectorAll('button, .no-print, .print\\:hidden');
+  elementsToHide.forEach((el) => {
+    (el as HTMLElement).style.display = 'none';
+  });
+
+  return { clone, offscreen };
+};
+
+/**
+ * 应用导出样式调整
+ * @param clone - 克隆的元素
+ * @param dy - 垂直偏移量
+ */
+export const applyExportStyleAdjustments = (clone: HTMLElement, dy: number = -6): void => {
+  centerTableCellsForExport(clone, dy);
+  nudgeNonTableTextUp(clone, dy);
+  nudgeTitleUpForExport(clone, dy);
+};
+
+/**
+ * 计算缩放倍率
+ * @param cssWidth - CSS 宽度
+ * @param fixedPixelWidth - 固定像素宽度
+ * @param scale - 备用缩放倍率
+ * @returns 计算后的缩放倍率
+ */
+export const calculateScale = (
+  cssWidth: number,
+  fixedPixelWidth?: number,
+  scale: number = 3
+): number => {
+  const desiredPixelWidth = fixedPixelWidth ?? Math.round(cssWidth * scale);
+  return Math.max(1, Math.min(4, desiredPixelWidth / cssWidth));
 };
 

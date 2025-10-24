@@ -273,24 +273,25 @@
 </MobileHeader>
 
 <!-- 搜索框 - sticky定位在header下方 -->
-<div class="sticky top-16 z-30 bg-white border-b border-gray-200 p-3 space-y-2">
-  <input
-    type="text"
-    bind:value={keyword}
-    placeholder="搜索产品名称、分类、条码、标签"
-    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-  />
-
-  <!-- 添加产品按钮 -->
-  <a
-    href="/mobile/products/new?returnUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
-    class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors shadow-sm"
-  >
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-    </svg>
-    <span>添加新产品</span>
-  </a>
+<div class="sticky top-16 z-30 bg-white border-b border-gray-200 p-3">
+  <div class="flex gap-2">
+    <input
+      type="text"
+      bind:value={keyword}
+      placeholder="搜索产品名称、分类、条码、标签"
+      class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+    />
+    <!-- 添加产品按钮 - 右上角 -->
+    <a
+      href="/mobile/products/new?returnUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
+      class="flex items-center justify-center w-10 h-10 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm flex-shrink-0"
+      aria-label="添加新产品"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+    </a>
+  </div>
 </div>
 
 <!-- 列表 -->
@@ -335,7 +336,7 @@
 
 <!-- 购物车固定底部栏 - 当编辑模态框打开时隐藏 -->
 {#if !showEditModal}
-  <div class="fixed bottom-0 left-0 right-0 bg-blue-500 shadow-lg z-[60]">
+  <div class="fixed bottom-0 left-0 right-0 bg-blue-500 shadow-lg z-[60]" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
     <div class="flex items-center justify-between px-4 py-3">
       <!-- 左侧：购物车图标和金额 - 可点击 -->
       <button
@@ -374,8 +375,7 @@
   </div>
 {/if}
 
-<!-- 底部占位，防止内容被购物车遮挡 -->
-<div class="h-16"></div>
+
 
 <!-- 使用独立的编辑模态框组件 -->
 <ProductEditModal

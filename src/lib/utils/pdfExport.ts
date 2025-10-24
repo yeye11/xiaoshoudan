@@ -5,9 +5,9 @@ import { IMAGE_EXPORT_CONFIG } from './imageExport';
 import { savePDFWithAndroid } from './androidHelpers';
 import {
   removeOklchColors,
-  centerTableCellsForExport,
-  nudgeNonTableTextUp,
-  nudgeTitleUpForExport
+  prepareElementForExport,
+  applyExportStyleAdjustments,
+  calculateScale
 } from './exportHelpers';
 
 /**
@@ -40,56 +40,21 @@ export async function exportElementAsPDF(
   const config = { ...DEFAULT_PDF_OPTIONS, ...options };
 
   try {
-    // 保存原始样式
     const originalWidth = element.style.width;
     const originalMaxWidth = element.style.maxWidth;
 
-    // 固定 CSS 宽度（仅用于导出克隆体，不修改原页面）
     const cssWidth = IMAGE_EXPORT_CONFIG.fixedCssWidth ?? Math.max(1, Math.round(element.getBoundingClientRect().width || element.offsetWidth));
 
-    // 等待 DOM 重排（给字体/布局与测量一个最小的 settle 时间）
     await new Promise(resolve => setTimeout(resolve, 50));
-
-    // 在截图前等待字体就绪，避免因字体回退造成的测量差异而截断
     try { await (document as any).fonts?.ready; } catch {}
 
-    // 克隆元素以避免修改原始DOM
-    const clone = element.cloneNode(true) as HTMLElement;
+    // 使用共享的准备函数
+    const { clone, offscreen } = prepareElementForExport(element, cssWidth);
+    const computedScale = calculateScale(cssWidth, IMAGE_EXPORT_CONFIG.fixedPixelWidth, IMAGE_EXPORT_CONFIG.scale);
 
-    // 创建离屏容器
-    const offscreen = document.createElement('div');
-    offscreen.style.position = 'fixed';
-    offscreen.style.left = '-10000px';
-    offscreen.style.top = '0';
-    offscreen.style.zIndex = '0';
-    offscreen.style.backgroundColor = '#ffffff';
-    offscreen.appendChild(clone);
-    document.body.appendChild(offscreen);
+    // 应用导出样式调整
+    applyExportStyleAdjustments(clone, -6);
 
-    // 固定克隆体 CSS 宽度，避免受设备影响产生不同换行
-    clone.style.setProperty('width', `${cssWidth}px`, 'important');
-    clone.style.setProperty('max-width', `${cssWidth}px`, 'important');
-    clone.style.setProperty('min-width', `${cssWidth}px`, 'important');
-
-    // 计算用于"固定图片像素宽度"的缩放倍率：canvasWidth = cssWidth * scale = fixedPixelWidth
-    const desiredPixelWidth = IMAGE_EXPORT_CONFIG.fixedPixelWidth ?? Math.round(cssWidth * IMAGE_EXPORT_CONFIG.scale);
-    const computedScale = Math.max(1, Math.min(4, desiredPixelWidth / cssWidth)); // 限制缩放范围，避免过大/过小
-
-    // 移除 oklch 颜色
-    removeOklchColors(clone);
-
-    // 隐藏所有按钮和不需要导出的元素
-    const elementsToHide = clone.querySelectorAll('button, .no-print, .print\\:hidden');
-    elementsToHide.forEach((el) => {
-      (el as HTMLElement).style.display = 'none';
-    });
-
-    // 在克隆体上做最小化的导出专用调整
-    centerTableCellsForExport(clone, -6);       // 单元格内容垂直/水平居中，并整体上移 6px
-    nudgeNonTableTextUp(clone, -6);             // 表格外的文本整体上移 6px，修正基线
-    nudgeTitleUpForExport(clone, -6);           // 仅将"销售单"标题上移 6px（导出专用）
-
-    // 使用 html2canvas 生成图片（关闭 foreignObjectRendering，避免个别环境渲染为空/全黑）
     const canvas = await html2canvas(clone, {
       scale: computedScale,
       useCORS: IMAGE_EXPORT_CONFIG.useCORS,
@@ -97,28 +62,22 @@ export async function exportElementAsPDF(
       logging: IMAGE_EXPORT_CONFIG.logging
     });
 
-    // 清理离屏容器
     document.body.removeChild(offscreen);
-
-    // 恢复原始样式
     element.style.width = originalWidth;
     element.style.maxWidth = originalMaxWidth;
 
     // 转换为 PDF
     const imgData = canvas.toDataURL(IMAGE_EXPORT_CONFIG.format, IMAGE_EXPORT_CONFIG.quality);
 
-    // 创建 PDF
     const pdf = new jsPDF({
       orientation: config.orientation,
       unit: 'mm',
       format: config.format
     });
 
-    // 计算图片在 PDF 中的尺寸
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    // 保持宽高比
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
     const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
@@ -126,17 +85,13 @@ export async function exportElementAsPDF(
     const imgPdfWidth = imgWidth * ratio;
     const imgPdfHeight = imgHeight * ratio;
 
-    // 居中显示
     const x = (pdfWidth - imgPdfWidth) / 2;
     const y = (pdfHeight - imgPdfHeight) / 2;
 
-    // 添加图片到 PDF
     pdf.addImage(imgData, 'JPEG', x, y, imgPdfWidth, imgPdfHeight);
 
-    // 保存 PDF
     const fileName = `${config.fileName}.pdf`;
 
-    // 检查是否有 Android 原生接口
     // @ts-ignore
     const hasAndroidPDFSaver = window.AndroidImageSaver && typeof window.AndroidImageSaver.savePDF === 'function';
 
@@ -146,7 +101,7 @@ export async function exportElementAsPDF(
       pdf.save(fileName);
     }
   } catch (error) {
-    console.error('导出 PDF 失败:', error);
+    console.error('❌ 导出 PDF 失败:', error);
     throw error;
   }
 }
@@ -161,24 +116,20 @@ export async function exportElementAsMultiPagePDF(
   options: PDFExportOptions = {}
 ): Promise<void> {
   const config = { ...DEFAULT_PDF_OPTIONS, ...options };
-  
+
   console.log('📄 开始生成多页 PDF...');
 
   try {
-    // 1. 克隆元素并移除 oklch 颜色
     console.log('🔧 正在准备元素...');
     const clonedElement = element.cloneNode(true) as HTMLElement;
 
-    // 临时添加到 DOM 中以便获取计算样式
     clonedElement.style.position = 'absolute';
     clonedElement.style.left = '-9999px';
     clonedElement.style.top = '-9999px';
     document.body.appendChild(clonedElement);
 
-    // 移除 oklch 颜色
     removeOklchColors(clonedElement);
 
-    // 2. 截取整个元素
     const canvas = await html2canvas(clonedElement, {
       scale: config.scale,
       useCORS: true,
@@ -186,12 +137,10 @@ export async function exportElementAsMultiPagePDF(
       backgroundColor: '#ffffff'
     });
 
-    // 移除临时元素
     document.body.removeChild(clonedElement);
 
     const imgData = canvas.toDataURL('image/jpeg', config.quality);
 
-    // 2. 创建 PDF
     const pdf = new jsPDF({
       orientation: config.orientation,
       unit: 'mm',
@@ -200,37 +149,31 @@ export async function exportElementAsMultiPagePDF(
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    // 3. 计算需要多少页
+
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-    
-    // 图片宽度适配 PDF 宽度
+
     const ratio = pdfWidth / imgWidth;
     const imgPdfWidth = pdfWidth;
     const imgPdfHeight = imgHeight * ratio;
-    
-    // 计算需要的页数
+
     const totalPages = Math.ceil(imgPdfHeight / pdfHeight);
-    
+
     console.log('📄 总页数:', totalPages);
 
-    // 4. 分页添加图片
     for (let i = 0; i < totalPages; i++) {
       if (i > 0) {
         pdf.addPage();
       }
-      
+
       const yOffset = -(i * pdfHeight);
       pdf.addImage(imgData, 'JPEG', 0, yOffset, imgPdfWidth, imgPdfHeight);
-      
+
       console.log(`📄 已添加第 ${i + 1}/${totalPages} 页`);
     }
 
-    // 5. 保存 PDF
     const fileName = `${config.fileName}.pdf`;
 
-    // 检查是否有 Android 原生接口
     // @ts-ignore
     const hasAndroidPDFSaver = window.AndroidImageSaver && typeof window.AndroidImageSaver.savePDF === 'function';
 

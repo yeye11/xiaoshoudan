@@ -232,7 +232,7 @@ export const createEmptyInvoice = (companyInfo: CompanyInfo): Invoice => {
       email: ''
     },
     companyInfo,
-    items: [createEmptyInvoiceItem()],
+    items: [],
     totalAmount: 0,
     createdBy: '',
     status: 'draft',

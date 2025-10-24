@@ -3,20 +3,18 @@
 # Android APK 构建脚本
 # 仁腾装饰材料管理系统
 
+# 加载共享的构建工具函数
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/scripts/build-utils.sh"
+
 echo "🚀 开始构建 Android APK..."
 
-# 检查环境
-echo "📋 检查构建环境..."
-
-# 检查 Rust 环境
-if ! command -v cargo &> /dev/null; then
-    echo "❌ Rust 未安装，请先安装 Rust"
+# 检查基础环境
+if ! check_command "cargo" "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"; then
     exit 1
 fi
 
-# 检查 Node.js 环境
-if ! command -v npm &> /dev/null; then
-    echo "❌ Node.js 未安装，请先安装 Node.js"
+if ! check_command "npm" "请访问 https://nodejs.org/"; then
     exit 1
 fi
 
@@ -85,15 +83,9 @@ echo "✅ 环境检查完成"
 source "$HOME/.cargo/env"
 
 # 构建前端
-echo "🔨 构建前端..."
-npm run build
-
-if [ $? -ne 0 ]; then
-    echo "❌ 前端构建失败"
+if ! build_frontend; then
     exit 1
 fi
-
-echo "✅ 前端构建完成"
 
 # 初始化 Android 项目（如果需要）
 if [ ! -d "src-tauri/gen/android" ]; then

@@ -149,6 +149,13 @@
     margin-bottom: 1rem !important;
   }
 
+  /* 排除底部导航栏和相关元素的 margin-bottom */
+  nav.fixed,
+  .mobile-nav,
+  nav.fixed ~ * {
+    margin-bottom: 0 !important;
+  }
+
   /* 网格布局移动端优化 */
   .grid-cols-2 {
     grid-template-columns: 1fr !important;

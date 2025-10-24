@@ -54,7 +54,7 @@
   </main>
 
   <!-- 底部导航栏 -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white z-50" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+  <nav class="fixed bottom-0 left-0 right-0 bg-white z-50" style="height: calc(64px + env(safe-area-inset-bottom, 0px));">
     <div class="flex items-center justify-around h-16">
       {#each navItems as item}
         <button
@@ -75,7 +75,7 @@
   <div class="fixed left-0 right-0 bg-white pointer-events-none" style="bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 1px); z-index: 51;"></div>
 
   <!-- 最底部向下延伸 2px，覆盖任何底缘发丝线 -->
-  <div class="fixed bg-white pointer-events-none" style="left: -1px; right: -1px; bottom: -80px; height: 80px; z-index: 9999;"></div>
+
 
 
 </div>
