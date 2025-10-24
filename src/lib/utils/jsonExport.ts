@@ -1,22 +1,9 @@
 /**
  * JSON 数据导出工具
- * 支持多层备用方案：
+ * 支持两层方案：
  * 1. Android 原生接口（保存到下载文件夹）
- * 2. Tauri API（保存到下载文件夹）
- * 3. IndexedDB 存储（最后的兜底方案）
- * 4. 浏览器下载 API（桌面环境）
+ * 2. 浏览器下载 API（桌面环境）
  */
-
-/**
- * 检测是否在 Tauri 环境中
- */
-function isTauriEnvironment(): boolean {
-  try {
-    return typeof window !== 'undefined' && '__TAURI__' in window;
-  } catch {
-    return false;
-  }
-}
 
 /**
  * 将 JSON 数据导出为文件
@@ -27,7 +14,6 @@ function isTauriEnvironment(): boolean {
 export async function exportJsonData(data: any, fileName: string): Promise<void> {
   try {
     console.log('📊 开始导出 JSON 数据:', fileName);
-    console.log('🔍 环境检测 - Tauri:', isTauriEnvironment());
 
     // 转换为 JSON 字符串
     const jsonStr = JSON.stringify(data, null, 2);
@@ -43,19 +29,7 @@ export async function exportJsonData(data: any, fileName: string): Promise<void>
       return;
     }
 
-    // 尝试方案 2: Tauri API（仅在 Tauri 环境中）
-    if (isTauriEnvironment() && await tryTauriSave(blob, fullFileName)) {
-      console.log('✅ 使用 Tauri API 保存成功');
-      return;
-    }
-
-    // 尝试方案 3: IndexedDB 存储（兜底方案）
-    if (await tryIndexedDBSave(jsonStr, fullFileName)) {
-      console.log('✅ 使用 IndexedDB 保存成功');
-      return;
-    }
-
-    // 方案 4: 浏览器下载 API（桌面环境）
+    // 方案 2: 浏览器下载 API（桌面环境）
     tryBrowserDownload(blob, fullFileName);
     console.log('✅ 使用浏览器下载 API 保存成功');
   } catch (error) {
@@ -107,117 +81,7 @@ async function tryAndroidNativeSave(blob: Blob, fileName: string): Promise<boole
   }
 }
 
-/**
- * 尝试使用 Tauri API 保存
- */
-async function tryTauriSave(blob: Blob, fileName: string): Promise<boolean> {
-  try {
-    console.log('🔧 尝试使用 Tauri API 保存...');
 
-    // 检查是否在 Tauri 环境中
-    if (!isTauriEnvironment()) {
-      console.log('ℹ️  不在 Tauri 环境中，跳过 Tauri API');
-      return false;
-    }
-
-    // 动态导入 Tauri 模块
-    let writeFile, BaseDirectory;
-    try {
-      const tauriFs = await import('@tauri-apps/plugin-fs');
-      writeFile = tauriFs.writeFile;
-      BaseDirectory = tauriFs.BaseDirectory;
-    } catch (importError) {
-      console.warn('⚠️  无法导入 Tauri 文件系统模块:', importError);
-      return false;
-    }
-
-    // 将 Blob 转换为字节数组
-    const arrayBuffer = await blob.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-
-    console.log('📁 保存文件到下载文件夹...');
-
-    // 使用 Download 目录
-    await writeFile(fileName, bytes, { baseDir: BaseDirectory.Download });
-
-    console.log('✅ Tauri API 保存成功！');
-    alert(`✅ 数据已保存到下载文件夹！\n\n文件名：${fileName}\n\n请在文件管理器的"下载"文件夹中查看`);
-    return true;
-  } catch (error) {
-    console.warn('⚠️  Tauri API 保存失败:', error);
-    return false;
-  }
-}
-
-/**
- * 尝试使用 IndexedDB 保存（作为最后的兜底方案）
- */
-async function tryIndexedDBSave(jsonStr: string, fileName: string): Promise<boolean> {
-  try {
-    console.log('🔧 尝试使用 IndexedDB 保存...');
-
-    // 检查 IndexedDB 支持
-    if (!window.indexedDB) {
-      console.log('ℹ️  IndexedDB 不可用');
-      return false;
-    }
-
-    return new Promise((resolve) => {
-      const request = window.indexedDB.open('CypridinaBakup', 1);
-
-      request.onerror = () => {
-        console.warn('⚠️  IndexedDB 打开失败');
-        resolve(false);
-      };
-
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('exports')) {
-          db.createObjectStore('exports', { keyPath: 'id', autoIncrement: true });
-        }
-      };
-
-      request.onsuccess = (event: any) => {
-        try {
-          const db = event.target.result;
-          const transaction = db.transaction(['exports'], 'readwrite');
-          const store = transaction.objectStore('exports');
-
-          const exportData = {
-            fileName,
-            content: jsonStr,
-            timestamp: new Date().toISOString(),
-            size: jsonStr.length
-          };
-
-          const addRequest = store.add(exportData);
-
-          addRequest.onsuccess = () => {
-            console.log('✅ IndexedDB 保存成功！');
-            alert(
-              `✅ 数据已保存到本地存储！\n\n` +
-              `文件名：${fileName}\n` +
-              `大小：${(jsonStr.length / 1024).toFixed(2)} KB\n\n` +
-              `提示：您可以在应用设置中导出此数据`
-            );
-            resolve(true);
-          };
-
-          addRequest.onerror = () => {
-            console.warn('⚠️  IndexedDB 保存失败');
-            resolve(false);
-          };
-        } catch (error) {
-          console.warn('⚠️  IndexedDB 操作失败:', error);
-          resolve(false);
-        }
-      };
-    });
-  } catch (error) {
-    console.warn('⚠️  IndexedDB 保存失败:', error);
-    return false;
-  }
-}
 
 /**
  * 使用浏览器下载 API 保存（桌面环境）
@@ -247,6 +111,8 @@ function tryBrowserDownload(blob: Blob, fileName: string): void {
 
 /**
  * 将 Blob 转换为 Base64 字符串
+ * 注意：这个函数与 imageExport.ts 中的逻辑相同，
+ * 但由于 imageExport.ts 是内部函数，这里保留独立实现
  */
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
