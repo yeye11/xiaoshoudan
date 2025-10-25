@@ -1,0 +1,286 @@
+// 数据库配置
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Prisma 客户端配置
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============ 用户相关 ============
+
+// 公司表 (多租户)
+model Company {
+  id                    String   @id @default(cuid())
+  name                  String
+  licenseNo             String?  @unique
+  phone                 String?
+  email                 String?
+  address               String?
+  subscriptionPlan      String   @default("free") // free, basic, pro, enterprise
+  subscriptionStatus    String   @default("active") // active, expired, suspended
+  subscriptionExpiresAt DateTime?
+  maxUsers              Int      @default(5)
+  maxProducts           Int      @default(1000)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // 关系
+  users                 User[]
+  customers             Customer[]
+  products              Product[]
+  salesInvoices         SalesInvoice[]
+  inventory             Inventory[]
+  inventoryLogs         InventoryLog[]
+  payments              Payment[]
+  auditLogs             AuditLog[]
+
+  @@index([subscriptionStatus])
+  @@map("companies")
+}
+
+// 用户表
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  companyId     String
+  role          String   @default("salesman") // admin, manager, salesman
+  status        String   @default("active") // active, inactive, suspended
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  // 关系
+  company        Company  @relation(fields: [companyId], references: [id])
+  salesInvoices  SalesInvoice[]
+  customers      Customer[]
+  products       Product[]
+  payments       Payment[]
+  auditLogs      AuditLog[]
+  inventoryLogs  InventoryLog[]
+
+  @@index([email])
+  @@index([companyId])
+  @@index([status])
+  @@map("users")
+}
+
+// ============ 销售相关 ============
+
+// 销售单表
+model SalesInvoice {
+  id              String   @id @default(cuid())
+  companyId       String
+  invoiceNo       String   @unique
+  customerId      String
+  userId          String
+  invoiceDate     DateTime
+  totalAmount     Float
+  discountAmount  Float    @default(0)
+  finalAmount     Float
+  status          String   @default("draft") // draft, submitted, approved, completed, cancelled
+  paymentStatus   String   @default("unpaid") // unpaid, partial, paid
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  // 关系
+  company         Company  @relation(fields: [companyId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+  items           SalesItem[]
+  payments        Payment[]
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([status])
+  @@index([invoiceDate])
+  @@map("sales_invoices")
+}
+
+// 销售单明细表
+model SalesItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  productId   String
+  quantity    Float
+  unitPrice   Float
+  discountRate Float @default(0) // 折扣率 %
+  lineAmount  Float
+  remark      String?
+  createdAt   DateTime @default(now())
+
+  // 关系
+  invoice     SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id])
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@map("sales_items")
+}
+
+// ============ 客户相关 ============
+
+// 客户表
+model Customer {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  phone       String?
+  email       String?
+  category    String?  // VIP, 普通, 潜在
+  creditLimit Float    @default(0)
+  creditUsed  Float    @default(0)
+  address     String?
+  remark      String?
+  status      String   @default("active") // active, inactive, blacklist
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  createdBy   String
+
+  // 关系
+  company     Company  @relation(fields: [companyId], references: [id])
+  user        User     @relation(fields: [createdBy], references: [id])
+  invoices    SalesInvoice[]
+
+  @@index([companyId])
+  @@index([status])
+  @@map("customers")
+}
+
+// ============ 产品相关 ============
+
+// 产品表
+model Product {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  sku         String   @unique
+  category    String?
+  unit        String?  // 件, 盒, 箱等
+  unitPrice   Float
+  costPrice   Float?
+  specs       String?  // 规格说明
+  description String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  createdBy   String
+
+  // 关系
+  company     Company  @relation(fields: [companyId], references: [id])
+  user        User     @relation(fields: [createdBy], references: [id])
+  items       SalesItem[]
+  inventory   Inventory?
+
+  @@index([companyId])
+  @@index([sku])
+  @@map("products")
+}
+
+// ============ 库存相关 ============
+
+// 库存表
+model Inventory {
+  id           String   @id @default(cuid())
+  companyId    String
+  productId    String   @unique
+  quantity     Float    @default(0)
+  reserved     Float    @default(0) // 已预留
+  warningLevel Float    @default(0) // 预警库存
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关系
+  company      Company  @relation(fields: [companyId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id])
+
+  @@index([companyId])
+  @@index([productId])
+  @@map("inventory")
+}
+
+// 库存日志表
+model InventoryLog {
+  id            String   @id @default(cuid())
+  companyId     String
+  productId     String
+  type          String   // in, out, adjust, return
+  quantity      Float
+  reason        String?
+  referenceId   String?  // 关联销售单等
+  referenceType String?  // sales_invoice, purchase_order等
+  createdBy     String
+  createdAt     DateTime @default(now())
+
+  // 关系
+  company       Company  @relation(fields: [companyId], references: [id])
+  creator       User     @relation(fields: [createdBy], references: [id])
+
+  @@index([companyId])
+  @@index([productId])
+  @@index([createdAt])
+  @@map("inventory_logs")
+}
+
+// ============ 财务相关 ============
+
+// 收款记录表
+model Payment {
+  id            String   @id @default(cuid())
+  companyId     String
+  invoiceId     String
+  userId        String
+  amount        Float
+  paymentMethod String?  // cash, bank_transfer, check等
+  paymentDate   DateTime
+  referenceNo   String?  // 支票号、转账号等
+  status        String   @default("completed")
+  remark        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关系
+  company       Company  @relation(fields: [companyId], references: [id])
+  invoice       SalesInvoice @relation(fields: [invoiceId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([invoiceId])
+  @@map("payments")
+}
+
+// ============ 审计相关 ============
+
+// 审计日志表
+model AuditLog {
+  id            String   @id @default(cuid())
+  companyId     String
+  userId        String
+  action        String   // create, update, delete, export等
+  resourceType  String   // sales_invoice, customer, product等
+  resourceId    String?
+  changes       String?  // 变更内容 (JSON 字符串)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  // 关系
+  company       Company  @relation(fields: [companyId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
