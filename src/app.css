@@ -65,12 +65,7 @@ body {
   appearance: none !important;
 }
 
-*:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-outline: none !important;
-}
-
+*:focus,
 *:focus-visible {
   outline: none !important;
   box-shadow: none !important;
@@ -78,61 +73,9 @@ body {
 }
 
 /* 移除所有 Tailwind ring 类 */
-[class*="ring"] {
-  box-shadow: none !important;
-}
-
+[class*="ring"],
 [class*="focus:ring"] {
   box-shadow: none !important;
-}
-
-/* 移除所有可能的焦点指示器 */
-:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* 移除 div[role="button"] 的焦点指示器 */
-div[role="button"] {
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  appearance: none !important;
-}
-
-div[role="button"]:focus,
-div[role="button"]:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-outline: none !important;
-}
-
-/* 移除 input 的焦点指示器 */
-input,
-textarea,
-select {
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  appearance: none !important;
-}
-
-input:focus,
-input:focus-visible,
-textarea:focus,
-textarea:focus-visible,
-select:focus,
-select:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  -webkit-outline: none !important;
 }
 
 /* 手动定义颜色类 */

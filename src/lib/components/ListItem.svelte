@@ -97,21 +97,5 @@
   </div>
 </div>
 
-<style>
-  .list-item {
-    outline: none !important;
-    box-shadow: none !important;
-  }
 
-  .list-item:focus,
-  .list-item:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .list-item::before,
-  .list-item::after {
-    display: none !important;
-  }
-</style>
 
