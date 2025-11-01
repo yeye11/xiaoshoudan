@@ -30,6 +30,19 @@
 
   onMount(() => {
     loadProducts();
+
+    // 从 sessionStorage 加载已有的产品到购物车
+    const existingProducts = sessionStorage.getItem('selectedProducts');
+    if (existingProducts) {
+      try {
+        const items: InvoiceItem[] = JSON.parse(existingProducts);
+        if (items.length > 0) {
+          cart = items;
+        }
+      } catch (e) {
+        console.error('加载现有产品失败:', e);
+      }
+    }
   });
 
   const loadProducts = () => {
@@ -68,10 +81,12 @@
 
     if (history) {
       // 使用历史购买信息
+      console.log('📋 找到历史购买信息:', history);
       editingItem.unit = history.unit;
       editingItem.unitPrice = history.unitPrice;
       editingItem.specification = history.specification;
       editingItem.quantity = 1; // 数量默认为1，不使用历史数量
+      console.log('📋 设置后的 editingItem.unitPrice:', editingItem.unitPrice);
       console.log('📋 使用客户历史购买信息:', {
         product: product.name,
         unit: history.unit,

@@ -122,7 +122,10 @@
   };
 
   const handleViewInvoice = (invoiceId: string) => {
-    goto(`/mobile/sales/${invoiceId}`);
+    // 传递 from 参数，以便销售单详情页面知道从哪里来的
+    const targetUrl = `/mobile/sales/${invoiceId}?from=customer&customerId=${customerId}`;
+    console.log('📍 从客户详情跳转到销售单:', targetUrl);
+    goto(targetUrl);
   };
 
   const toggleSort = (field: string) => {

@@ -11,7 +11,7 @@
   const list = useList({
     initialData: [],
     searchFields: ['invoiceNumber'],
-    sortFields: ['date', 'totalAmount'],
+    sortFields: ['createdAt', 'totalAmount'],
     onDelete: async (item: Invoice) => {
       StorageManager.deleteInvoice(item.id);
     },
@@ -24,8 +24,8 @@
 
   onMount(async () => {
     await load();
-    // 默认按照日期倒序排序
-    sortField.set('date');
+    // 默认按照创建时间倒序排序
+    sortField.set('createdAt');
     sortOrder.set('desc');
   });
 
@@ -89,13 +89,13 @@
     <!-- 排序按钮 -->
     <div class="flex gap-2">
       <button
-        on:click={() => toggleSort('date')}
+        on:click={() => toggleSort('createdAt')}
         class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-        class:bg-purple-500={$sortField === 'date'}
-        class:text-white={$sortField === 'date'}
-        class:bg-gray-100={$sortField !== 'date'}
+        class:bg-purple-500={$sortField === 'createdAt'}
+        class:text-white={$sortField === 'createdAt'}
+        class:bg-gray-100={$sortField !== 'createdAt'}
       >
-        日期 {$sortField === 'date' ? ($sortOrder === 'asc' ? '↑' : '↓') : ''}
+        创建时间 {$sortField === 'createdAt' ? ($sortOrder === 'asc' ? '↑' : '↓') : ''}
       </button>
       <button
         on:click={() => toggleSort('totalAmount')}

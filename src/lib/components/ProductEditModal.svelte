@@ -51,20 +51,28 @@
     }
   };
 
-  // 处理输入框聚焦时清空默认值0
-  const handleFocus = (event: FocusEvent) => {
+  // 处理单价输入框聚焦时全选内容
+  const handlePriceFocus = (event: FocusEvent) => {
     const input = event.target as HTMLInputElement;
-    if (input.value === '0') {
-      input.value = '';
-    }
+    // 全选输入框内容，方便用户直接输入新值
+    input.select();
+    console.log('单价输入框已聚焦，当前值:', input.value);
   };
 
-  // 处理输入框失焦时如果为空则设置为0
-  const handleBlur = (event: FocusEvent) => {
+  // 处理单价输入框失焦时如果为空则设置为0
+  const handlePriceBlur = (event: FocusEvent) => {
     const input = event.target as HTMLInputElement;
     if (input.value === '') {
       item!.unitPrice = 0;
+      console.log('单价输入框为空，已设置为0');
     }
+  };
+
+  // 处理数量输入框聚焦时清空内容
+  const handleQuantityFocus = (event: FocusEvent) => {
+    const input = event.target as HTMLInputElement;
+    input.value = '';
+    console.log('数量输入框已清空');
   };
 
   // 响应式计算金额
@@ -157,8 +165,8 @@
             <input
               type="number"
               bind:value={item.unitPrice}
-              on:focus={handleFocus}
-              on:blur={handleBlur}
+              on:focus={handlePriceFocus}
+              on:blur={handlePriceBlur}
               min="0"
               step="0.01"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
@@ -229,6 +237,7 @@
               <input
                 type="number"
                 bind:value={item.quantity}
+                on:focus={handleQuantityFocus}
                 min="1"
                 step="1"
                 class="w-14 px-1 py-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"

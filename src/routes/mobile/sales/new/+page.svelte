@@ -8,10 +8,12 @@
   import { onMount } from 'svelte';
   import { StorageManager } from '$lib/utils/storage';
   import { useForm } from '$lib/composables/useForm';
+  import { saveCustomerOrderHistory } from '$lib/utils/customerHistory';
 
   let selectedCustomer: Customer | null = null;
   let customers: Customer[] = [];
   let showCustomerPicker = false;
+  let fromPage: string | null = null; // 记录来源页面
 
   // 初始化表单
   const form = useForm({
@@ -32,12 +34,36 @@
           phone: selectedCustomer.phone,
           address: selectedCustomer.address || ''
         };
+
+        // 保存客户购买历史
+        if (data.items && data.items.length > 0) {
+          // 过滤出有 productId 的项目
+          const itemsWithProductId = data.items
+            .filter(item => item.productId)
+            .map(item => ({
+              productId: item.productId!,
+              unitPrice: item.unitPrice,
+              unit: item.unit,
+              specification: item.specification,
+              quantity: item.quantity
+            }));
+
+          if (itemsWithProductId.length > 0) {
+            saveCustomerOrderHistory(selectedCustomer.id, itemsWithProductId);
+            console.log('💾 已保存客户购买历史:', selectedCustomer.name, itemsWithProductId.length, '个产品');
+          }
+        }
       }
 
       StorageManager.addInvoice(data);
     },
-    onSuccess: () => {
-      goto('/mobile/sales');
+    onSuccess: (data) => {
+      // 如果是从客户详情页面来的，返回到销售单详情页面并传递 from 参数
+      if (fromPage === 'customer' && selectedCustomer) {
+        goto(`/mobile/sales/${data.id}?from=customer&customerId=${selectedCustomer.id}`);
+      } else {
+        goto('/mobile/sales');
+      }
     }
   });
 
@@ -57,6 +83,9 @@
     // 检查URL参数中是否有customerId
     const customerId = $page.url.searchParams.get('customerId');
     if (customerId) {
+      // 标记来源为客户详情页面
+      fromPage = 'customer';
+
       const customer = StorageManager.getCustomer(customerId);
       if (customer) {
         selectedCustomer = customer;
@@ -87,6 +116,11 @@
   });
 
   const handleSelectProducts = () => {
+    // 将当前已有的产品保存到 sessionStorage，以便在产品选择页面预加载
+    if ($data.items.length > 0) {
+      sessionStorage.setItem('selectedProducts', JSON.stringify($data.items));
+    }
+
     // 导航到产品选择页面
     const customerId = selectedCustomer?.id || '';
     goto(`/mobile/products/select?customerId=${customerId}`);

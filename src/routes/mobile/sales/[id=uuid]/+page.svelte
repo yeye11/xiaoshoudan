@@ -16,6 +16,11 @@
   let error = '';
   let invoiceContainer: HTMLElement | null = null;
 
+  // 获取来源信息
+  let fromPage: string | null = null;
+  let customerId: string | null = null;
+  let backPath: string | null = null;
+
   const BASE_WIDTH = IMAGE_EXPORT_CONFIG.fixedCssWidth;
   let viewportRef: HTMLElement | null = null;
   let contentRef: HTMLElement | null = null;
@@ -26,6 +31,21 @@
   onMount(() => {
     // 1. 加载销售单数据
     invoiceId = $page.params.id as string;
+
+    // 获取 URL 参数
+    fromPage = $page.url.searchParams.get('from');
+    customerId = $page.url.searchParams.get('customerId');
+
+    console.log('📍 销售单详情页面 - URL参数:', { fromPage, customerId });
+
+    // 设置返回路径
+    if (fromPage === 'customer' && customerId) {
+      backPath = `/mobile/customers/${customerId}`;
+      console.log('📍 设置自定义返回路径:', backPath);
+    } else {
+      console.log('📍 未设置自定义返回路径，将使用默认逻辑');
+    }
+
     loadInvoice();
 
     // 2. 检测设备类型
@@ -101,7 +121,12 @@
   };
 
   const handleEdit = () => {
-    goto(`/mobile/sales/${invoiceId}/edit`);
+    // 如果是从客户详情页面来的，编辑时也传递 from 参数
+    if (fromPage === 'customer' && customerId) {
+      goto(`/mobile/sales/${invoiceId}/edit?from=customer&customerId=${customerId}`);
+    } else {
+      goto(`/mobile/sales/${invoiceId}/edit`);
+    }
   };
 
   // 检测是否为移动设备
@@ -183,6 +208,7 @@
   showBack={true}
   showActions={true}
   backgroundColor="bg-red-500"
+  customBackPath={backPath}
 >
   <div slot="actions">
     {#if invoice && invoice.status === 'draft'}

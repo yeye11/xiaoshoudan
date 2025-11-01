@@ -9,11 +9,14 @@
   import { StorageManager } from '$lib/utils/storage';
   import { validators } from '$lib/utils/validation';
   import { useForm } from '$lib/composables/useForm';
+  import { saveCustomerOrderHistory } from '$lib/utils/customerHistory';
 
   let invoiceId: string = '';
   let initialInvoice: Invoice;
   let customers: Customer[] = [];
   let showCustomerPicker = false;
+  let fromPage: string | null = null; // 记录来源页面
+  let returnCustomerId: string | null = null; // 记录返回的客户ID
 
   // 初始化表单
   const form = useForm({
@@ -28,10 +31,35 @@
     onSave: async (data) => {
       data.customerInfo.name = data.customerInfo.name.trim();
       data.updatedAt = new Date().toISOString();
+
+      // 保存客户购买历史
+      if (data.customerId && data.items && data.items.length > 0) {
+        // 过滤出有 productId 的项目
+        const itemsWithProductId = data.items
+          .filter(item => item.productId)
+          .map(item => ({
+            productId: item.productId!,
+            unitPrice: item.unitPrice,
+            unit: item.unit,
+            specification: item.specification,
+            quantity: item.quantity
+          }));
+
+        if (itemsWithProductId.length > 0) {
+          saveCustomerOrderHistory(data.customerId, itemsWithProductId);
+          console.log('💾 已更新客户购买历史:', data.customerInfo.name, itemsWithProductId.length, '个产品');
+        }
+      }
+
       StorageManager.updateInvoice(data.id, data);
     },
-    onSuccess: () => {
-      goto('/mobile/sales');
+    onSuccess: (data) => {
+      // 如果是从客户详情页面来的，返回到销售单详情页面并传递 from 参数
+      if (fromPage === 'customer' && returnCustomerId) {
+        goto(`/mobile/sales/${data.id}?from=customer&customerId=${returnCustomerId}`);
+      } else {
+        goto('/mobile/sales');
+      }
     }
   });
 
@@ -55,14 +83,34 @@
     showCustomerPicker = false;
   };
 
+  const handleSelectProducts = () => {
+    // 将当前已有的产品保存到 sessionStorage，以便在产品选择页面预加载
+    if ($data.items.length > 0) {
+      sessionStorage.setItem('selectedProducts', JSON.stringify($data.items));
+    }
+
+    // 导航到产品选择页面
+    const customerId = $data.customerId || '';
+    goto(`/mobile/products/select?customerId=${customerId}&returnTo=edit&invoiceId=${invoiceId}`);
+  };
+
   onMount(async () => {
     invoiceId = $page.params.id || '';
+
+    // 检查 URL 参数，判断是否从客户详情页面来的
+    fromPage = $page.url.searchParams.get('from');
+    returnCustomerId = $page.url.searchParams.get('customerId');
 
     try {
       const invoice = StorageManager.getInvoice(invoiceId);
       if (invoice) {
         initialInvoice = invoice;
         data.set(invoice);
+
+        // 如果没有从 URL 获取 customerId，使用销售单的 customerId
+        if (!returnCustomerId && invoice.customerId) {
+          returnCustomerId = invoice.customerId;
+        }
       } else {
         form.setFieldError('general', '销售单不存在');
       }
@@ -72,6 +120,22 @@
     } catch (error) {
       console.error('加载销售单失败:', error);
       form.setFieldError('general', '加载销售单信息失败');
+    }
+
+    // 检查 sessionStorage 中是否有选中的产品
+    const selectedProducts = sessionStorage.getItem('selectedProducts');
+    if (selectedProducts) {
+      try {
+        const items = JSON.parse(selectedProducts);
+        if (items.length > 0) {
+          $data.items = items;
+          $data.totalAmount = calculateTotalAmount(items);
+          // 清除 sessionStorage
+          sessionStorage.removeItem('selectedProducts');
+        }
+      } catch (e) {
+        console.error('加载选中产品失败:', e);
+      }
     }
   });
 </script>
@@ -172,6 +236,13 @@
   <div class="bg-white rounded-lg p-4 shadow-sm border">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-medium text-gray-900">产品项目</h3>
+      <button
+        type="button"
+        on:click={handleSelectProducts}
+        class="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+      >
+        + 选择产品
+      </button>
     </div>
 
     <!-- 产品列表 -->

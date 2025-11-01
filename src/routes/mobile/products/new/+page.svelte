@@ -34,21 +34,25 @@
 
         if (names.length === 0) {
           form.setFieldError('general', '请输入至少一个产品名称');
-          return;
+          throw new Error('请输入至少一个产品名称');
         }
 
+        console.log('批量创建产品，数量:', names.length);
         for (const name of names) {
           const newProduct = { ...data };
           newProduct.id = crypto.randomUUID();
           newProduct.name = name;
           newProduct.updatedAt = new Date().toISOString();
           StorageManager.addProduct(newProduct);
+          console.log('已添加产品:', name);
         }
+        console.log('批量创建完成');
       } else {
         // 单个模式
         data.name = data.name.trim();
         data.updatedAt = new Date().toISOString();
         StorageManager.addProduct(data);
+        console.log('已添加产品:', data.name);
       }
 
       // 保存分类和单位
@@ -68,6 +72,35 @@
   });
 
   const { data, errors, isSubmitting } = form;
+
+  // 自定义保存处理函数，支持批量模式
+  const handleCustomSave = async () => {
+    // 清除之前的错误
+    form.clearFieldError('general');
+
+    if (isBatchMode) {
+      // 批量模式：验证批量名称
+      const names = batchNames
+        .split(/[,，;；\n\r]+/)
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      if (names.length === 0) {
+        form.setFieldError('general', '请输入至少一个产品名称');
+        return;
+      }
+
+      // 批量模式下，临时设置一个假的 name 值来通过验证
+      // 这个值会在 onSave 中被替换
+      $data.name = '批量模式临时名称';
+
+      // 调用保存
+      await form.handleSave();
+    } else {
+      // 单个模式：使用正常的表单验证
+      await form.handleSave();
+    }
+  };
 
   // 全局标签和规格列表
   let globalTags: string[] = [];
@@ -216,7 +249,7 @@
 >
   <div slot="actions">
     <button
-      on:click={() => form.handleSave()}
+      on:click={handleCustomSave}
       disabled={$isSubmitting}
       class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors disabled:opacity-50"
       aria-label="保存"
@@ -513,7 +546,7 @@
     </button>
     <button
       type="button"
-      on:click={() => form.handleSave()}
+      on:click={handleCustomSave}
       disabled={$isSubmitting}
       class="flex-1 bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
     >

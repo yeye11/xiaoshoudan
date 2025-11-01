@@ -88,7 +88,10 @@ export function useList<T extends { id: string }>(config: ListConfig<T>): ListSt
           const aVal = a[$sortField];
           const bVal = b[$sortField];
 
-          if (aVal === bVal) return 0;
+          if (aVal === bVal) {
+            // 当主排序字段相同时，使用 id 作为稳定的二次排序
+            return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+          }
           if (aVal === null || aVal === undefined) return 1;
           if (bVal === null || bVal === undefined) return -1;
 

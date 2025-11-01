@@ -5,6 +5,7 @@
   export let showActions: boolean = false;
   export let backgroundColor: string = 'bg-blue-500';
   export let textColor: string = 'text-white';
+  export let customBackPath: string | null = null; // 自定义返回路径
 
   // 事件处理
   import { createEventDispatcher } from 'svelte';
@@ -15,6 +16,14 @@
   const dispatch = createEventDispatcher();
 
   const handleBack = () => {
+    // 0) 如果设置了自定义返回路径，优先使用
+    if (customBackPath) {
+      console.log('⬅️ 使用自定义返回路径:', customBackPath);
+      // 使用 replaceState 替换当前历史记录，避免循环
+      goto(customBackPath, { replaceState: true });
+      return;
+    }
+
     // 先触发自定义事件，允许页面自定义返回行为
     const event = dispatch('back', {}, { cancelable: true });
 
