@@ -29,6 +29,11 @@
 		{ name: 'TikTok', icon: '🎶', example: 'https://vm.tiktok.com/xxx' }
 	];
 
+	// 检测是否在 Tauri 环境中
+	function isTauriEnvironment(): boolean {
+		return typeof window !== 'undefined' && '__TAURI__' in window;
+	}
+
 	// 解析视频
 	async function parseVideo() {
 		if (!url.trim()) {
@@ -47,9 +52,17 @@
 			if (parseResult.success && parseResult.data) {
 				result = parseResult.data;
 
-				// 如果是视频,使用 Tauri 命令获取视频数据
+				// 如果是视频,根据环境选择加载方式
 				if (parseResult.data.type === 'video' && parseResult.data.videoUrl) {
-					loadVideoWithTauri(parseResult.data.videoUrl);
+					if (isTauriEnvironment()) {
+						// Tauri 环境:使用 Rust 命令获取视频
+						console.log('📱 检测到 Tauri 环境,使用原生视频加载');
+						loadVideoWithTauri(parseResult.data.videoUrl);
+					} else {
+						// 浏览器环境:使用代理 API
+						console.log('🌐 检测到浏览器环境,使用代理 API');
+						proxyVideoUrl = `/api/proxy-video?url=${encodeURIComponent(parseResult.data.videoUrl)}`;
+					}
 				}
 			} else {
 				error = parseResult.error || '解析失败';
