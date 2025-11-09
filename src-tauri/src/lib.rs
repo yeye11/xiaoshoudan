@@ -194,12 +194,52 @@ async fn download_video(url: String, filename: String) -> Result<String, String>
     Ok(file_path.to_string_lossy().to_string())
 }
 
+/// 获取视频数据 (Base64 编码)
+#[tauri::command]
+async fn fetch_video_base64(url: String) -> Result<String, String> {
+    println!("🎬 获取视频数据: {}", url);
+
+    // 创建 HTTP 客户端
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| format!("创建 HTTP 客户端失败: {}", e))?;
+
+    // 发送请求
+    let response = client
+        .get(&url)
+        .header("Referer", "https://www.douyin.com/")
+        .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+        .send()
+        .await
+        .map_err(|e| format!("请求失败: {}", e))?;
+
+    // 检查响应状态
+    if !response.status().is_success() {
+        return Err(format!("获取失败: HTTP {}", response.status()));
+    }
+
+    // 读取响应体
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("读取数据失败: {}", e))?;
+
+    println!("✅ 获取完成，文件大小: {} bytes", bytes.len());
+
+    // 转换为 Base64
+    use base64::{Engine as _, engine::general_purpose};
+    let base64_data = general_purpose::STANDARD.encode(&bytes);
+
+    Ok(base64_data)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![greet, download_video, parse_douyin_video])
+        .invoke_handler(tauri::generate_handler![greet, download_video, parse_douyin_video, fetch_video_base64])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

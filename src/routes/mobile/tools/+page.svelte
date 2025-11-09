@@ -8,6 +8,7 @@
 		copyToClipboard,
 		type VideoInfo
 	} from '$lib/services/videoParser';
+	import { invoke } from '@tauri-apps/api/core';
 
 	let url = $state('');
 	let loading = $state(false);
@@ -17,6 +18,8 @@
 	let isDownloading = $state(false);
 	let downloadedPath = $state<string | null>(null);
 	let downloadSuccess = $state(false);
+	let proxyVideoUrl = $state<string | null>(null);
+	let loadingVideo = $state(false);
 
 	// 支持的平台
 	const platforms = [
@@ -36,12 +39,18 @@
 		loading = true;
 		result = null;
 		error = null;
+		proxyVideoUrl = null;
 
 		try {
 			const parseResult = await parseVideoService(url);
 
 			if (parseResult.success && parseResult.data) {
 				result = parseResult.data;
+
+				// 如果是视频,使用 Tauri 命令获取视频数据
+				if (parseResult.data.type === 'video' && parseResult.data.videoUrl) {
+					loadVideoWithTauri(parseResult.data.videoUrl);
+				}
 			} else {
 				error = parseResult.error || '解析失败';
 			}
@@ -50,6 +59,36 @@
 			error = '解析失败,请稍后重试';
 		} finally {
 			loading = false;
+		}
+	}
+
+	// 使用 Tauri 命令加载视频
+	async function loadVideoWithTauri(videoUrl: string) {
+		console.log('🎬 使用 Tauri 命令加载视频...');
+		loadingVideo = true;
+
+		try {
+			// 调用 Tauri 命令获取 Base64 数据
+			const base64Data = await invoke<string>('fetch_video_base64', { url: videoUrl });
+			console.log('✅ 视频数据获取成功，大小:', base64Data.length, '字符');
+
+			// 将 Base64 转换为 Blob
+			const byteCharacters = atob(base64Data);
+			const byteNumbers = new Array(byteCharacters.length);
+			for (let i = 0; i < byteCharacters.length; i++) {
+				byteNumbers[i] = byteCharacters.charCodeAt(i);
+			}
+			const byteArray = new Uint8Array(byteNumbers);
+			const blob = new Blob([byteArray], { type: 'video/mp4' });
+
+			// 创建 Blob URL
+			proxyVideoUrl = URL.createObjectURL(blob);
+			console.log('✅ Blob URL 创建成功:', proxyVideoUrl);
+		} catch (err) {
+			console.error('❌ 加载视频失败:', err);
+			error = '视频加载失败: ' + (err instanceof Error ? err.message : String(err));
+		} finally {
+			loadingVideo = false;
 		}
 	}
 
@@ -168,6 +207,12 @@
 		isDownloading = false;
 		downloadedPath = null;
 		downloadSuccess = false;
+
+		// 清理 Blob URL
+		if (proxyVideoUrl && proxyVideoUrl.startsWith('blob:')) {
+			URL.revokeObjectURL(proxyVideoUrl);
+		}
+		proxyVideoUrl = null;
 	}
 
 	// 粘贴剪贴板内容
@@ -299,17 +344,54 @@
 					</div>
 
 					<!-- 内容预览 -->
-					{#if result.type === 'video' && result.videoUrl}
-						<!-- 视频预览 -->
-						<!-- svelte-ignore a11y_media_has_caption -->
-						<video
-							src={result.videoUrl}
-							controls
-							class="w-full rounded-lg"
-							poster={result.cover}
-						>
-							您的浏览器不支持视频播放
-						</video>
+					{#if result.type === 'video'}
+						{#if loadingVideo}
+							<!-- 视频加载中 -->
+							<div class="relative">
+								<img
+									src={result.cover}
+									alt="视频封面"
+									class="w-full rounded-lg"
+								/>
+								<div
+									class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg"
+								>
+									<div class="text-center text-white">
+										<div class="text-4xl mb-2">⏳</div>
+										<p class="text-sm">正在加载视频...</p>
+									</div>
+								</div>
+							</div>
+						{:else if proxyVideoUrl}
+							<!-- 视频播放器 (使用 Blob URL) -->
+							<!-- svelte-ignore a11y_media_has_caption -->
+							<video
+								src={proxyVideoUrl}
+								controls
+								class="w-full rounded-lg"
+								poster={result.cover}
+								preload="metadata"
+							>
+								您的浏览器不支持视频播放
+							</video>
+						{:else}
+							<!-- 视频封面 (加载失败) -->
+							<div class="relative">
+								<img
+									src={result.cover}
+									alt="视频封面"
+									class="w-full rounded-lg"
+								/>
+								<div
+									class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg"
+								>
+									<div class="text-center text-white">
+										<div class="text-4xl mb-2">❌</div>
+										<p class="text-sm">视频加载失败</p>
+									</div>
+								</div>
+							</div>
+						{/if}
 					{:else if result.type === 'image' && result.images && result.images.length > 0}
 						<!-- 图文预览 -->
 						<div class="space-y-2">
