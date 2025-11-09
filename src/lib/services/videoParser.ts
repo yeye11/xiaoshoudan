@@ -268,29 +268,6 @@ export async function parseVideo(url: string): Promise<ParseResult> {
 }
 
 /**
- * 从剪贴板获取链接
- */
-export async function getClipboardUrl(): Promise<string | null> {
-	try {
-		const text = await navigator.clipboard.readText();
-		// 检查是否包含支持的平台链接
-		if (
-			text.includes('douyin.com') ||
-			text.includes('kuaishou.com') ||
-			text.includes('xiaohongshu.com') ||
-			text.includes('xhslink.com') ||
-			text.includes('tiktok.com')
-		) {
-			return text;
-		}
-		return null;
-	} catch (error) {
-		console.error('读取剪贴板失败:', error);
-		return null;
-	}
-}
-
-/**
  * 将 Blob 转换为 Base64 字符串
  */
 function blobToBase64(blob: Blob): Promise<string> {
@@ -474,3 +451,70 @@ export function formatDuration(seconds: number | undefined): string {
 	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+/**
+ * 检查是否有 Android 剪贴板接口
+ */
+function hasAndroidClipboard(): boolean {
+	const w: any = window as any;
+	return w.AndroidClipboard && typeof w.AndroidClipboard.readText === 'function';
+}
+
+/**
+ * 从剪贴板读取文本
+ * 优先使用 Android 原生接口,回退到浏览器 API
+ */
+export async function getClipboardText(): Promise<string> {
+	// 优先使用 Android 原生剪贴板接口
+	if (hasAndroidClipboard()) {
+		console.log('📋 使用 Android 原生剪贴板接口...');
+		try {
+			const w: any = window as any;
+			const text = w.AndroidClipboard.readText();
+			console.log('✅ Android 剪贴板读取成功:', text.substring(0, 100));
+			return text || '';
+		} catch (error) {
+			console.error('❌ Android 剪贴板读取失败:', error);
+		}
+	}
+
+	// 回退到浏览器 Clipboard API
+	try {
+		console.log('📋 使用浏览器剪贴板 API...');
+		const text = await navigator.clipboard.readText();
+		console.log('✅ 浏览器剪贴板读取成功:', text.substring(0, 100));
+		return text || '';
+	} catch (error) {
+		console.error('❌ 浏览器剪贴板读取失败:', error);
+		return '';
+	}
+}
+
+/**
+ * 从剪贴板提取视频链接
+ */
+export async function getClipboardUrl(): Promise<string | null> {
+	try {
+		const text = await getClipboardText();
+		if (!text) {
+			console.log('⚠️ 剪贴板为空');
+			return null;
+		}
+
+		// 提取链接的正则表达式
+		const urlRegex = /https?:\/\/[^\s]+/g;
+		const urls = text.match(urlRegex);
+
+		if (!urls || urls.length === 0) {
+			console.log('⚠️ 剪贴板中没有找到链接');
+			return null;
+		}
+
+		// 返回第一个链接
+		const url = urls[0];
+		console.log('📎 从剪贴板提取到链接:', url);
+		return url;
+	} catch (error) {
+		console.error('❌ 提取剪贴板链接失败:', error);
+		return null;
+	}
+}
