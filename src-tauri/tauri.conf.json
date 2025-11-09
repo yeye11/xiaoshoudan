@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "仁腾装饰材料管理系统",
+  "productName": "靓仔的app",
   "version": "1.0.0",
   "identifier": "com.renteng.sales",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "仁腾装饰材料管理系统",
+        "title": "靓仔的app",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
