@@ -108,7 +108,7 @@
   };
 
   const handleEdit = () => {
-    goto(`/mobile/customers/${customerId}/edit`);
+    goto(`/mobile/sales-management/customers/${customerId}/edit`);
   };
 
   const handleCreateInvoice = () => {
@@ -118,12 +118,12 @@
       alert('客户ID无效，无法创建销售单');
       return;
     }
-    goto(`/mobile/sales/new?customerId=${customerId}`);
+    goto(`/mobile/sales-management/sales/new?customerId=${customerId}`);
   };
 
   const handleViewInvoice = (invoiceId: string) => {
     // 传递 from 参数，以便销售单详情页面知道从哪里来的
-    const targetUrl = `/mobile/sales/${invoiceId}?from=customer&customerId=${customerId}`;
+    const targetUrl = `/mobile/sales-management/sales/${invoiceId}?from=customer&customerId=${customerId}`;
     console.log('📍 从客户详情跳转到销售单:', targetUrl);
     goto(targetUrl);
   };
@@ -173,7 +173,7 @@
     <div class="text-center">
       <p class="text-gray-500 mb-4">客户不存在</p>
       <button
-        on:click={() => goto('/mobile/customers')}
+        on:click={() => goto('/mobile/sales-management/customers')}
         class="bg-blue-500 text-white px-4 py-2 rounded-lg"
       >
         返回客户列表

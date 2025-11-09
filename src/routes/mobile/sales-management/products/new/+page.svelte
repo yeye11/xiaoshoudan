@@ -12,7 +12,7 @@
   import { productCategoryStore, productUnitStore } from '$lib/stores/categoryStore';
 
   // 获取返回URL
-  let returnUrl = '/mobile/products';
+  let returnUrl = '/mobile/sales-management/products';
 
   // 批量模式
   let isBatchMode = false;
@@ -539,7 +539,7 @@
   <div class="flex space-x-3 pb-6">
     <button
       type="button"
-      on:click={() => goto('/mobile/products')}
+      on:click={() => goto('/mobile/sales-management/products')}
       class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
     >
       取消

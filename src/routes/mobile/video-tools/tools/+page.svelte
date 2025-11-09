@@ -61,7 +61,7 @@
 					} else {
 						// 浏览器环境:使用代理 API
 						console.log('🌐 检测到浏览器环境,使用代理 API');
-						proxyVideoUrl = `/api/proxy-video?url=${encodeURIComponent(parseResult.data.videoUrl)}`;
+						proxyVideoUrl = `/api/video-tools-proxy-video?url=${encodeURIComponent(parseResult.data.videoUrl)}`;
 					}
 				}
 			} else {

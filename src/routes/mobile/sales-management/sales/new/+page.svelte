@@ -60,7 +60,7 @@
     onSuccess: (data) => {
       // 如果是从客户详情页面来的，返回到销售单详情页面并传递 from 参数
       if (fromPage === 'customer' && selectedCustomer) {
-        goto(`/mobile/sales/${data.id}?from=customer&customerId=${selectedCustomer.id}`);
+        goto(`/mobile/sales-management/sales/${data.id}?from=customer&customerId=${selectedCustomer.id}`);
       } else {
         goto('/mobile/sales');
       }
@@ -123,7 +123,7 @@
 
     // 导航到产品选择页面
     const customerId = selectedCustomer?.id || '';
-    goto(`/mobile/products/select?customerId=${customerId}`);
+    goto(`/mobile/sales-management/products/select?customerId=${customerId}`);
   };
 
   const handleRemoveItem = (index: number) => {

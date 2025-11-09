@@ -169,7 +169,7 @@
   // 完成选择，返回销售单页面
   const finishSelection = () => {
     if (cart.length === 0) {
-      goto('/mobile/sales/new');
+      goto('/mobile/sales-management/sales/new');
       return;
     }
 
@@ -178,14 +178,14 @@
     console.log('✅ 完成选择，保存购物车:', cart.length, '个商品');
 
     const cid = $page?.url?.searchParams?.get('customerId');
-    goto(`/mobile/sales/new${cid ? `?customerId=${cid}` : ''}`);
+    goto(`/mobile/sales-management/sales/new${cid ? `?customerId=${cid}` : ''}`);
   };
 
   // 处理返回按钮
   const handleBack = () => {
     // 返回到新建销售单页面（不保存购物车）
     const cid = $page?.url?.searchParams?.get('customerId');
-    goto(`/mobile/sales/new${cid ? `?customerId=${cid}` : ''}`);
+    goto(`/mobile/sales-management/sales/new${cid ? `?customerId=${cid}` : ''}`);
   };
 
   const handleClose = () => {
@@ -298,7 +298,7 @@
     />
     <!-- 添加产品按钮 - 右上角 -->
     <a
-      href="/mobile/products/new?returnUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
+      href="/mobile/sales-management/products/new?returnUrl={encodeURIComponent($page.url.pathname + $page.url.search)}"
       class="flex items-center justify-center w-10 h-10 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-sm flex-shrink-0"
       aria-label="添加新产品"
     >

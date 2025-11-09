@@ -1,29 +1,27 @@
 <script lang="ts">
   import MobileHeader from '$lib/components/MobileHeader.svelte';
   import FormField from '$lib/components/FormField.svelte';
-  import type { Customer } from '$lib/types/invoice.ts';
-  import { createEmptyCustomer } from '$lib/types/invoice.ts';
-  import { page } from '$app/stores';
+  import { createEmptyCustomer } from '$lib/types/invoice';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { StorageManager } from '$lib/utils/storage';
   import { validators } from '$lib/utils/validation';
-  import { useForm } from '$lib/composables/useForm';
+  import { useFormWithDuplicateCheck } from '$lib/composables/useForm';
   import { customerCategoryStore } from '$lib/stores/categoryStore';
 
-  let customerId: string;
-  let initialCustomer: Customer = createEmptyCustomer();
-
   // 初始化表单
-  const form = useForm({
-    initialData: initialCustomer,
+  const form = useFormWithDuplicateCheck({
+    initialData: createEmptyCustomer(),
     validators: {
       name: validators.name
+    },
+    checkDuplicate: (name: string) => {
+      return StorageManager.getCustomers().some(c => c.name === name.trim());
     },
     onSave: async (data) => {
       data.name = data.name.trim();
       data.updatedAt = new Date().toISOString();
-      StorageManager.updateCustomer(data.id, data);
+      StorageManager.addCustomer(data);
 
       // 保存分类
       if (data.category && !$customerCategoryStore.includes(data.category)) {
@@ -31,29 +29,14 @@
       }
     },
     onSuccess: () => {
-      goto('/mobile/customers');
+      goto('/mobile/sales-management/customers');
     }
   });
 
-  // 解构 form 的 stores
   const { data, errors, isSubmitting } = form;
 
-  onMount(async () => {
-    customerId = $page.params.id;
+  onMount(() => {
     customerCategoryStore.load();
-
-    try {
-      const customer = StorageManager.getCustomer(customerId);
-      if (customer) {
-        initialCustomer = customer;
-        data.set(customer);
-      } else {
-        form.setFieldError('general', '客户不存在');
-      }
-    } catch (error) {
-      console.error('加载客户失败:', error);
-      form.setFieldError('general', '加载客户信息失败');
-    }
   });
 
   // 格式化电话号码输入
@@ -61,13 +44,13 @@
     const input = event.target as HTMLInputElement;
     let value = input.value.replace(/\D/g, '');
     if (value.length > 11) value = value.slice(0, 11);
-    
+
     if (value.length > 7) {
       value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
     } else if (value.length > 3) {
       value = value.replace(/(\d{3})(\d{4})/, '$1-$2');
     }
-    
+
     input.value = value;
     $data.phone = value;
   };
@@ -81,8 +64,8 @@
   };
 </script>
 
-<MobileHeader 
-  title="编辑客户" 
+<MobileHeader
+  title="新建客户"
   showBack={true}
   backgroundColor="bg-blue-500"
 >
@@ -111,7 +94,7 @@
   <!-- 基本信息 -->
   <div class="bg-white rounded-lg p-4 shadow-sm border space-y-4">
     <h3 class="font-medium text-gray-900">基本信息</h3>
-    
+
     <!-- 客户名称 -->
     <FormField
       label="客户名称"
@@ -160,7 +143,7 @@
   <!-- 联系信息 -->
   <div class="bg-white rounded-lg p-4 shadow-sm border space-y-4">
     <h3 class="font-medium text-gray-900">联系信息</h3>
-    
+
     <!-- 电话 -->
     <FormField
       label="电话"
@@ -223,7 +206,7 @@
   <div class="flex space-x-3 pb-6">
     <button
       type="button"
-      on:click={() => goto('/mobile/customers')}
+      on:click={() => goto('/mobile/sales-management/customers')}
       class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
     >
       取消

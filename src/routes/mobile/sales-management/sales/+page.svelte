@@ -31,12 +31,12 @@
 
   // 编辑销售单
   const handleEdit = (invoice: Invoice) => {
-    goto(`/mobile/sales/${invoice.id}/edit`);
+    goto(`/mobile/sales-management/sales/${invoice.id}/edit`);
   };
 
   // 查看销售单详情
   const handleView = (invoice: Invoice) => {
-    goto(`/mobile/sales/${invoice.id}`);
+    goto(`/mobile/sales-management/sales/${invoice.id}`);
   };
 
   // 删除销售单
@@ -65,7 +65,7 @@
 >
   <div slot="actions">
     <button
-      on:click={() => goto('/mobile/sales/new')}
+      on:click={() => goto('/mobile/sales-management/sales/new')}
       class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
       aria-label="新建销售单"
     >

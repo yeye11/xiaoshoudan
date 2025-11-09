@@ -47,11 +47,11 @@
         originalProduct = JSON.parse(JSON.stringify(found));
       } else {
         // 产品不存在，返回列表
-        goto('/mobile/products');
+        goto('/mobile/sales-management/products');
       }
     } catch (error) {
       console.error('加载产品失败:', error);
-      goto('/mobile/products');
+      goto('/mobile/sales-management/products');
     }
   };
 
@@ -159,7 +159,7 @@
         saveOptions();
 
         // 返回产品列表
-        goto('/mobile/products');
+        goto('/mobile/sales-management/products');
       } else {
         errors.general = '产品不存在';
       }
@@ -511,7 +511,7 @@
   <div class="flex space-x-3 pb-6">
     <button
       type="button"
-      on:click={() => goto('/mobile/products')}
+      on:click={() => goto('/mobile/sales-management/products')}
       class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors"
     >
       取消

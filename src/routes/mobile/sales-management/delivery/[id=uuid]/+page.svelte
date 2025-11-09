@@ -47,7 +47,7 @@
   };
 
   const handleEdit = () => {
-    goto(`/mobile/sales/${invoiceId}/edit`);
+    goto(`/mobile/sales-management/sales/${invoiceId}/edit`);
   };
 
   const handlePrint = () => {

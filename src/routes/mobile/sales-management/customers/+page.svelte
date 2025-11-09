@@ -31,12 +31,12 @@
 
   // 编辑客户
   const handleEdit = (customer: Customer) => {
-    goto(`/mobile/customers/${customer.id}/edit`);
+    goto(`/mobile/sales-management/customers/${customer.id}/edit`);
   };
 
   // 查看客户详情
   const handleView = (customer: Customer) => {
-    goto(`/mobile/customers/${customer.id}`);
+    goto(`/mobile/sales-management/customers/${customer.id}`);
   };
 
   // 删除客户
@@ -65,7 +65,7 @@
 >
   <div slot="actions">
     <button
-      on:click={() => goto('/mobile/customers/new')}
+      on:click={() => goto('/mobile/sales-management/customers/new')}
       class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
       aria-label="新建客户"
     >

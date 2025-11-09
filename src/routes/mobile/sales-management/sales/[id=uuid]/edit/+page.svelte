@@ -56,7 +56,7 @@
     onSuccess: (data) => {
       // 如果是从客户详情页面来的，返回到销售单详情页面并传递 from 参数
       if (fromPage === 'customer' && returnCustomerId) {
-        goto(`/mobile/sales/${data.id}?from=customer&customerId=${returnCustomerId}`);
+        goto(`/mobile/sales-management/sales/${data.id}?from=customer&customerId=${returnCustomerId}`);
       } else {
         goto('/mobile/sales');
       }
@@ -91,7 +91,7 @@
 
     // 导航到产品选择页面
     const customerId = $data.customerId || '';
-    goto(`/mobile/products/select?customerId=${customerId}&returnTo=edit&invoiceId=${invoiceId}`);
+    goto(`/mobile/sales-management/products/select?customerId=${customerId}&returnTo=edit&invoiceId=${invoiceId}`);
   };
 
   onMount(async () => {

@@ -40,7 +40,7 @@
 
     // 设置返回路径
     if (fromPage === 'customer' && customerId) {
-      backPath = `/mobile/customers/${customerId}`;
+      backPath = `/mobile/sales-management/customers/${customerId}`;
       console.log('📍 设置自定义返回路径:', backPath);
     } else {
       console.log('📍 未设置自定义返回路径，将使用默认逻辑');
@@ -123,9 +123,9 @@
   const handleEdit = () => {
     // 如果是从客户详情页面来的，编辑时也传递 from 参数
     if (fromPage === 'customer' && customerId) {
-      goto(`/mobile/sales/${invoiceId}/edit?from=customer&customerId=${customerId}`);
+      goto(`/mobile/sales-management/sales/${invoiceId}/edit?from=customer&customerId=${customerId}`);
     } else {
-      goto(`/mobile/sales/${invoiceId}/edit`);
+      goto(`/mobile/sales-management/sales/${invoiceId}/edit`);
     }
   };
 

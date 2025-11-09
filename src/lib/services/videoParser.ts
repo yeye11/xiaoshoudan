@@ -199,7 +199,7 @@ export async function parseVideo(url: string): Promise<ParseResult> {
 			} else {
 				// 在浏览器环境中使用 SvelteKit API
 				console.log('🌐 使用 SvelteKit 后端解析抖音视频...');
-				const apiUrl = `/api/parse-douyin?url=${encodeURIComponent(videoUrl)}`;
+				const apiUrl = `/api/video-tools-parse-douyin?url=${encodeURIComponent(videoUrl)}`;
 				const response = await fetch(apiUrl);
 				const result = await response.json();
 
@@ -346,7 +346,7 @@ export async function downloadVideo(
 
 		// 如果没有 Android 下载器,尝试通过后端 API 代理下载
 		console.log('🌐 使用后端 API 代理下载视频...');
-		const apiUrl = `/api/download-video?url=${encodeURIComponent(videoUrl)}&filename=${encodeURIComponent(filename)}`;
+		const apiUrl = `/api/video-tools-download-video?url=${encodeURIComponent(videoUrl)}&filename=${encodeURIComponent(filename)}`;
 
 		const response = await fetch(apiUrl);
 

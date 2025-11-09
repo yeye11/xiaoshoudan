@@ -28,12 +28,12 @@
 
   // 编辑产品
   const handleEdit = (product: Product) => {
-    goto(`/mobile/products/${product.id}`);
+    goto(`/mobile/sales-management/products/${product.id}`);
   };
 
   // 查看产品详情
   const handleView = (product: Product) => {
-    goto(`/mobile/products/${product.id}`);
+    goto(`/mobile/sales-management/products/${product.id}`);
   };
 
   // 删除产品
@@ -62,7 +62,7 @@
 >
   <div slot="actions">
     <button
-      on:click={() => goto('/mobile/products/new')}
+      on:click={() => goto('/mobile/sales-management/products/new')}
       class="p-2 rounded-lg hover:bg-black hover:bg-opacity-10 transition-colors"
       aria-label="新建产品"
     >
