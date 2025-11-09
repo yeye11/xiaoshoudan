@@ -321,16 +321,54 @@ function hasAndroidFileSaver(): boolean {
 }
 
 /**
+ * 检查是否有 AndroidVideoDownloader 接口
+ */
+function hasAndroidVideoDownloader(): boolean {
+	const w: any = window as any;
+	const hasInterface = w.AndroidVideoDownloader && typeof w.AndroidVideoDownloader.downloadVideo === 'function';
+	console.log('🔍 检查 AndroidVideoDownloader 接口:', {
+		hasWindow: typeof window !== 'undefined',
+		hasAndroidVideoDownloader: !!w.AndroidVideoDownloader,
+		hasDownloadVideo: w.AndroidVideoDownloader ? typeof w.AndroidVideoDownloader.downloadVideo : 'N/A',
+		result: hasInterface
+	});
+	return hasInterface;
+}
+
+/**
  * 下载视频到手机
  */
 export async function downloadVideo(
 	videoUrl: string,
-	title: string = 'video'
+	title: string = 'video',
+	platform: string = '抖音'
 ): Promise<{ success: boolean; path?: string; error?: string }> {
 	try {
 		const filename = `${sanitizeFilename(title)}.mp4`;
 
-		// 通过后端 API 代理下载视频
+		// 优先使用 Android 原生视频下载器 (直接在 Android 端下载,绕过 CORS 和防盗链)
+		if (hasAndroidVideoDownloader()) {
+			console.log('📱 检测到 Android 环境,使用原生视频下载器...');
+			try {
+				const w: any = window as any;
+				console.log('📞 调用 AndroidVideoDownloader.downloadVideo()...');
+				console.log(`🔗 视频 URL: ${videoUrl}`);
+				console.log(`📝 文件名: ${filename}`);
+				console.log(`📱 平台: ${platform}`);
+
+				// 调用 Android 原生下载器 (异步执行,不等待结果)
+				w.AndroidVideoDownloader.downloadVideo(videoUrl, filename, platform);
+
+				console.log('✅ 已发起下载请求,请等待下载完成...');
+				return { success: true, path: filename };
+			} catch (error) {
+				console.error('❌ Android 下载失败:', error);
+				throw error;
+			}
+		}
+
+		// 如果没有 Android 下载器,尝试通过后端 API 代理下载
+		console.log('🌐 使用后端 API 代理下载视频...');
 		const apiUrl = `/api/download-video?url=${encodeURIComponent(videoUrl)}&filename=${encodeURIComponent(filename)}`;
 
 		const response = await fetch(apiUrl);
@@ -342,7 +380,7 @@ export async function downloadVideo(
 		// 转换为 blob
 		const blob = await response.blob();
 
-		// 优先使用 Android 原生接口保存
+		// 使用 Android 文件保存器保存
 		if (hasAndroidFileSaver()) {
 			console.log('📱 检测到 Android 环境,使用原生接口保存...');
 			try {

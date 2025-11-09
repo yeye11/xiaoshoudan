@@ -79,7 +79,7 @@
 				}
 			}, 200);
 
-			const downloadResult = await downloadVideoService(result.videoUrl, result.title);
+			const downloadResult = await downloadVideoService(result.videoUrl, result.title, result.platform);
 
 			clearInterval(progressInterval);
 			downloadProgress = 100;
