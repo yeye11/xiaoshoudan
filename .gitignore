@@ -35,18 +35,24 @@ build/
 # Tauri / Rust build artifacts
 **/target/
 src-tauri/gen/
+src-tauri/target/
+tauri-plugin-*/target/
 
 # Android build/signing artifacts
 *.apk
 *.aab
+*.idsig
 *.keystore
 *.jks
+release.keystore
 **/.gradle/
 **/build/
 android/local.properties
 **/.cxx/
 **/.externalNativeBuild/
 
+# 保留最新的发布版本（如果需要）
+# !cypridina-sales-latest.apk
 
 # Coverage / reports
 coverage/
