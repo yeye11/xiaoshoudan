@@ -8,6 +8,7 @@
 #   ./build-android.sh --logs             # 启动日志查看（需先安装）
 
 # /Users/zdp/android-sdk/platform-tools/adb -s 192.168.31.14:5555 install -r src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk 
+# /Users/zdp/android-sdk/platform-tools/adb -s 192.168.31.25:5555 install -r src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk 
 # 加载共享的构建工具函数
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/scripts/build-utils.sh"
