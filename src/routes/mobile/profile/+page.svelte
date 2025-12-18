@@ -34,6 +34,8 @@
   let showEdit = false;
   let editForm: typeof userInfo = { ...userInfo };
   let editErrors: Record<string, string> = {};
+  const REQUIRED_CUSTOMER_NAME = '291769418@张总最帅';
+  let canEditProfile = false;
 
   // 自定义确认对话框
   let confirmDialog = {
@@ -121,6 +123,9 @@
     const customers = StorageManager.getCustomers();
     const products = StorageManager.getProducts();
     const invoices = StorageManager.getInvoices();
+
+    // 只有存在指定客户时才允许显示“编辑资料”入口
+    canEditProfile = customers.some(c => c.name === REQUIRED_CUSTOMER_NAME);
 
     dataStats.customers = customers.length;
     dataStats.products = products.length;
@@ -446,9 +451,14 @@
       </div>
     </div>
 
-    <button on:click={openEdit} class="w-full bg-purple-500 text-white py-2 rounded-lg font-medium hover:bg-purple-600 transition-colors">
-      编辑资料
-    </button>
+    {#if canEditProfile}
+      <button
+        on:click={openEdit}
+        class="w-full bg-purple-500 text-white py-2 rounded-lg font-medium hover:bg-purple-600 transition-colors"
+      >
+        编辑资料
+      </button>
+    {/if}
   </div>
 
   <!-- 数据统计 -->
@@ -702,7 +712,7 @@
         <div>
           <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
           <input id="edit-email"
-            type="text"
+            type="email"
             bind:value={editForm.email}
             placeholder="请输入邮箱（可选）"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -711,12 +721,10 @@
       </div>
 
       <!-- 操作按钮 -->
-      {#if editForm.email === '291769418@张总最帅'}
-        <div class="grid grid-cols-2 gap-3 mt-5">
-          <button on:click={closeEdit} class="py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
-          <button on:click={saveEdit} class="py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors">保存</button>
-        </div>
-      {/if}
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button on:click={closeEdit} class="py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
+        <button on:click={saveEdit} class="py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors">保存</button>
+      </div>
     </div>
   </div>
 {/if}
