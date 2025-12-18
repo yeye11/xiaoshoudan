@@ -99,7 +99,7 @@
 </script>
 
 <svelte:head>
-  <title>送货单详情 - 仁腾装饰材料管理系统</title>
+  <title>送货单详情 - 靓仔的app</title>
 </svelte:head>
 
 <MobileHeader 

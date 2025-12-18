@@ -242,8 +242,8 @@ export const createEmptyInvoice = (companyInfo: CompanyInfo): Invoice => {
     type: 'sale',
     paymentStatus: 'unpaid',
     paidAmount: 0,
-    createdAt: now,
-    updatedAt: now
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString()
   };
 };
 
@@ -380,3 +380,127 @@ export const formatPhoneNumber = (phone: string): string => {
   // 简单的电话号码格式化，可以根据需要扩展
   return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
 };
+
+// ============================ 报价单相关类型 ============================
+
+// 列定义
+export interface QuotationColumn {
+  id: string;
+  label: string; // 列标题
+  fieldKey: string; // 字段键名
+  width?: string; // 列宽百分比，如"25%"
+  isSequence?: boolean; // 是否是序号列
+}
+
+// 报价单项目（表格行，支持动态字段）
+export interface QuotationItem {
+  id: string;
+  [key: string]: any; // 支持动态字段
+}
+
+// 头部信息
+export interface QuotationHeaderInfo {
+  title: string; // 报价单标题
+  company?: string;
+  phone?: string;
+  address?: string;
+  email?: string;
+}
+
+// 底部信息（表格外四个可编辑区域 + 二维码）
+export interface QuotationFooterInfo {
+  note1?: string;
+  note2?: string;
+  contactLine?: string; // 如：订购热线：xxx
+  qrCodeImage?: string; // Base64/URL
+  qrCodeWidth?: number; // 默认 80
+  qrCodeHeight?: number; // 默认 80
+}
+
+export interface Quotation {
+  id: string;
+  quotationNumber: string;
+  customName?: string; // 自定义名称（仅用于列表显示，不导出）
+  headerInfo: QuotationHeaderInfo;
+  columns: QuotationColumn[]; // 动态列配置（包含序号列作为第一列）
+  tableWidth?: string; // 表格总宽度
+  headerFontSize?: number; // 头部标题字体大小（px）
+  note1FontSize?: number; // 备注1字体大小（px）
+  note2FontSize?: number; // 备注2字体大小（px）
+  items: QuotationItem[];
+  footerInfo: QuotationFooterInfo;
+  createdBy?: string; // 可空
+  createdAt: string;
+  updatedAt: string;
+  notes?: string;
+}
+
+// 报价产品（独立入口）
+export interface QuotationProduct {
+  id: string;
+  name: string; // 产品/型号名
+  specification?: string; // 规格
+  defaultPrice?: number; // 参考单价
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 生成报价单编号
+export const generateQuotationNumber = (): string => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const t = String(now.getTime()).slice(-4);
+  return `QT${y}${m}${d}${t}`;
+};
+
+// 创建空报价行
+export const createEmptyQuotationItem = (): QuotationItem => ({
+  id: crypto.randomUUID()
+});
+
+// 创建空报价单
+export const createEmptyQuotation = (): Quotation => ({
+  id: crypto.randomUUID(),
+  quotationNumber: generateQuotationNumber(),
+  headerInfo: {
+    title: ''
+  },
+  columns: [
+    { id: crypto.randomUUID(), label: '序号', fieldKey: '__sequence__', width: '6%', isSequence: true },
+    { id: crypto.randomUUID(), label: '型号', fieldKey: 'productName', width: '18%' },
+    { id: crypto.randomUUID(), label: '规格', fieldKey: 'specification', width: '18%' },
+    { id: crypto.randomUUID(), label: '单价', fieldKey: 'unitPrice', width: '12%' },
+    { id: crypto.randomUUID(), label: '备注', fieldKey: 'note', width: '12%' }
+  ],
+  tableWidth: '600px',
+  headerFontSize: 28,
+  note1FontSize: 16,
+  note2FontSize: 16,
+  items: [createEmptyQuotationItem()],
+  footerInfo: {
+    note1: '',
+    note2: '',
+    contactLine: '',
+    qrCodeImage: '',
+    qrCodeWidth: 80,
+    qrCodeHeight: 80
+  },
+  createdBy: '',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  notes: ''
+});
+
+// 验证报价单（放宽：表格内容均可空）
+export const validateQuotation = (q: Quotation): string[] => {
+  const errors: string[] = [];
+  if (!q.headerInfo.title || !q.headerInfo.title.trim()) {
+    errors.push('报价单标题不能为空');
+  }
+  // 其他字段均为可选，不强制校验
+  return errors;
+};
+

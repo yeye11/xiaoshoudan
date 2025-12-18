@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Android 环境自动配置脚本
-# 仁腾装饰材料管理系统
+# 靓仔的app
 
 echo "🔧 配置 Android 开发环境..."
 

@@ -108,6 +108,7 @@
         customers: StorageManager.getCustomers(),
         products: StorageManager.getProducts(),
         invoices: StorageManager.getInvoices(),
+        quotations: StorageManager.getQuotations(),
         customerHistory: JSON.parse(localStorage.getItem('customer_product_history') || '[]'),
         globalTags: JSON.parse(localStorage.getItem('global_tags') || '[]'),
         globalSpecifications: JSON.parse(localStorage.getItem('global_specifications') || '[]'),
@@ -233,6 +234,20 @@
       });
       StorageManager.saveInvoices(mergedInvoices);
 
+      // 合并报价单数据
+      if (importedData.quotations && importedData.quotations.length > 0) {
+        const existingQuotations = StorageManager.getQuotations();
+        const mergedQuotations = [...existingQuotations];
+
+        importedData.quotations.forEach((newQuotation: any) => {
+          const exists = mergedQuotations.find(q => q.id === newQuotation.id);
+          if (!exists) {
+            mergedQuotations.push(newQuotation);
+          }
+        });
+        StorageManager.saveQuotations(mergedQuotations);
+      }
+
       // 合并其他数据
       if (importedData.customerHistory) {
         const existingHistory = JSON.parse(localStorage.getItem('customer_product_history') || '[]');
@@ -276,6 +291,7 @@
       localStorage.setItem('customers', JSON.stringify(importedData.customers || []));
       localStorage.setItem('products', JSON.stringify(importedData.products || []));
       localStorage.setItem('invoice_history', JSON.stringify(importedData.invoices || []));
+      localStorage.setItem('quotations', JSON.stringify(importedData.quotations || []));
 
       if (importedData.customerHistory) {
         localStorage.setItem('customer_product_history', JSON.stringify(importedData.customerHistory));

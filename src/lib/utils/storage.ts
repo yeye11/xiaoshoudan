@@ -15,7 +15,9 @@ import type {
   Product,
   CustomerCategory,
   ExpenseIncome,
-  CompanyInfo
+  CompanyInfo,
+  Quotation,
+  QuotationProduct
 } from '$lib/types/invoice';
 import { globalCache } from './cache';
 
@@ -52,7 +54,13 @@ class CRUDManager<T extends { id: string }> {
       localStorage.setItem(this.storageKey, JSON.stringify(items));
       globalCache.delete(this.cacheKey);
     } catch (error) {
+      const msg = (error as any)?.message || '';
+      const name = (error as any)?.name || '';
+      const isQuota = /quota/i.test(msg) || /QuotaExceededError/i.test(name);
       console.error(`保存 ${this.storageKey} 失败:`, error);
+      if (isQuota) {
+        throw new Error(`保存失败：存储空间不足。请删除过大的图片（如二维码）或清理部分历史数据后重试。`);
+      }
       throw new Error(`保存 ${this.storageKey} 失败`);
     }
   }
@@ -102,6 +110,8 @@ export class StorageManager {
   private static invoiceManager = new CRUDManager<Invoice>('invoice_history', 'invoices', 5 * 60 * 1000);
   private static customerManager = new CRUDManager<Customer>('customers', 'customers', 5 * 60 * 1000);
   private static productManager = new CRUDManager<Product>('products', 'products', 5 * 60 * 1000);
+  private static quotationManager = new CRUDManager<Quotation>('quotations', 'quotations', 5 * 60 * 1000);
+  private static quotationProductManager = new CRUDManager<QuotationProduct>('quotation_products', 'quotation_products', 5 * 60 * 1000);
 
   // ==================== 销售单相关 ====================
 
@@ -235,6 +245,46 @@ export class StorageManager {
     this.productManager.delete(id);
   }
 
+  // ==================== 报价单相关 ====================
+  static getQuotations(): Quotation[] {
+    return this.quotationManager.getAll();
+  }
+  static saveQuotations(quotations: Quotation[]): void {
+    this.quotationManager.saveAll(quotations);
+  }
+  static getQuotation(id: string): Quotation | null {
+    return this.quotationManager.getById(id);
+  }
+  static addQuotation(quotation: Quotation): void {
+    this.quotationManager.add(quotation);
+  }
+  static updateQuotation(id: string, updates: Partial<Quotation>): void {
+    this.quotationManager.update(id, updates);
+  }
+  static deleteQuotation(id: string): void {
+    this.quotationManager.delete(id);
+  }
+
+  // ==================== 报价产品相关 ====================
+  static getQuotationProducts(): QuotationProduct[] {
+    return this.quotationProductManager.getAll();
+  }
+  static saveQuotationProducts(items: QuotationProduct[]): void {
+    this.quotationProductManager.saveAll(items);
+  }
+  static getQuotationProduct(id: string): QuotationProduct | null {
+    return this.quotationProductManager.getById(id);
+  }
+  static addQuotationProduct(item: QuotationProduct): void {
+    this.quotationProductManager.add(item);
+  }
+  static updateQuotationProduct(id: string, updates: Partial<QuotationProduct>): void {
+    this.quotationProductManager.update(id, updates);
+  }
+  static deleteQuotationProduct(id: string): void {
+    this.quotationProductManager.delete(id);
+  }
+
   // ==================== 分类相关 ====================
 
   /**
@@ -353,6 +403,8 @@ export class StorageManager {
       localStorage.removeItem('customers');
       localStorage.removeItem('products');
       localStorage.removeItem('invoice_history');
+      localStorage.removeItem('quotations');
+      localStorage.removeItem('quotation_products');
       localStorage.removeItem('customer_categories');
       localStorage.removeItem('product_categories');
       localStorage.removeItem('product_units');

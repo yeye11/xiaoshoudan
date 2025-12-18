@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# 仁腾装饰材料管理系统 - 桌面应用打包脚本
+# 靓仔的app - 桌面应用打包脚本
 
 # 加载共享的构建工具函数
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/scripts/build-utils.sh"
 
-echo "🚀 开始打包仁腾装饰材料管理系统..."
+echo "🚀 开始打包靓仔的app..."
 
 # 检查环境
 if ! check_environment; then

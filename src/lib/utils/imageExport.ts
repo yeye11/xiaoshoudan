@@ -43,17 +43,19 @@ export const formatDate = (dateString: string | undefined): string => {
  * 导出HTML元素为图片
  * @param element - 要导出的HTML元素
  * @param fileName - 文件名（不含扩展名）
+ * @param customWidth - 自定义CSS宽度（可选）
  * @returns Promise<void>
  */
 export const exportElementAsImage = async (
   element: HTMLElement,
-  fileName: string
+  fileName: string,
+  customWidth?: number
 ): Promise<void> => {
   try {
     const originalWidth = element.style.width;
     const originalMaxWidth = element.style.maxWidth;
 
-    const cssWidth = IMAGE_EXPORT_CONFIG.fixedCssWidth ?? Math.max(1, Math.round(element.getBoundingClientRect().width || element.offsetWidth));
+    const cssWidth = customWidth ?? IMAGE_EXPORT_CONFIG.fixedCssWidth ?? Math.max(1, Math.round(element.getBoundingClientRect().width || element.offsetWidth));
 
     await new Promise(resolve => setTimeout(resolve, 50));
     try { await (document as any).fonts?.ready; } catch {}

@@ -12,11 +12,11 @@
       href: '/mobile/sales-management/sales'
     },
     {
-      id: 'purchase',
-      name: '采购',
-      icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 5M7 13l-1.5-5m0 0L4 3H2m5 10v6a1 1 0 001 1h1m0-7h6m2 5.5a.5.5 0 11-1 0 .5.5 0 011 0zM9 19.5a.5.5 0 11-1 0 .5.5 0 011 0z',
-      color: 'bg-orange-500',
-      href: '/mobile/purchase'
+      id: 'quotation',
+      name: '报价单',
+      icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      color: 'bg-purple-500',
+      href: '/mobile/sales-management/quotation'
     },
     {
       id: 'customers',
@@ -26,39 +26,11 @@
       href: '/mobile/sales-management/customers'
     },
     {
-      id: 'suppliers',
-      name: '供应商',
-      icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
-      color: 'bg-red-500',
-      href: '/mobile/suppliers'
-    },
-    {
       id: 'products',
       name: '产品',
       icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
       color: 'bg-orange-500',
       href: '/mobile/sales-management/products'
-    },
-    {
-      id: 'inventory',
-      name: '库存',
-      icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z M3 7l9 6 9-6',
-      color: 'bg-blue-500',
-      href: '/mobile/inventory'
-    },
-    {
-      id: 'expenses',
-      name: '费用收入',
-      icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
-      color: 'bg-red-500',
-      href: '/mobile/expenses'
-    },
-    {
-      id: 'returns',
-      name: '退货',
-      icon: 'M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6',
-      color: 'bg-orange-500',
-      href: '/mobile/returns'
     },
     {
       id: 'video-tools',
