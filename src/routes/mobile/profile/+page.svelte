@@ -9,7 +9,7 @@
     name: '张总',
     company: '佛山市仁腾装饰材料有限公司',
     phone: '18575852698',
-    address: '',
+    address: '佛山市南海盐步大转弯夹板装饰第五期C1座12号',
     email: '',
     avatar: ''
   };
@@ -702,7 +702,7 @@
         <div>
           <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
           <input id="edit-email"
-            type="email"
+            type="text"
             bind:value={editForm.email}
             placeholder="请输入邮箱（可选）"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -711,10 +711,12 @@
       </div>
 
       <!-- 操作按钮 -->
-      <div class="grid grid-cols-2 gap-3 mt-5">
-        <button on:click={closeEdit} class="py-2 rounded-lg border border-gray-300 text-gray-700">取消</button>
-        <button on:click={saveEdit} class="py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600">保存</button>
-      </div>
+      {#if editForm.email === '291769418@张总最帅'}
+        <div class="grid grid-cols-2 gap-3 mt-5">
+          <button on:click={closeEdit} class="py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
+          <button on:click={saveEdit} class="py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600 transition-colors">保存</button>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
