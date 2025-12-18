@@ -1,4 +1,5 @@
 import { saveFileWithAndroid, downloadBlobAsBrowser } from './androidHelpers';
+import { encryptJsonToBinary } from './crypto';
 
 /**
  * 将 JSON 数据导出为文件
@@ -25,6 +26,31 @@ export async function exportJsonData(data: any, fileName: string): Promise<void>
     console.log('✅ 使用浏览器下载 API 保存成功');
   } catch (error) {
     console.error('❌ JSON 数据导出失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 将 JSON 数据加密后以二进制文件导出（.cbin）
+ * 使用 AES-GCM + PBKDF2（120k 次迭代）派生密钥
+ */
+export async function exportEncryptedData(data: any, fileName: string, password: string): Promise<void> {
+  try {
+    if (!password || password.trim().length < 4) {
+      throw new Error('加密密码至少 4 位');
+    }
+    console.log('🔐 开始加密并导出数据:', fileName);
+    const blob = await encryptJsonToBinary(data, password);
+    const fullFileName = `${fileName}.cbin`;
+    console.log('📦 加密数据大小:', blob.size, 'bytes');
+
+    if (await saveFileWithAndroid(blob, fullFileName, 'application/octet-stream')) {
+      return;
+    }
+    downloadBlobAsBrowser(blob, fullFileName);
+    console.log('✅ 二进制加密文件保存成功');
+  } catch (error) {
+    console.error('❌ 加密导出失败:', error);
     throw error;
   }
 }

@@ -21,7 +21,7 @@
         </div>
         <div>
           <div class="font-medium text-gray-900">客服电话</div>
-          <div class="text-sm text-gray-600">18575852698</div>
+          <div class="text-sm text-gray-600">7758258</div>
         </div>
       </div>
 
@@ -33,7 +33,7 @@
         </div>
         <div>
           <div class="font-medium text-gray-900">邮箱支持</div>
-          <div class="text-sm text-gray-600">support@example.com</div>
+          <div class="text-sm text-gray-600">291769418@qq.com</div>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
         </div>
         <div>
           <div class="font-medium text-gray-900">公司地址</div>
-          <div class="text-sm text-gray-600">佛山市南海盐步大转弯夹板装饰第五期C1座12号</div>
+          <div class="text-sm text-gray-600">中国火星市</div>
         </div>
       </div>
     </div>

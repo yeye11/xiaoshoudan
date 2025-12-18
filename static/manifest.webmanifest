@@ -1,6 +1,6 @@
 {
   "name": "靓仔的app",
-  "short_name": "仁腾管理",
+  "short_name": "靓仔",
   "start_url": "/mobile",
   "scope": "/",
   "display": "standalone",

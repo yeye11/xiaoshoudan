@@ -35,6 +35,46 @@
   let editForm: typeof userInfo = { ...userInfo };
   let editErrors: Record<string, string> = {};
 
+  // 自定义确认对话框
+  let confirmDialog = {
+    show: false,
+    title: '',
+    message: '',
+    confirmText: '确定',
+    cancelText: '取消',
+    onConfirm: () => {},
+    onCancel: () => {}
+  };
+
+  const showConfirmDialog = (
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void,
+    title = '确认',
+    confirmText = '确定',
+    cancelText = '取消'
+  ) => {
+    return new Promise<boolean>((resolve) => {
+      confirmDialog = {
+        show: true,
+        title,
+        message,
+        confirmText,
+        cancelText,
+        onConfirm: () => {
+          confirmDialog.show = false;
+          onConfirm();
+          resolve(true);
+        },
+        onCancel: () => {
+          confirmDialog.show = false;
+          if (onCancel) onCancel();
+          resolve(false);
+        }
+      };
+    });
+  };
+
   const openEdit = () => {
     editForm = { ...userInfo };
     editErrors = {};
@@ -99,7 +139,7 @@
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // 导出数据
+  // 导出数据（强制加密为二进制）
   const exportData = async () => {
     try {
       console.log('📊 开始导出数据...');
@@ -120,11 +160,15 @@
         exportTime: new Date().toISOString(),
         version: '1.0.0'
       };
-
-      const { exportJsonData } = await import('$lib/utils/jsonExport');
+      const { exportEncryptedData } = await import('$lib/utils/jsonExport');
       const fileName = `cypridina-data-${new Date().toISOString().split('T')[0]}`;
 
-      await exportJsonData(allData, fileName);
+      const pwd = prompt('请输入导出密码（至少 4 位）：');
+      if (!pwd || pwd.trim().length < 4) {
+        alert('密码无效，已取消导出');
+        return;
+      }
+      await exportEncryptedData(allData, fileName, pwd.trim());
       console.log('✅ 数据导出成功！');
     } catch (error) {
       console.error('❌ 导出数据失败:', error);
@@ -146,51 +190,67 @@
     if (!file) return;
 
     try {
-      const text = await file.text();
-      const importedData = JSON.parse(text);
+      let importedData: any;
 
-      // 验证数据格式
+      // 如果是加密的二进制文件（扩展名 .cbin），先解密
+      if (file.name.endsWith('.cbin')) {
+        const pwd = prompt('请输入导入密码：');
+        if (!pwd) {
+          alert('未输入密码，取消导入');
+          input.value = '';
+          return;
+        }
+        const { decryptBinaryToJson } = await import('$lib/utils/crypto');
+        importedData = await decryptBinaryToJson(file, pwd);
+      } else {
+        alert('仅支持导入加密备份（.cbin）');
+        input.value = '';
+        return;
+      }
+
+      // 验证数据格式（quotations 可选以兼容旧版本）
       if (!importedData.customers || !importedData.products || !importedData.invoices) {
         alert('数据格式不正确，请选择有效的导出文件');
         return;
       }
 
       // 询问导入方式
-      const mode = confirm(
-        '选择导入方式：\n\n' +
-        '【确定】= 合并模式（保留现有数据，添加新数据）\n' +
-        '【取消】= 覆盖模式（清除现有数据，完全替换）'
+      await showConfirmDialog(
+        '【确定】= 合并模式（保留现有数据，添加新数据）\n【取消】= 覆盖模式（清除现有数据，完全替换）',
+        // 确定 = 合并模式
+        () => {
+          mergeImportData(importedData);
+          // 重新加载数据
+          userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+          settings = { ...settings, ...StorageManager.getSettings() };
+          calculateDataStats();
+          alert('数据导入成功！');
+          input.value = '';
+        },
+        // 取消 = 进入覆盖模式确认
+        async () => {
+          await showConfirmDialog(
+            '⚠️ 警告：覆盖模式将删除所有现有数据！\n\n确定要继续吗？此操作不可恢复！',
+            () => {
+              overwriteImportData(importedData);
+              // 重新加载数据
+              userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+              settings = { ...settings, ...StorageManager.getSettings() };
+              calculateDataStats();
+              alert('数据导入成功！');
+              input.value = '';
+            },
+            () => {
+              input.value = '';
+            },
+            '警告'
+          );
+        },
+        '选择导入方式'
       );
-
-      if (mode) {
-        // 合并模式
-        mergeImportData(importedData);
-      } else {
-        // 覆盖模式
-        const confirmOverwrite = confirm(
-          '⚠️ 警告：覆盖模式将删除所有现有数据！\n\n' +
-          '确定要继续吗？此操作不可恢复！'
-        );
-
-        if (confirmOverwrite) {
-          overwriteImportData(importedData);
-        } else {
-          return;
-        }
-      }
-
-      // 重新加载数据
-      userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
-      settings = { ...settings, ...StorageManager.getSettings() };
-      calculateDataStats();
-
-      alert('数据导入成功！');
-
-      // 清空文件选择
-      input.value = '';
     } catch (error) {
       console.error('导入数据失败:', error);
-      alert('导入失败：文件格式错误或数据损坏');
+      alert('导入失败：仅支持 .cbin，或文件/密码不正确');
       input.value = '';
     }
   };
@@ -334,16 +394,24 @@
   };
 
   // 清除数据
-  const clearData = () => {
-    const confirmed = confirm('确定要清除所有数据吗？此操作不可恢复！');
-    if (confirmed) {
-      const secondConfirm = confirm('请再次确认：这将删除所有客户、产品和销售单数据！');
-      if (secondConfirm) {
-        StorageManager.clearAllData();
-        calculateDataStats();
-        alert('数据已清除');
-      }
-    }
+  const clearData = async () => {
+    await showConfirmDialog(
+      '确定要清除所有数据吗？此操作不可恢复！',
+      async () => {
+        await showConfirmDialog(
+          '请再次确认：这将删除所有客户、产品和销售单数据！',
+          () => {
+            StorageManager.clearAllData();
+            calculateDataStats();
+            alert('数据已清除');
+          },
+          () => {},
+          '再次确认'
+        );
+      },
+      () => {},
+      '警告'
+    );
   };
 
   // 切换设置
@@ -492,7 +560,7 @@
       <!-- 隐藏的文件选择器 -->
       <input
         type="file"
-        accept=".json"
+        accept=".cbin"
         bind:this={fileInput}
         on:change={handleImport}
         class="hidden"
@@ -505,7 +573,7 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
         </svg>
-        <span>导入数据</span>
+        <span>导入加密备份（.cbin）</span>
       </button>
 
       <button
@@ -515,7 +583,7 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
-        <span>导出数据</span>
+        <span>导出加密备份（.cbin）</span>
       </button>
 
       <button
@@ -646,6 +714,39 @@
       <div class="grid grid-cols-2 gap-3 mt-5">
         <button on:click={closeEdit} class="py-2 rounded-lg border border-gray-300 text-gray-700">取消</button>
         <button on:click={saveEdit} class="py-2 rounded-lg bg-purple-500 text-white font-medium hover:bg-purple-600">保存</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- 自定义确认对话框 -->
+{#if confirmDialog.show}
+  <div class="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4" on:click={confirmDialog.onCancel}>
+    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl" on:click|stopPropagation>
+      <!-- 标题 -->
+      <div class="px-6 pt-6 pb-4">
+        <h3 class="text-lg font-semibold text-gray-900">{confirmDialog.title}</h3>
+      </div>
+      
+      <!-- 消息 -->
+      <div class="px-6 pb-6">
+        <p class="text-gray-600 whitespace-pre-line">{confirmDialog.message}</p>
+      </div>
+      
+      <!-- 按钮 -->
+      <div class="grid grid-cols-2 gap-0 border-t border-gray-200">
+        <button 
+          on:click={confirmDialog.onCancel}
+          class="py-4 text-center text-gray-600 font-medium hover:bg-gray-50 rounded-bl-2xl transition-colors border-r border-gray-200"
+        >
+          {confirmDialog.cancelText}
+        </button>
+        <button 
+          on:click={confirmDialog.onConfirm}
+          class="py-4 text-center text-blue-600 font-semibold hover:bg-blue-50 rounded-br-2xl transition-colors"
+        >
+          {confirmDialog.confirmText}
+        </button>
       </div>
     </div>
   </div>
