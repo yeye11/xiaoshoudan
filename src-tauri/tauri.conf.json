@@ -39,11 +39,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "佛山市仁腾装饰材料有限公司",
+    "publisher": "张总有限公司",
     "category": "Business",
-    "shortDescription": "装饰材料销售管理系统",
+    "shortDescription": "销售管理系统",
     "longDescription": "专业的装饰材料销售管理系统，支持客户管理、产品管理、销售单和送货单生成等功能。",
-    "copyright": "Copyright © 2024 佛山市仁腾装饰材料有限公司",
+    "copyright": "Copyright © 2024 张总有限公司",
     "externalBin": [],
     "resources": [],
     "macOS": {
