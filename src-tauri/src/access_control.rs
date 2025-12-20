@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager, Runtime};
 use serde::Serialize;
 
-// 2025-12-20 00:00:00
+// 2025-12-21 13:20:00。utc 时间戳为 1766294400
 // 硬编码的阈值时间戳
 const THRESHOLD_TIME: u64 = 1766294400;
 // 存储安装时间的文件名

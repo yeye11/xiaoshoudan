@@ -6,9 +6,13 @@
 #   ./build-android.sh                    # 构建发布版 APK
 #   ./build-android.sh 192.168.31.14:5555 # 构建并安装到指定设备
 #   ./build-android.sh --logs             # 启动日志查看（需先安装）
-
+# 这次我用了一种 绕过图片生成工具 的方案，直接通过 Android 的 XML 资源系统来强制缩放图标。因为我发现 Tauri 的图标生成工具似乎忽略了缩放参数，生成的图标一直是满屏的，所以导致了裁剪。
+# adb -s 192.168.31.25:5555 exec-out screencap -p > ~/Desktop/wifi_screen.png
 # /Users/zdp/android-sdk/platform-tools/adb -s 192.168.31.14:5555 install -r src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk 
-# /Users/zdp/android-sdk/platform-tools/adb -s 192.168.31.25:5555 install -r src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk 
+
+# adb connect 192.168.31.25:5555
+
+# /Users/zdp/android-sdk/platform-tools/adb -s 192.168.31.25:5555 install -r src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
 # 加载共享的构建工具函数
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/scripts/build-utils.sh"
@@ -183,7 +187,6 @@ if [ -n "$TARGET_DEVICE" ]; then
         echo ""
         echo "📋 后续操作："
         echo "  查看日志: ./build-android.sh --logs"
-        echo "  卸载应用: adb -s $TARGET_DEVICE uninstall com.renteng.sales"
     else
         echo "❌ 应用安装失败"
         exit 1
