@@ -2,6 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
+mod access_control;
+
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -239,7 +241,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
-        .invoke_handler(tauri::generate_handler![greet, download_video, parse_douyin_video, fetch_video_base64])
+        .invoke_handler(tauri::generate_handler![
+            greet, 
+            download_video, 
+            parse_douyin_video, 
+            fetch_video_base64,
+            access_control::check_access_status
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

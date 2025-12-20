@@ -122,7 +122,7 @@ echo "🔨 构建发布版 APK（使用正式签名）..."
 echo "📝 签名文件: release.keystore (cypridina/123456)"
 
 # 使用 npx pnpm 避免 pnpm 未全局安装的问题
-npx pnpm tauri android build --apk
+npx pnpm tauri android build --apk true
 
 if [ $? -ne 0 ]; then
     echo "❌ 发布版本构建失败"
