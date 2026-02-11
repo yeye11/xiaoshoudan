@@ -1,6 +1,15 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
+function buildReferer(videoUrl: string): string {
+	try {
+		const parsed = new URL(videoUrl);
+		return `${parsed.protocol}//${parsed.host}/`;
+	} catch {
+		return 'https://www.douyin.com/';
+	}
+}
+
 /**
  * 视频代理 API - 用于绕过防盗链限制,支持视频播放
  */
@@ -12,12 +21,15 @@ export const GET: RequestHandler = async ({ url, request }) => {
 	}
 
 	try {
+		const referer = buildReferer(videoUrl);
+
 		// 获取客户端的 Range 请求头(用于视频流播放)
 		const range = request.headers.get('range');
 
 		// 构建请求头
 		const headers: HeadersInit = {
-			'Referer': 'https://www.douyin.com/',
+			'Referer': referer,
+			'Origin': referer.replace(/\/$/, ''),
 			'User-Agent':
 				'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
 		};
@@ -82,4 +94,3 @@ export const OPTIONS: RequestHandler = async () => {
 		}
 	});
 };
-

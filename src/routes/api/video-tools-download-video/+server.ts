@@ -1,6 +1,15 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
+function buildReferer(videoUrl: string): string {
+	try {
+		const parsed = new URL(videoUrl);
+		return `${parsed.protocol}//${parsed.host}/`;
+	} catch {
+		return 'https://www.douyin.com/';
+	}
+}
+
 export const GET: RequestHandler = async ({ url }) => {
 	const videoUrl = url.searchParams.get('url');
 	const filename = url.searchParams.get('filename') || 'video.mp4';
@@ -10,10 +19,13 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	try {
+		const referer = buildReferer(videoUrl);
+
 		// 使用服务器端下载,添加必要的请求头绕过防盗链
 		const response = await fetch(videoUrl, {
 			headers: {
-				'Referer': 'https://www.douyin.com/',
+				'Referer': referer,
+				'Origin': referer.replace(/\/$/, ''),
 				'User-Agent':
 					'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
 			}
@@ -39,4 +51,3 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(500, 'Failed to download video');
 	}
 };
-

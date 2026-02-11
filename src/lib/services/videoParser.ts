@@ -184,39 +184,48 @@ export async function parseVideo(url: string): Promise<ParseResult> {
 		};
 	}
 
-	// 如果是抖音链接,优先使用本地后端 API
-	if (platform === '抖音') {
+	// Tauri 环境优先走 Rust 命令，避免 CORS 及平台反爬限制
+	if (isTauriEnvironment()) {
 		try {
-			// 在 Tauri 环境中使用 Rust 后端
-			if (isTauriEnvironment()) {
-				console.log('🦀 使用 Tauri Rust 后端解析抖音视频...');
+			console.log('🦀 使用 Tauri Rust 解析命令...');
+			const videoInfo = await invoke<VideoInfo>('parse_video_via_providers', { url: videoUrl });
+			return {
+				success: true,
+				data: videoInfo
+			};
+		} catch (error) {
+			console.warn('❌ 通用解析命令失败:', error);
+		}
+
+		// 兼容旧命令（仅抖音）
+		if (platform === '抖音') {
+			try {
+				console.log('🦀 回退到旧抖音解析命令...');
 				const videoInfo = await invoke<VideoInfo>('parse_douyin_video', { url: videoUrl });
-				console.log('✅ Rust 后端解析成功:', videoInfo);
 				return {
 					success: true,
 					data: videoInfo
 				};
-			} else {
-				// 在浏览器环境中使用 SvelteKit API
-				console.log('🌐 使用 SvelteKit 后端解析抖音视频...');
-				const apiUrl = `/api/video-tools-parse-douyin?url=${encodeURIComponent(videoUrl)}`;
-				const response = await fetch(apiUrl);
-				const result = await response.json();
-
-				if (result.success && result.data) {
-					console.log('✅ SvelteKit 后端解析成功:', result.data);
-					return {
-						success: true,
-						data: result.data
-					};
-				} else {
-					console.warn('❌ SvelteKit 后端解析失败:', result.error);
-				}
+			} catch (error) {
+				console.warn('❌ 旧抖音解析命令失败:', error);
 			}
-		} catch (error) {
-			console.warn('❌ 本地后端解析失败,尝试使用在线 API:', error);
-			// 继续尝试在线 API
 		}
+	}
+
+	// 浏览器环境优先走本地后端 API，避免第三方接口 CORS 变动
+	try {
+		const apiUrl = `/api/video-tools-parse-douyin?url=${encodeURIComponent(videoUrl)}`;
+		const response = await fetch(apiUrl);
+		const result = await response.json();
+
+		if (result.success && result.data) {
+			return {
+				success: true,
+				data: result.data
+			};
+		}
+	} catch (error) {
+		console.warn('❌ 本地后端 API 解析失败,尝试直接请求第三方 API:', error);
 	}
 
 	// 依次尝试每个 API

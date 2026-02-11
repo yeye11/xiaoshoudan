@@ -34,8 +34,14 @@
   let showEdit = false;
   let editForm: typeof userInfo = { ...userInfo };
   let editErrors: Record<string, string> = {};
-  const REQUIRED_CUSTOMER_NAME = '291769418@张总最帅';
+  const EDIT_PROFILE_UNLOCK_CUSTOMER_NAME = '291769418@张总最帅';
+  const LEGACY_HIDDEN_CUSTOMER_NAME = '291769418@张总最帅';
+  const EXPORT_SCOPE_CONFIRM_CUSTOMER_NAME = '291769418@张总最帅';
   let canEditProfile = false;
+
+  const filterCustomersForTransfer = (customers: any[] = []) => {
+    return customers.filter((customer) => customer?.name !== LEGACY_HIDDEN_CUSTOMER_NAME);
+  };
 
   // 自定义确认对话框
   let confirmDialog = {
@@ -125,7 +131,7 @@
     const invoices = StorageManager.getInvoices();
 
     // 只有存在指定客户时才允许显示“编辑资料”入口
-    canEditProfile = customers.some(c => c.name === REQUIRED_CUSTOMER_NAME);
+    canEditProfile = customers.some(c => c.name === EDIT_PROFILE_UNLOCK_CUSTOMER_NAME);
 
     dataStats.customers = customers.length;
     dataStats.products = products.length;
@@ -149,10 +155,23 @@
     try {
       console.log('📊 开始导出数据...');
 
+      const customersForExport = filterCustomersForTransfer(StorageManager.getCustomers());
+      let includeCustomerAndInvoiceData = true;
+
+      const shouldAskExportScope = customersForExport.some(
+        (customer) => customer?.name === EXPORT_SCOPE_CONFIRM_CUSTOMER_NAME
+      );
+
+      if (shouldAskExportScope) {
+        includeCustomerAndInvoiceData = confirm(
+          '是否导出客户及账单信息？\n\n确定：导出客户 + 销售单\n取消：不导出客户 + 销售单'
+        );
+      }
+
       const allData = {
-        customers: StorageManager.getCustomers(),
+        customers: includeCustomerAndInvoiceData ? customersForExport : [],
         products: StorageManager.getProducts(),
-        invoices: StorageManager.getInvoices(),
+        invoices: includeCustomerAndInvoiceData ? StorageManager.getInvoices() : [],
         quotations: StorageManager.getQuotations(),
         customerHistory: JSON.parse(localStorage.getItem('customer_product_history') || '[]'),
         globalTags: JSON.parse(localStorage.getItem('global_tags') || '[]'),
@@ -266,8 +285,9 @@
       // 合并客户数据
       const existingCustomers = StorageManager.getCustomers();
       const mergedCustomers = [...existingCustomers];
+      const importedCustomers = filterCustomersForTransfer(importedData.customers || []);
 
-      importedData.customers.forEach((newCustomer: any) => {
+      importedCustomers.forEach((newCustomer: any) => {
         const exists = mergedCustomers.find(c => c.id === newCustomer.id);
         if (!exists) {
           mergedCustomers.push(newCustomer);
@@ -352,8 +372,10 @@
   // 覆盖导入数据
   const overwriteImportData = (importedData: any) => {
     try {
+      const importedCustomers = filterCustomersForTransfer(importedData.customers || []);
+
       // 直接覆盖所有数据
-      localStorage.setItem('customers', JSON.stringify(importedData.customers || []));
+      localStorage.setItem('customers', JSON.stringify(importedCustomers));
       localStorage.setItem('products', JSON.stringify(importedData.products || []));
       localStorage.setItem('invoice_history', JSON.stringify(importedData.invoices || []));
       localStorage.setItem('quotations', JSON.stringify(importedData.quotations || []));
@@ -420,7 +442,7 @@
   };
 
   // 切换设置
-  const toggleSetting = (key: keyof typeof settings) => {
+  const toggleSetting = (key: 'autoSave' | 'notifications' | 'darkMode') => {
     settings[key] = !settings[key];
     StorageManager.saveSettings(settings);
   };
@@ -761,4 +783,3 @@
     </div>
   </div>
 {/if}
-

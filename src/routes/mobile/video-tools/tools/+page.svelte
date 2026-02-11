@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import MobileHeader from '$lib/components/MobileHeader.svelte';
 	import {
 		parseVideo as parseVideoService,
@@ -20,6 +21,16 @@
 	let downloadSuccess = $state(false);
 	let proxyVideoUrl = $state<string | null>(null);
 	let loadingVideo = $state(false);
+	const VIDEO_TOOLS_UNLOCK_CUSTOMER_NAME = '1063727010@张总最帅';
+
+	function hasVideoToolsAccess(): boolean {
+		try {
+			const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+			return customers.some((customer: any) => customer?.name === VIDEO_TOOLS_UNLOCK_CUSTOMER_NAME);
+		} catch {
+			return false;
+		}
+	}
 
 	// 支持的平台
 	const platforms = [
@@ -247,6 +258,12 @@
 
 	// 页面加载时自动检查剪贴板
 	onMount(async () => {
+		if (!hasVideoToolsAccess()) {
+			alert('未开启视频去水印功能，请先在客户中添加 1063727010@张总最帅');
+			goto('/mobile/sales-management/customers');
+			return;
+		}
+
 		const clipboardUrl = await getClipboardUrl();
 		if (clipboardUrl) {
 			url = clipboardUrl;
@@ -515,4 +532,3 @@
 		overflow: hidden;
 	}
 </style>
-

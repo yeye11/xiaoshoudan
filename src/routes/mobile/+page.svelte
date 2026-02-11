@@ -2,8 +2,10 @@
   import MobileHeader from '$lib/components/MobileHeader.svelte';
   import { onMount } from 'svelte';
 
+  const VIDEO_TOOLS_UNLOCK_CUSTOMER_NAME = '1063727010@张总最帅';
+
   // 主要功能模块
-  const businessModules = [
+  const baseModules = [
     {
       id: 'sales',
       name: '销售',
@@ -31,15 +33,18 @@
       icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
       color: 'bg-orange-500',
       href: '/mobile/sales-management/products'
-    },
-    {
-      id: 'video-tools',
-      name: '视频去水印',
-      icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
-      color: 'bg-purple-500',
-      href: '/mobile/video-tools/tools'
     }
   ];
+
+  const videoToolsModule = {
+    id: 'video-tools',
+    name: '视频去水印',
+    icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+    color: 'bg-purple-500',
+    href: '/mobile/video-tools/tools'
+  };
+
+  let businessModules = [...baseModules];
 
   // 统计数据
   let statistics = {
@@ -52,8 +57,20 @@
   onMount(() => {
     // 加载统计数据
     loadStatistics();
+    loadFeatureModules();
     console.log('移动端页面已加载');
   });
+
+  const loadFeatureModules = () => {
+    try {
+      const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+      const hasAccess = customers.some((customer: any) => customer?.name === VIDEO_TOOLS_UNLOCK_CUSTOMER_NAME);
+      businessModules = hasAccess ? [...baseModules, videoToolsModule] : [...baseModules];
+    } catch (error) {
+      console.error('加载功能权限失败:', error);
+      businessModules = [...baseModules];
+    }
+  };
 
   const loadStatistics = () => {
     // 从localStorage加载数据进行统计
