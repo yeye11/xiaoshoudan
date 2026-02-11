@@ -1,452 +1,226 @@
-# Cypridina Client - 销售管理系统
+# 靓仔的app（Cypridina Client）项目总文档
 
-一个基于 **Tauri + SvelteKit + TypeScript** 构建的跨平台销售管理系统，支持 Windows、macOS、Linux 和 Android 平台。
+本文件是项目唯一维护文档。  
+原根目录的拆分说明文档已清理，后续请只更新本文件。
 
-## 📋 项目概述
+## 1. 项目概览
 
-Cypridina Client 是一个功能完整的销售管理应用，提供：
+- 项目类型：Tauri 2 + SvelteKit 的移动优先销售管理应用
+- 前端：SvelteKit + TypeScript + Tailwind CSS
+- 容器：Tauri（桌面 + Android）
+- 数据存储：本地 `localStorage`（离线可用）
+- 当前应用信息（以 `src-tauri/tauri.conf.json` 为准）：
+  - 应用名：`靓仔的app`
+  - 包名：`com.renteng.sales`
+  - 版本：`1.0.0`
 
-- ✅ 客户管理
-- ✅ 产品管理
-- ✅ 销售单生成
-- ✅ 送货单生成
-- ✅ 中文大写金额转换
-- ✅ 本地数据存储
-- ✅ 移动端优化界面
-- ✅ PDF 导出功能
+## 2. 功能范围
 
-## 🛠️ 推荐开发环境
+### 2.1 销售业务
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- 客户管理：增删改查、搜索
+- 产品管理：增删改查、搜索
+- 销售单：新建、编辑、详情、删除、导出图片
+- 送货单：由销售单生成并导出图片
+- 报价单：增删改查与复制
+- 数据看板：销售额、欠款、排行
+- 标签和规格管理：全局维护
 
-## 📦 系统要求
+### 2.2 视频去水印
 
-### 开发环境
-- **Node.js**: 18.0 或更高版本
-- **Rust**: 1.70 或更高版本
-- **Tauri CLI**: 2.0 或更高版本
+- 入口：`/mobile/video-tools/tools`
+- 支持平台：抖音、快手、小红书、TikTok（按链接识别）
+- 支持类型：视频、图文
+- 能力：链接提取、解析、预览、下载（含 Android 原生下载桥接）
 
-### 可选（用于 Android 开发）
-- **Android Studio**: 4.0 或更高版本
-- **Android SDK**: API 24 或更高版本
-- **NDK**: 最新版本
+## 3. 当前业务规则（按代码）
 
-## 🚀 快速开始
+### 3.1 特定客户名开关
 
-### 1. 安装依赖
+- 客户名 `291769418@张总最帅`：
+  - 存在时，`我的`页面才显示“编辑资料”按钮。
+  - 存在时，导出前弹出是否导出“客户+销售单”的确认框。
+  - 导入/导出传输时，此客户会被过滤，不写入备份。
+- 客户名 `1063727010@张总最帅`：
+  - 作为视频去水印功能开关，存在时才显示入口并可使用。
+
+### 3.2 多公司、多地址（已支持）
+
+- 在 `我的 -> 编辑资料` 中可添加多个公司和多个地址。
+- 新建/编辑销售单里：
+  - 销售公司和销售地址均为“大按钮 + 下拉列表选择”。
+  - 默认值优先级：当前值 -> 上次选择值 -> 列表第一个。
+  - 上次选择分别存储在：
+    - `last_selected_sales_company`
+    - `last_selected_sales_address`
+- 销售单保存的是当时快照，不会因为后续修改“我的资料”而联动历史单。
+
+### 3.3 安装时限控制（Tauri）
+
+- 启动时调用 `check_access_status`。
+- 首次运行会写入安装时间（`app_data_dir/.install_time`）。
+- 当前阈值时间戳：`1773417599`（即 `2026-03-13 23:59:59 CST`）。
+- 规则：`install_time <= threshold` 允许使用，否则拦截并提示停服。
+
+## 4. 关键路由
+
+- 首页：`/mobile`
+- 销售单：`/mobile/sales-management/sales`
+- 客户：`/mobile/sales-management/customers`
+- 产品：`/mobile/sales-management/products`
+- 报价单：`/mobile/sales-management/quotation`
+- 数据：`/mobile/sales-management/data`
+- 视频去水印：`/mobile/video-tools/tools`
+- 我的：`/mobile/profile`
+
+## 5. 本地数据键（localStorage）
+
+核心业务：
+
+- `customers`：客户
+- `products`：产品
+- `invoice_history`：销售单
+- `quotations`：报价单
+- `quotation_products`：报价产品库
+- `user_info`：个人资料（含 `companies[]`、`addresses[]`）
+- `settings`：应用设置
+
+其他业务键：
+
+- `customer_product_history`
+- `global_tags`
+- `global_specifications`
+- `customer_categories`
+- `product_categories`
+- `product_units`
+
+## 6. 开发运行
+
+### 6.1 环境要求
+
+- Node.js 18+
+- Rust（建议 rustup）
+- Android 构建时额外需要：Android SDK / NDK / JDK 17
+
+### 6.2 常用命令
 
 ```bash
-# 使用 pnpm（推荐）
-pnpm install
-
-# 或使用 npm
+# 安装依赖
 npm install
 
-# 或使用 yarn
-yarn install
-```
-
-### 2. 启动开发服务器
-
-#### 方式一：Web 开发模式（推荐用于前端开发）
-
-```bash
-# 启动 Vite 开发服务器
+# Web 开发（默认 http://localhost:1420）
 npm run dev
 
-# 访问 http://localhost:1420/
-```
-
-#### 方式二：Tauri 桌面应用开发模式
-
-```bash
-# 启动 Tauri 开发应用
+# Tauri 开发
 npm run tauri:dev
 
-# 这会启动一个原生窗口，支持热重载
-```
-
-### 3. 代码检查
-
-```bash
-# 运行 TypeScript 和 Svelte 检查
+# 类型检查
 npm run check
-
-# 监听模式（自动检查）
-npm run check:watch
 ```
 
-## 🏗️ 构建
+## 7. 构建与打包
 
-### 桌面应用构建
-
-#### 构建前端资源
+### 7.1 桌面端
 
 ```bash
-# 构建生产版本
+# 一键脚本（会安装依赖+构建前端+tauri build）
+./build.sh
+
+# 或手动
 npm run build
-
-# 预览构建结果
-npm run preview
-```
-
-#### 构建 Tauri 应用
-
-```bash
-# 构建桌面应用（Windows/macOS/Linux）
 npm run tauri:build
-
-# 生成的应用位置：
-# - macOS: src-tauri/target/release/bundle/macos/
-# - Windows: src-tauri/target/release/
-# - Linux: src-tauri/target/release/bundle/deb/
 ```
 
-### Android APK 构建
+产物目录：`src-tauri/target/release/bundle/`
 
-详见 [Android 构建指南](#-android-构建指南)
-
-## 📱 Android 开发
-
-### Android 环境配置
-
-#### 1. 安装 Android 开发环境
+### 7.2 Android
 
 ```bash
-# 下载并安装 Android Studio
-# https://developer.android.com/studio
-
-# 通过 Android Studio 安装：
-# - Android SDK
-# - Android SDK Build-Tools
-# - Android SDK Platform-Tools
-# - Android NDK
-```
-
-#### 2. 配置环境变量（macOS/Linux）
-
-编辑 `~/.zshrc` 或 `~/.bash_profile`：
-
-```bash
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export NDK_HOME=$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk | tail -1)
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-export PATH=$PATH:$ANDROID_HOME/tools
-export PATH=$PATH:$ANDROID_HOME/tools/bin
-```
-
-应用配置：
-
-```bash
-source ~/.zshrc
-```
-
-#### 3. 验证安装
-
-```bash
-# 检查 Android SDK
-echo $ANDROID_HOME
-
-# 检查 ADB
-adb --version
-
-# 运行验证脚本
-./verify-android-setup.sh
-```
-
-#### 4. 安装 Rust Android 目标
-
-```bash
-rustup target add aarch64-linux-android
-rustup target add armv7-linux-androideabi
-rustup target add i686-linux-android
-rustup target add x86_64-linux-android
-```
-
-### 初始化 Android 项目
-
-```bash
-# 首次需要初始化 Android 支持
+# 首次初始化
 npm run android:init
+
+# 构建发布 APK
+./build-android.sh
+
+# 构建并安装到指定设备（无线 adb）
+./build-android.sh <设备IP>:5555
+
+# 查看应用日志
+./build-android.sh --logs
 ```
 
-### 构建 Android APK
+APK 目录：`src-tauri/gen/android/app/build/outputs/apk/`
 
-#### 开发版本（推荐用于调试）
+### 7.3 Android 签名
+
+`src-tauri/gen/android/app/build.gradle.kts` 当前策略：
+
+- 优先读取 `tauri.properties` 或环境变量
+- 未配置时回退使用仓库根目录 `release.keystore`
+- 默认别名和密码在脚本里有回退值，仅适合内部环境
+
+建议发布前配置环境变量：
 
 ```bash
-# 构建并自动安装到连接的设备
-npm run android:dev
-
-# 或者只构建不安装
-npm run tauri android build --debug
+export TAURI_ANDROID_KEY_ALIAS=your_alias
+export TAURI_ANDROID_KEYSTORE_PASSWORD=your_store_password
+export TAURI_ANDROID_KEY_PASSWORD=your_key_password
 ```
 
-#### 发布版本
+## 8. 导入导出（`.cbin`）
 
-```bash
-# 构建发布版本
-npm run tauri android build
+- 仅支持导入/导出加密二进制文件 `.cbin`
+- 导出需要输入密码（不少于 4 位）
+- 导入支持两种模式：
+  - 合并：保留现有数据，追加新数据（按 `id` 去重）
+  - 覆盖：清空现有业务数据后完全替换
+- 特殊规则：
+  - 若存在 `291769418@张总最帅`，导出前询问是否包含客户+销售单
+  - 该客户在导入/导出数据中始终被过滤
 
-# 生成的 APK 位置：
-# src-tauri/gen/android/app/build/outputs/apk/release/app-release.apk
-```
+## 9. 视频去水印实现链路
 
-### 安装 APK 到设备
+前端解析顺序（`src/lib/services/videoParser.ts`）：
 
-```bash
-# 通过 USB 安装调试版本
-npm run android:install
+1. Tauri 环境优先调用 Rust 命令 `parse_video_via_providers`
+2. 失败则回退旧命令 `parse_douyin_video`（抖音）
+3. 浏览器环境走本地 API：`/api/video-tools-parse-douyin`
+4. 再失败才尝试第三方公开 API
 
-# 或手动安装
-adb install src-tauri/gen/android/app/build/outputs/apk/debug/app-debug.apk
-```
+服务端解析顺序（`src/routes/api/video-tools-parse-douyin/+server.ts`）：
 
-## 🔌 手机调试
+1. `tryDouyinSharePage`
+2. `tryTikwm`
+3. `tryPearktrue`
+4. `tryVvhan`
+5. `tryLolimi`
 
-### 准备工作
+下载链路：
 
-#### 1. 启用手机开发者选项
+- API 下载：`/api/video-tools-download-video`
+- 代理播放：`/api/video-tools-proxy-video`
+- Android 下优先走原生下载接口（若注入桥接成功）
 
-1. 打开手机设置
-2. 进入"关于手机"
-3. 连续点击"版本号" 7 次
-4. 返回设置，进入"开发者选项"
+## 10. 常见问题
 
-#### 2. 启用 USB 调试
+### 10.1 视频解析失败
 
-1. 在"开发者选项"中找到"USB 调试"
-2. 打开开关
-3. 用 USB 数据线连接手机到电脑
-4. 在手机上点击"允许 USB 调试"
+- 平台接口会变化，公开 API 可能失效
+- 先确认链接可在手机端正常打开
+- 优先在 Tauri 环境测试（绕开浏览器 CORS 限制）
 
-#### 3. 验证连接
+### 10.2 Android 构建失败
 
-```bash
-# 查看连接的设备
-adb devices
+- 检查 `ANDROID_HOME`、`NDK_HOME`、`JAVA_HOME`
+- 执行 `./verify-android-setup.sh`
+- 重新执行 `npm run build` 后再构建
 
-# 应该显示：
-# List of devices attached
-# XXXXXXXXXX    device
-```
+### 10.3 下拉选项为空
 
-### 远程调试
+- 在“我的资料”先录入公司/地址列表
+- 若仍为空，清理异常空字符串数据后重试
 
-#### 在 Chrome 中调试
+## 11. 维护约定
 
-1. 打开 Chrome 浏览器
-2. 访问：`chrome://inspect#devices`
-3. 确保勾选 **Discover USB devices**
-4. 在手机上打开应用
-5. 在 Chrome 中会看到应用的 WebView
-6. 点击 **inspect** 打开开发者工具
-
-#### 查看应用日志
-
-```bash
-# 实时查看应用日志
-npm run android:logcat
-
-# 或手动查看
-adb logcat | grep -i "cypridina"
-
-# 查看所有日志
-adb logcat
-```
-
-#### 调试技巧
-
-- 在 Chrome DevTools 中打开 **Console** 标签查看 JavaScript 日志
-- 在 **Network** 标签查看网络请求
-- 在 **Application** 标签查看 localStorage 和 IndexedDB
-- 勾选 "Preserve log" 保留日志（切换页面时不会丢失）
-
-## 📱 模拟器调试
-
-### 创建 Android 虚拟设备
-
-#### 方法一：使用 Android Studio GUI
-
-1. 打开 Android Studio
-2. 点击 **Tools** → **Device Manager**
-3. 点击 **Create Device**
-4. 选择设备类型（推荐 Pixel 系列）
-5. 选择 Android 版本（API 24 或更高）
-6. 完成创建
-
-#### 方法二：使用命令行
-
-```bash
-# 列出可用的系统镜像
-sdkmanager --list
-
-# 创建虚拟设备
-avdmanager create avd -n "Pixel_4_API_30" -k "system-images;android-30;google_apis;x86_64" -d "pixel_4"
-```
-
-### 启动模拟器
-
-```bash
-# 列出所有虚拟设备
-emulator -list-avds
-
-# 启动虚拟设备
-emulator -avd Pixel_4_API_30
-
-# 或从 Android Studio 启动
-```
-
-### 在模拟器上调试
-
-```bash
-# 等待模拟器启动完成，然后构建并安装
-npm run android:dev
-
-# 或手动安装
-adb install src-tauri/gen/android/app/build/outputs/apk/debug/app-debug.apk
-
-# 查看日志
-npm run android:logcat
-```
-
-#### 模拟器调试技巧
-
-- 模拟器启动较慢，请耐心等待
-- 可以在 Android Studio 中查看模拟器的性能监控
-- 使用 `adb shell` 进入模拟器的 shell 环境
-- 模拟器支持所有 adb 命令
-
-## 🐛 常见问题
-
-### 问题 1: `adb` 命令找不到
-
-**解决方案**：
-
-```bash
-# 检查 Android SDK 是否安装
-ls ~/Library/Android/sdk
-
-# 重新配置环境变量
-export PATH=$PATH:~/Library/Android/sdk/platform-tools
-
-# 重新加载配置
-source ~/.zshrc
-```
-
-### 问题 2: 设备显示 `unauthorized`
-
-**症状**：`adb devices` 显示 `unauthorized`
-
-**解决方案**：
-1. 在手机上撤销 USB 调试授权
-2. 重新连接 USB 线
-3. 在手机上点击"允许"
-
-### 问题 3: 无法安装 APK
-
-**症状**：安装失败或提示"未知来源"
-
-**解决方案**：
-1. 设置 → 安全 → 允许未知来源
-2. 或在安装时点击"设置" → 允许此来源
-
-### 问题 4: Chrome 中看不到设备
-
-**解决方案**：
-1. 确保 USB 调试已启用
-2. 重新插拔 USB 线
-3. 在 Chrome 中刷新 `chrome://inspect` 页面
-4. 确保应用正在运行
-
-### 问题 5: 构建失败
-
-**常见原因**：
-- Android SDK 未完整安装
-- 磁盘空间不足
-- 网络连接不稳定
-- Rust 目标未安装
-
-**解决方案**：
-```bash
-# 检查 Android SDK
-ls $ANDROID_HOME
-
-# 检查磁盘空间
-df -h
-
-# 重新安装 Rust 目标
-rustup target add aarch64-linux-android
-
-# 清理构建缓存
-cargo clean
-```
-
-## 📝 项目结构
-
-```
-.
-├── src/                          # 前端源代码
-│   ├── routes/                   # SvelteKit 路由
-│   ├── lib/                      # 可复用组件和工具
-│   └── app.html                  # HTML 入口
-├── src-tauri/                    # Tauri 后端代码
-│   ├── src/                      # Rust 源代码
-│   ├── Cargo.toml                # Rust 依赖配置
-│   └── tauri.conf.json           # Tauri 配置
-├── static/                       # 静态资源
-├── package.json                  # Node.js 依赖配置
-├── tsconfig.json                 # TypeScript 配置
-├── vite.config.js                # Vite 配置
-├── svelte.config.js              # SvelteKit 配置
-└── tailwind.config.js            # Tailwind CSS 配置
-```
-
-## 📚 可用命令
-
-```bash
-# 开发
-npm run dev                        # 启动 Web 开发服务器
-npm run tauri:dev                  # 启动 Tauri 桌面应用开发
-
-# 构建
-npm run build                      # 构建前端资源
-npm run tauri:build                # 构建桌面应用
-npm run preview                    # 预览构建结果
-
-# 代码检查
-npm run check                      # 运行 TypeScript 和 Svelte 检查
-npm run check:watch                # 监听模式检查
-
-# Android 相关
-npm run android:init               # 初始化 Android 项目
-npm run android:dev                # 构建并安装到设备
-npm run android:build              # 构建 Android APK
-npm run android:install            # 安装 APK 到设备
-npm run android:logcat             # 查看应用日志
-
-# Tauri 相关
-npm run tauri                      # 运行 Tauri CLI
-```
-
-## 🔗 相关文档
-
-- [BUILD_AND_DEBUG.md](./BUILD_AND_DEBUG.md) - 详细的 Android 打包和调试指南
-- [Android构建指南.md](./Android构建指南.md) - Android 构建步骤
-- [docs/SETUP.md](./docs/SETUP.md) - 项目设置指南
-- [Tauri 官方文档](https://tauri.app/)
-- [SvelteKit 官方文档](https://kit.svelte.dev/)
-
-## 📞 技术支持
-
-遇到问题时，可以：
-
-1. 查看项目中的详细文档
-2. 检查 [Tauri 官方文档](https://tauri.app/v1/guides/building/android)
-3. 查看 [Android 开发者文档](https://developer.android.com)
-4. 检查构建日志获取详细错误信息
-
-## 📄 许可证
-
-MIT License
+- 后续文档更新统一改 `README.md`
+- 不再恢复根目录拆分文档，避免信息冲突和重复维护
