@@ -155,10 +155,11 @@
     try {
       console.log('📊 开始导出数据...');
 
-      const customersForExport = filterCustomersForTransfer(StorageManager.getCustomers());
+      const allCustomers = StorageManager.getCustomers();
+      const customersForExport = filterCustomersForTransfer(allCustomers);
       let includeCustomerAndInvoiceData = true;
 
-      const shouldAskExportScope = customersForExport.some(
+      const shouldAskExportScope = allCustomers.some(
         (customer) => customer?.name === EXPORT_SCOPE_CONFIRM_CUSTOMER_NAME
       );
 
