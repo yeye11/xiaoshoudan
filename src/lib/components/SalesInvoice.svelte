@@ -3,7 +3,6 @@
   import { numberToChineseSimple } from '$lib/utils/numberToChinese.ts';
   import { exportElementAsImage, formatDate as formatDateUtil, IMAGE_EXPORT_CONFIG } from '$lib/utils/imageExport.ts';
   import MobileImageExport from './MobileImageExport.svelte';
-  import { onMount } from 'svelte';
 
 
   export let invoice: Invoice;
@@ -20,25 +19,15 @@
   // 格式化金额
   const formatCurrency = (amount: number): string => amount.toFixed(2);
 
-  // 从“我的资料”读取用户信息，用于抬头与制单人显示（不再使用“经理”兜底）
-  type UserProfile = { name?: string; company?: string; address?: string; phone?: string; email?: string; taxId?: string };
-  let userProfile: UserProfile = {};
-  const loadUserProfile = () => {
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem('user_info');
-      if (stored) userProfile = JSON.parse(stored) || {};
-    } catch (e) {
-      console.warn('读取用户资料失败', e);
-    }
+  // 展示逻辑：仅使用“该销售单保存时的快照”，避免修改“我的资料”后影响历史销售单
+  const normalizeSnapshotValue = (value: unknown, placeholders: string[] = []) => {
+    const text = String(value ?? '').trim();
+    return text.length > 0 && !placeholders.includes(text) ? text : '';
   };
-  onMount(loadUserProfile);
-
-  // 显示逻辑：优先“我的资料”，若为空则回退到发票中保存的公司信息/制单人
-  $: headerCompanyName = String((userProfile.company && userProfile.company.trim()) || invoice?.companyInfo?.name || '');
-  $: headerAddress = String((userProfile.address && userProfile.address.trim()) || invoice?.companyInfo?.address || '');
-  $: headerPhone = String((userProfile.phone && userProfile.phone.trim()) || invoice?.companyInfo?.phone || '');
-  $: displayCreatedBy = String((userProfile.name && userProfile.name.trim()) || invoice?.createdBy || '');
+  $: headerCompanyName = normalizeSnapshotValue(invoice?.companyInfo?.name, ['公司名称']);
+  $: headerAddress = normalizeSnapshotValue(invoice?.companyInfo?.address, ['公司地址']);
+  $: headerPhone = normalizeSnapshotValue(invoice?.companyInfo?.phone, ['公司电话']);
+  $: displayCreatedBy = normalizeSnapshotValue(invoice?.createdBy);
 
   // 使用统一的日期格式化函数
   const formatDate = formatDateUtil;

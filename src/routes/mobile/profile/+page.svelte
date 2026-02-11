@@ -4,12 +4,69 @@
   import { StorageManager } from '$lib/utils/storage';
   import { validators, validateForm, hasErrors } from '$lib/utils/validation';
 
+  type UserInfo = {
+    name: string;
+    company: string;
+    companies: string[];
+    phone: string;
+    address: string;
+    addresses: string[];
+    email: string;
+    avatar: string;
+  };
+
+  const normalizeAddressList = (value: unknown): string[] => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => String(item ?? '').trim())
+        .filter((item) => item.length > 0);
+    }
+
+    if (typeof value === 'string') {
+      return value
+        .split('\n')
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+    }
+
+    return [];
+  };
+
+  const getAddressListFromUserInfo = (profile: Partial<UserInfo> & Record<string, any>): string[] => {
+    const fromAddresses = normalizeAddressList(profile?.addresses);
+    if (fromAddresses.length > 0) return fromAddresses;
+    return normalizeAddressList(profile?.address);
+  };
+
+  const getCompanyListFromUserInfo = (profile: Partial<UserInfo> & Record<string, any>): string[] => {
+    const fromCompanies = normalizeAddressList(profile?.companies);
+    if (fromCompanies.length > 0) return fromCompanies;
+    return normalizeAddressList(profile?.company);
+  };
+
+  const normalizeUserInfo = (raw: Partial<UserInfo> & Record<string, any>): UserInfo => {
+    const companyList = getCompanyListFromUserInfo(raw);
+    const addressList = getAddressListFromUserInfo(raw);
+    return {
+      name: String(raw?.name ?? ''),
+      company: companyList[0] ?? '',
+      companies: companyList,
+      phone: String(raw?.phone ?? ''),
+      address: addressList[0] ?? '',
+      addresses: addressList,
+      email: String(raw?.email ?? ''),
+      avatar: String(raw?.avatar ?? '')
+    };
+  };
+
   // 用户信息
-  let userInfo = {
+  let userInfo: UserInfo = {
     name: '张总',
     company: '佛山市仁腾装饰材料有限公司',
+    companies: ['佛山市仁腾装饰材料有限公司'],
     phone: '18575852698',
     address: '佛山市南海盐步大转弯夹板装饰第五期C1座12号',
+    addresses: ['佛山市南海盐步大转弯夹板装饰第五期C1座12号'],
     email: '',
     avatar: ''
   };
@@ -32,7 +89,11 @@
 
   // 编辑界面状态与表单
   let showEdit = false;
-  let editForm: typeof userInfo = { ...userInfo };
+  let editForm: UserInfo = { ...userInfo };
+  let editCompanies: string[] = [];
+  let editAddresses: string[] = [];
+  let displayCompanies: string[] = [];
+  let displayAddresses: string[] = [];
   let editErrors: Record<string, string> = {};
   const EDIT_PROFILE_UNLOCK_CUSTOMER_NAME = '291769418@张总最帅';
   const LEGACY_HIDDEN_CUSTOMER_NAME = '291769418@张总最帅';
@@ -42,6 +103,9 @@
   const filterCustomersForTransfer = (customers: any[] = []) => {
     return customers.filter((customer) => customer?.name !== LEGACY_HIDDEN_CUSTOMER_NAME);
   };
+
+  $: displayCompanies = getCompanyListFromUserInfo(userInfo);
+  $: displayAddresses = getAddressListFromUserInfo(userInfo);
 
   // 自定义确认对话框
   let confirmDialog = {
@@ -85,6 +149,8 @@
 
   const openEdit = () => {
     editForm = { ...userInfo };
+    editCompanies = [...(userInfo.companies.length > 0 ? userInfo.companies : [''])];
+    editAddresses = [...(userInfo.addresses.length > 0 ? userInfo.addresses : [''])];
     editErrors = {};
     showEdit = true;
   };
@@ -112,15 +178,51 @@
     return !hasErrors(editErrors);
   };
 
+  const addCompanyField = () => {
+    editCompanies = [...editCompanies, ''];
+  };
+
+  const removeCompanyField = (index: number) => {
+    if (editCompanies.length <= 1) {
+      editCompanies = [''];
+      return;
+    }
+    editCompanies = editCompanies.filter((_, i) => i !== index);
+  };
+
+  const addAddressField = () => {
+    editAddresses = [...editAddresses, ''];
+  };
+
+  const removeAddressField = (index: number) => {
+    if (editAddresses.length <= 1) {
+      editAddresses = [''];
+      return;
+    }
+    editAddresses = editAddresses.filter((_, i) => i !== index);
+  };
+
   const saveEdit = () => {
     if (!validateEdit()) return;
-    userInfo = { ...userInfo, ...editForm };
-    StorageManager.saveUserInfo(userInfo);
+
+    const normalizedCompanies = normalizeAddressList(editCompanies);
+    const normalizedAddresses = normalizeAddressList(editAddresses);
+    const nextUserInfo = normalizeUserInfo({
+      ...userInfo,
+      ...editForm,
+      company: normalizedCompanies[0] ?? '',
+      companies: normalizedCompanies,
+      address: normalizedAddresses[0] ?? '',
+      addresses: normalizedAddresses
+    });
+
+    userInfo = nextUserInfo;
+    StorageManager.saveUserInfo(nextUserInfo);
     showEdit = false;
   };
 
   onMount(() => {
-    userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+    userInfo = normalizeUserInfo({ ...userInfo, ...StorageManager.getUserInfo() });
     settings = { ...settings, ...StorageManager.getSettings() };
     calculateDataStats();
   });
@@ -246,7 +348,7 @@
         () => {
           mergeImportData(importedData);
           // 重新加载数据
-          userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+          userInfo = normalizeUserInfo({ ...userInfo, ...StorageManager.getUserInfo() });
           settings = { ...settings, ...StorageManager.getSettings() };
           calculateDataStats();
           alert('数据导入成功！');
@@ -259,7 +361,7 @@
             () => {
               overwriteImportData(importedData);
               // 重新加载数据
-              userInfo = { ...userInfo, ...StorageManager.getUserInfo() };
+              userInfo = normalizeUserInfo({ ...userInfo, ...StorageManager.getUserInfo() });
               settings = { ...settings, ...StorageManager.getSettings() };
               calculateDataStats();
               alert('数据导入成功！');
@@ -407,7 +509,7 @@
 
       // 可选：导入用户信息和设置
       if (importedData.userInfo) {
-        StorageManager.saveUserInfo(importedData.userInfo);
+        StorageManager.saveUserInfo(normalizeUserInfo(importedData.userInfo));
       }
 
       if (importedData.settings) {
@@ -466,9 +568,15 @@
       </div>
       <div class="flex-1">
         <h3 class="font-medium text-gray-900">{userInfo.name}</h3>
-        <p class="text-sm text-gray-600">{userInfo.company}</p>
-        {#if userInfo.address}
-          <p class="text-sm text-gray-600">{userInfo.address}</p>
+        {#if displayCompanies.length > 0}
+          {#each displayCompanies as company}
+            <p class="text-sm text-gray-600">{company}</p>
+          {/each}
+        {/if}
+        {#if displayAddresses.length > 0}
+          {#each displayAddresses as address}
+            <p class="text-sm text-gray-600">{address}</p>
+          {/each}
         {/if}
         <p class="text-sm text-gray-600">{userInfo.phone}</p>
       </div>
@@ -695,26 +803,70 @@
           {/if}
         </div>
 
-        <!-- 公司 -->
+        <!-- 公司（可多条） -->
         <div>
-          <label for="edit-company" class="block text-sm font-medium text-gray-700 mb-1">公司</label>
-          <input id="edit-company"
-            type="text"
-            bind:value={editForm.company}
-            placeholder="请输入公司名称"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
+          <label for="edit-company-0" class="block text-sm font-medium text-gray-700 mb-1">公司</label>
+          <div class="space-y-2">
+            {#each editCompanies as _, index}
+              <div class="flex items-center gap-2">
+                <input
+                  id={`edit-company-${index}`}
+                  type="text"
+                  bind:value={editCompanies[index]}
+                  placeholder={`请输入公司 ${index + 1}`}
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  on:click={() => removeCompanyField(index)}
+                  class="px-3 py-2 text-sm text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  删除
+                </button>
+              </div>
+            {/each}
+
+            <button
+              type="button"
+              on:click={addCompanyField}
+              class="w-full py-2 text-sm font-medium text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+            >
+              + 添加公司
+            </button>
+          </div>
         </div>
 
-        <!-- 地址 -->
+        <!-- 地址（可多条） -->
         <div>
-          <label for="edit-address" class="block text-sm font-medium text-gray-700 mb-1">地址</label>
-          <input id="edit-address"
-            type="text"
-            bind:value={editForm.address}
-            placeholder="请输入公司地址"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
+          <label for="edit-address-0" class="block text-sm font-medium text-gray-700 mb-1">地址</label>
+          <div class="space-y-2">
+            {#each editAddresses as _, index}
+              <div class="flex items-center gap-2">
+                <input
+                  id={`edit-address-${index}`}
+                  type="text"
+                  bind:value={editAddresses[index]}
+                  placeholder={`请输入地址 ${index + 1}`}
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  on:click={() => removeAddressField(index)}
+                  class="px-3 py-2 text-sm text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  删除
+                </button>
+              </div>
+            {/each}
+
+            <button
+              type="button"
+              on:click={addAddressField}
+              class="w-full py-2 text-sm font-medium text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+            >
+              + 添加地址
+            </button>
+          </div>
         </div>
 
         <!-- 电话 -->
