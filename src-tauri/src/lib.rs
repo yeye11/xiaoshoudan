@@ -4,12 +4,6 @@ use serde::{Deserialize, Serialize};
 
 mod access_control;
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 struct VideoInfo {
     title: String,
@@ -87,9 +81,6 @@ async fn parse_douyin_video(url: String) -> Result<VideoInfo, String> {
         .text()
         .await
         .map_err(|e| format!("读取响应失败: {}", e))?;
-
-    // 打印响应内容用于调试
-    println!("API 响应: {}", &json_text[..json_text.len().min(500)]);
 
     // 4. 解析 JSON
     let json_value: serde_json::Value = serde_json::from_str(&json_text)
@@ -175,12 +166,24 @@ async fn download_video(url: String, filename: String) -> Result<String, String>
         .map_err(|e| format!("读取数据失败: {}", e))?;
 
     // 获取下载目录路径
+    println!("开始获取下载目录...");
+    
+    // 获取下载目录路径 - 根据平台区分
     #[cfg(target_os = "android")]
     let download_dir = PathBuf::from("/storage/emulated/0/Download");
 
-    #[cfg(not(target_os = "android"))]
+    #[cfg(target_os = "ios")]
+    let download_dir = {
+        // iOS 使用临时目录
+        println!("iOS 平台，使用临时目录");
+        std::env::temp_dir()
+    };
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let download_dir = dirs::download_dir()
         .ok_or_else(|| "无法获取下载目录".to_string())?;
+
+    println!("下载目录 = {:?}", download_dir);
 
     // 确保下载目录存在
     fs::create_dir_all(&download_dir)
@@ -242,7 +245,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
-            greet, 
             download_video, 
             parse_douyin_video, 
             fetch_video_base64,

@@ -46,7 +46,7 @@
         </div>
         <div>
           <div class="font-medium text-gray-900">公司地址</div>
-          <div class="text-sm text-gray-600">中国火星市</div>
+          <div class="text-sm text-gray-600">地址信息请在个人资料中维护</div>
         </div>
       </div>
     </div>
