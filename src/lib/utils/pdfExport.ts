@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { toCanvas } from 'html-to-image';
 import type { Invoice, Customer } from '$lib/types/invoice';
 import { IMAGE_EXPORT_CONFIG } from './imageExport';
 import { savePDFWithAndroid } from './androidHelpers';
@@ -53,13 +53,14 @@ export async function exportElementAsPDF(
     const computedScale = calculateScale(cssWidth, IMAGE_EXPORT_CONFIG.fixedPixelWidth, IMAGE_EXPORT_CONFIG.scale);
 
     // 应用导出样式调整
-    applyExportStyleAdjustments(clone, -6);
+    applyExportStyleAdjustments(clone, 0);
 
-    const canvas = await html2canvas(clone, {
-      scale: computedScale,
-      useCORS: IMAGE_EXPORT_CONFIG.useCORS,
+    const canvas = await toCanvas(clone, {
+      pixelRatio: computedScale,
       backgroundColor: IMAGE_EXPORT_CONFIG.backgroundColor,
-      logging: IMAGE_EXPORT_CONFIG.logging
+      cacheBust: true,
+      skipAutoScale: true,
+      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQkSuQmCC',
     });
 
     document.body.removeChild(offscreen);
@@ -130,16 +131,17 @@ export async function exportElementAsMultiPagePDF(
 
     removeOklchColors(clonedElement);
 
-    const canvas = await html2canvas(clonedElement, {
-      scale: config.scale,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
+    const canvas = await toCanvas(clonedElement, {
+      pixelRatio: 3,
+      backgroundColor: '#ffffff',
+      cacheBust: true,
+      skipAutoScale: true,
+      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQkSuQmCC',
     });
 
     document.body.removeChild(clonedElement);
 
-    const imgData = canvas.toDataURL('image/jpeg', config.quality);
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
     const pdf = new jsPDF({
       orientation: config.orientation,
@@ -326,13 +328,14 @@ export async function exportInvoiceAsPDF(
 
     document.body.appendChild(tempDiv);
 
-    // 使用 html2canvas 转换为图片
+    // 使用 html-to-image 转换为图片
     console.log('📸 正在截取页面...');
-    const canvas = await html2canvas(tempDiv, {
-      scale: 3, // 提高分辨率
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
+    const canvas = await toCanvas(tempDiv, {
+      pixelRatio: 3,
+      backgroundColor: '#ffffff',
+      cacheBust: true,
+      skipAutoScale: true,
+      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQkSuQmCC',
     });
 
     // 移除临时元素

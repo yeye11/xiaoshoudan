@@ -3,7 +3,7 @@
  * 用于图片、PDF 和打印导出
  */
 
-import html2canvas from 'html2canvas';
+// html-to-image 替代 html2canvas，不再需要在此文件导入
 
 /**
  * 导出配置接口

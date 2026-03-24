@@ -122,23 +122,20 @@ export function downloadDataURLAsBrowser(dataUrl: string, fileName: string): voi
 }
 
 /**
- * 获取 html2canvas 的标准配置
- * @param scale - 缩放倍率
- * @param useCORS - 是否使用 CORS
+ * 获取 html-to-image 的标准配置
+ * @param pixelRatio - 缩放倍率
  * @param backgroundColor - 背景颜色
- * @param logging - 是否启用日志
  */
-export function getHtml2CanvasConfig(
-  scale: number = 3,
-  useCORS: boolean = true,
-  backgroundColor: string = '#ffffff',
-  logging: boolean = false
+export function getHtmlToImageConfig(
+  pixelRatio: number = 3,
+  backgroundColor: string = '#ffffff'
 ): any {
   return {
-    scale,
-    useCORS,
+    pixelRatio,
     backgroundColor,
-    logging
+    cacheBust: true,
+    skipAutoScale: true,
+    imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQkSuQmCC',
   };
 }
 

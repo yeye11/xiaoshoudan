@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import { toCanvas } from 'html-to-image';
 import {
   removeOklchColors,
   prepareElementForExport,
@@ -63,13 +63,14 @@ export const exportElementAsImage = async (
     const { clone, offscreen } = prepareElementForExport(element, cssWidth);
     const computedScale = calculateScale(cssWidth, IMAGE_EXPORT_CONFIG.fixedPixelWidth, IMAGE_EXPORT_CONFIG.scale);
 
-    applyExportStyleAdjustments(clone, -6);
+    applyExportStyleAdjustments(clone, 0);
 
-    const canvas = await html2canvas(clone, {
-      scale: computedScale,
-      useCORS: IMAGE_EXPORT_CONFIG.useCORS,
+    const canvas = await toCanvas(clone, {
+      pixelRatio: computedScale,
       backgroundColor: IMAGE_EXPORT_CONFIG.backgroundColor,
-      logging: IMAGE_EXPORT_CONFIG.logging
+      cacheBust: true,
+      skipAutoScale: true,
+      imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRElEQkSuQmCC',
     });
 
     document.body.removeChild(offscreen);
