@@ -248,7 +248,7 @@
     border-width: 1px;
     border-style: solid;
     border-color: #374151;
-    vertical-align: middle; /* 显式指定垂直居中，html2canvas 不依赖 UA 默认值 */
+    vertical-align: middle; /* 显式指定垂直居中，确保导出截图时不依赖 UA 默认值 */
   }
 
   /* 信息网格：增加列间距，使右侧整体右移一些 */

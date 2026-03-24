@@ -3,7 +3,7 @@
  * 用于图片、PDF 和打印导出
  */
 
-// html-to-image 替代 html2canvas，不再需要在此文件导入
+// 截图引擎使用 html-to-image，由各调用方按需导入
 
 /**
  * 导出配置接口
@@ -20,7 +20,7 @@ export interface ExportConfig {
 }
 
 /**
- * 移除元素中的 oklch 颜色（html2canvas 不支持）
+ * 移除元素中的 oklch 颜色（部分渲染引擎不支持）
  * @param element - 要处理的HTML元素
  */
 export const removeOklchColors = (element: HTMLElement): void => {
@@ -79,7 +79,7 @@ export const centerTableCellsForExport = (root: HTMLElement, dy: number = -1): v
 };
 
 /**
- * 将"非表格内"的文字整体上移若干像素，修正 html2canvas 的基线偏差（仅作用于克隆体）
+ * 将"非表格内"的文字整体上移若干像素，修正截图基线偏差（仅作用于克隆体）
  */
 export const nudgeNonTableTextUp = (root: HTMLElement, dy: number = -1): void => {
   // 仅在白名单容器内进行文字上移，避免抬头/页脚等区域被影响
