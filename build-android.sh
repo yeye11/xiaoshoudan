@@ -107,6 +107,32 @@ fi
 
 echo "✅ 环境检查完成"
 
+# 检查 Android 项目是否已初始化，未初始化则自动执行
+if [ ! -d "src-tauri/gen/android" ]; then
+    echo "📱 初始化 Android 项目..."
+    npx tauri android init
+fi
+
+# 自动覆盖签名配置和图标（从 android-config/ 目录）
+if [ -f "android-config/app-build.gradle.kts" ]; then
+    echo "📝 覆盖签名配置..."
+    cp android-config/app-build.gradle.kts src-tauri/gen/android/app/build.gradle.kts
+fi
+if [ -f "apk_icon_xxxhdpi.png" ]; then
+    echo "🎨 覆盖应用图标..."
+    RES_DIR="src-tauri/gen/android/app/src/main/res"
+    sips -z 48 48 apk_icon_xxxhdpi.png --out "$RES_DIR/mipmap-mdpi/ic_launcher.png" > /dev/null 2>&1
+    sips -z 72 72 apk_icon_xxxhdpi.png --out "$RES_DIR/mipmap-hdpi/ic_launcher.png" > /dev/null 2>&1
+    sips -z 96 96 apk_icon_xxxhdpi.png --out "$RES_DIR/mipmap-xhdpi/ic_launcher.png" > /dev/null 2>&1
+    sips -z 144 144 apk_icon_xxxhdpi.png --out "$RES_DIR/mipmap-xxhdpi/ic_launcher.png" > /dev/null 2>&1
+    sips -z 192 192 apk_icon_xxxhdpi.png --out "$RES_DIR/mipmap-xxxhdpi/ic_launcher.png" > /dev/null 2>&1
+    for size_dir in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+        cp "$RES_DIR/mipmap-$size_dir/ic_launcher.png" "$RES_DIR/mipmap-$size_dir/ic_launcher_round.png"
+        cp "$RES_DIR/mipmap-$size_dir/ic_launcher.png" "$RES_DIR/mipmap-$size_dir/ic_launcher_foreground.png"
+    done
+    echo "✅ 图标覆盖完成"
+fi
+
 # 构建前端
 echo "📦 构建前端..."
 if ! build_frontend; then

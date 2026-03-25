@@ -44,7 +44,7 @@ tauri-plugin-*/target/
 *.idsig
 *.keystore
 *.jks
-release.keystore
+!release.keystore
 **/.gradle/
 **/build/
 android/local.properties
